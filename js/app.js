@@ -9,6 +9,18 @@ const App = {
   selectedCoords: [12.9716, 79.1588], // Default Vellore NH48 coord
   activeAIReport: null,
   activeCharts: {},
+  escapeHTML(str) {
+    if (!str) return "";
+    return str.replace(/[&<>'"]/g, 
+      tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag)
+    );
+  },
   miniMap: null,
   deferredInstallPrompt: null,
 
@@ -788,7 +800,7 @@ const App = {
     }
 
     return `
-      <p>I processed your query: <em>"${input}"</em></p>
+      <p>I processed your query: <em>"${this.escapeHTML(input)}"</em></p>
       <p style="margin-top:6px;">I didn't find an exact keyword match. Try asking one of these popular questions:</p>
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
         <button onclick="window.App.sendBotMessage('Show contractor performance rankings')" class="quick-action-pill" style="border:1px solid rgba(0,187,249,0.3)">Rankings</button>
