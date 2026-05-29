@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="YatraRaksha">
+  <rect width="512" height="512" fill="#0d9488"/>
+  <path d="M128 352 L256 176 L384 352" fill="none" stroke="#f0fdfa" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="312" r="56" fill="#f0fdfa"/>
+  <text x="256" y="336" text-anchor="middle" font-family="Arial,sans-serif" font-size="76" font-weight="700" fill="#0d9488">Y</text>
+</svg>

@@ -2,13 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="YatraRaksha PWA: AI-powered road safety verification, public spending audit, and complaint routing platform.">
   <title>YatraRaksha - Infrastructure Audit & Transparency</title>
   
-  <!-- PWA Manifest -->
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d9488">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="YatraRaksha">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   
   <!-- Leaflet and Chart.js CDNs (cached locally by service worker) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -18,8 +25,37 @@
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/welcome.css">
+  <link rel="stylesheet" href="css/captcha-gate.css">
 </head>
 <body>
+
+  <!-- Human verification gate (replaces login) -->
+  <div id="captcha-gate" class="captcha-gate" hidden aria-hidden="true" role="dialog" aria-labelledby="captcha-title" aria-modal="true">
+    <div class="captcha-gate__bg" aria-hidden="true">
+      <div class="captcha-gate__orb captcha-gate__orb--1"></div>
+      <div class="captcha-gate__orb captcha-gate__orb--2"></div>
+      <div class="captcha-gate__grid"></div>
+    </div>
+    <div class="captcha-card">
+      <div class="captcha-badge">
+        <span aria-hidden="true">🛡️</span> Bot protection
+      </div>
+      <h2 id="captcha-title" class="captcha-title">Verify you're human</h2>
+      <p class="captcha-subtitle">Complete the captcha to access YatraRaksha. This keeps automated bots off the road safety platform.</p>
+      <div class="captcha-visual">
+        <div id="captcha-svg-host" aria-live="polite"></div>
+        <button type="button" id="captcha-refresh" class="captcha-refresh" title="New captcha" aria-label="Refresh captcha">↻</button>
+      </div>
+      <div class="captcha-field">
+        <label for="captcha-answer">Enter the code above</label>
+        <input type="text" id="captcha-answer" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="• • • • •" aria-describedby="captcha-error" />
+      </div>
+      <input type="text" id="captcha-honeypot" class="captcha-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <p id="captcha-error" class="captcha-error" hidden role="alert"></p>
+      <button type="button" id="captcha-submit" class="captcha-submit">Verify &amp; continue</button>
+      <p class="captcha-footnote">Protected by server-side verification · Case insensitive · Expires in 5 minutes</p>
+    </div>
+  </div>
 
   <!-- Welcome splash (before dashboard) -->
   <div id="welcome-screen" class="welcome-screen" role="dialog" aria-label="Welcome to YatraRaksha">
@@ -672,14 +708,14 @@
     </nav>
   </div>
 
-  <!-- PWA Service Worker Registration -->
+  <!-- PWA Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("./sw.js")
-          .then((reg) => console.log("🚀 YatraRaksha PWA Service Worker registered:", reg.scope))
-          .catch((err) => console.error("❌ Service Worker failed:", err));
+          .register("./sw.js", { scope: "./" })
+          .then((reg) => console.log("YatraRaksha PWA registered:", reg.scope))
+          .catch((err) => console.error("Service Worker failed:", err));
       });
     }
   </script>
@@ -690,14 +726,16 @@
   <script src="js/database.js"></script>
   <script src="js/storage-optimizer.js"></script>
   
-  <!-- Authentication & API -->
+  <!-- Access gate & API -->
   <script src="js/auth-module.js"></script>
+  <script src="js/captcha-gate-ui.js"></script>
   <script src="js/api-service.js"></script>
   
   <!-- Image & Media Processing -->
   <script src="js/image-compressor.js"></script>
   
-  <!-- Notifications & Features -->
+  <!-- PWA & Notifications -->
+  <script src="js/pwa-install.js"></script>
   <script src="js/push-notifications.js"></script>
   
   <!-- AI & Tracking -->

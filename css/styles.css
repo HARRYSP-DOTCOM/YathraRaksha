@@ -177,6 +177,46 @@ body {
   filter: none;
 }
 
+/* PWA install, update, offline bars */
+.pwa-update-bar,
+.pwa-offline-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  box-shadow: 0 4px 20px var(--glass-shadow);
+}
+
+.pwa-update-bar {
+  top: 0;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(45, 212, 191, 0.35);
+  color: var(--text-white);
+}
+
+.pwa-offline-bar {
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  background: rgba(251, 146, 60, 0.15);
+  border-top: 1px solid rgba(251, 146, 60, 0.4);
+  color: var(--secondary);
+}
+
+html.pwa-standalone .pwa-offline-bar {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.is-offline .mobile-header .online-status::after {
+  content: " · Offline";
+  color: var(--secondary);
+}
+
 /* Ambient PWA Install Card */
 .pwa-install-card {
   display: none;

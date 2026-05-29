@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d9488">
+  <title>Offline — YatraRaksha</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .offline-card {
+      max-width: 420px;
+      padding: 32px 24px;
+    }
+    .offline-icon { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 8px; }
+    p { color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="glass-card offline-card">
+    <div class="offline-icon" aria-hidden="true">📵</div>
+    <h1>You’re offline</h1>
+    <p>YatraRaksha saved your session. Reopen the app when you’re back online — queued complaints will sync automatically.</p>
+    <button type="button" class="btn btn-primary" onclick="location.reload()">Try again</button>
+    <button type="button" class="btn btn-sm" style="margin-top:12px;width:100%;" onclick="location.href='./index.html'">Open dashboard</button>
+  </div>
+</body>
+</html>

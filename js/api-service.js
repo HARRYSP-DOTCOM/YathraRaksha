@@ -5,7 +5,9 @@
  */
 
 const APIService = {
-  BASE_URL: "https://api.yatra-raksha.local/v1", // Replace with actual backend URL
+  get BASE_URL() {
+    return (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
+  },
   TIMEOUT: 30000,
   MAX_RETRIES: 3,
   requestQueue: [],
@@ -56,7 +58,7 @@ const APIService = {
         if (!response.ok) {
           if (response.status === 401) {
             this.clearAuthToken();
-            throw new Error("Unauthorized - Please login again");
+            throw new Error("Session expired — please complete captcha verification again");
           }
           throw new Error(`API Error: ${response.statusText}`);
         }

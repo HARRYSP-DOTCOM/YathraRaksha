@@ -1,201 +1,102 @@
 /**
- * YatraRaksha Authentication Module
- * Handles user authentication, session management, and role-based access.
+ * YatraRaksha Access Gate — captcha verification (replaces email/password login).
+ * Keeps AuthModule name so the rest of the app continues to work.
  */
 
 const AuthModule = {
   currentUser: null,
-  SESSION_KEY: "yatra_raksha_user_session",
-  TOKEN_KEY: "yatra_raksha_auth_token",
+  SESSION_KEY: "yatra_raksha_captcha_session",
+  TOKEN_KEY: "yatra_raksha_access_token",
 
-  /**
-   * Initialize auth module
-   */
-  init() {
-    this.restoreSession();
-    this.setupAuthListeners();
+  get apiBase() {
+    return (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
   },
 
-  /**
-   * Restore session from storage
-   */
+  init() {
+    this.restoreSession();
+    window.addEventListener("access:verified", () => {
+      console.log("Human verification passed");
+    });
+    window.addEventListener("access:revoked", () => {
+      console.log("Access revoked");
+    });
+  },
+
   restoreSession() {
     const session = localStorage.getItem(this.SESSION_KEY);
-    if (session) {
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    if (session && token) {
       try {
         this.currentUser = JSON.parse(session);
         return true;
-      } catch (e) {
-        console.error("Failed to restore session:", e);
+      } catch {
         this.logout();
       }
     }
     return false;
   },
 
-  /**
-   * User login
-   */
-  async login(email, password) {
+  isAuthenticated() {
+    return this.currentUser !== null && !!this.getToken();
+  },
+
+  getUser() {
+    return this.currentUser;
+  },
+
+  getToken() {
+    return localStorage.getItem(this.TOKEN_KEY);
+  },
+
+  async fetchChallenge() {
+    const response = await fetch(`${this.apiBase}/captcha/challenge`);
+    if (!response.ok) throw new Error("Could not load captcha");
+    return response.json();
+  },
+
+  async verifyCaptcha(challengeId, answer, honeypot = "") {
     try {
-      // For MVP: Simulated backend call
-      // In production, replace with actual API call
-      const response = await fetch("https://api.yatra-raksha.local/v1/auth/login", {
+      const response = await fetch(`${this.apiBase}/captcha/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      }).catch(() => {
-        // Fallback to mock authentication for demo
-        return {
-          ok: true,
-          json: async () => ({
-            user: {
-              id: "user_" + Date.now(),
-              email: email,
-              name: email.split("@")[0],
-              role: "citizen",
-              createdAt: new Date().toISOString()
-            },
-            token: "mock_token_" + Date.now(),
-            expiresIn: 86400
-          })
-        };
+        body: JSON.stringify({ challengeId, answer, honeypot }),
       });
 
       if (!response.ok) {
-        throw new Error("Invalid credentials");
+        const err = await response.json().catch(() => ({}));
+        const detail = err.detail;
+        throw new Error(typeof detail === "string" ? detail : "Verification failed");
       }
 
       const data = await response.json();
-      this.setSession(data.user, data.token);
-      return { success: true, user: data.user };
+      this.setSession(data.token);
+      return { success: true };
     } catch (error) {
-      console.error("Login failed:", error);
       return { success: false, error: error.message };
     }
   },
 
-  /**
-   * User signup
-   */
-  async signup(email, password, name) {
-    try {
-      const response = await fetch("https://api.yatra-raksha.local/v1/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name })
-      }).catch(() => {
-        // Fallback to mock registration
-        return {
-          ok: true,
-          json: async () => ({
-            user: {
-              id: "user_" + Date.now(),
-              email: email,
-              name: name,
-              role: "citizen",
-              createdAt: new Date().toISOString()
-            },
-            token: "mock_token_" + Date.now()
-          })
-        };
-      });
-
-      if (!response.ok) {
-        throw new Error("Signup failed");
-      }
-
-      const data = await response.json();
-      this.setSession(data.user, data.token);
-      return { success: true, user: data.user };
-    } catch (error) {
-      console.error("Signup failed:", error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
-   * Set session
-   */
-  setSession(user, token) {
-    this.currentUser = user;
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(user));
+  setSession(token) {
+    this.currentUser = {
+      id: "citizen_" + Date.now(),
+      name: "Verified Citizen",
+      role: "citizen",
+      verifiedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(this.SESSION_KEY, JSON.stringify(this.currentUser));
     localStorage.setItem(this.TOKEN_KEY, token);
-    window.dispatchEvent(new CustomEvent("auth:login", { detail: { user } }));
+    localStorage.setItem("yatra_raksha_auth_token", token);
+    window.dispatchEvent(new CustomEvent("access:verified", { detail: { user: this.currentUser } }));
   },
 
-  /**
-   * Logout user
-   */
   logout() {
     this.currentUser = null;
     localStorage.removeItem(this.SESSION_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem("yatra_raksha_auth_token");
-    window.dispatchEvent(new CustomEvent("auth:logout"));
+    localStorage.removeItem("yatra_raksha_user_session");
+    window.dispatchEvent(new CustomEvent("access:revoked"));
   },
-
-  /**
-   * Check if user is logged in
-   */
-  isAuthenticated() {
-    return this.currentUser !== null && this.getToken() !== null;
-  },
-
-  /**
-   * Get current user
-   */
-  getUser() {
-    return this.currentUser;
-  },
-
-  /**
-   * Get auth token
-   */
-  getToken() {
-    return localStorage.getItem(this.TOKEN_KEY);
-  },
-
-  /**
-   * Check if user has role
-   */
-  hasRole(role) {
-    return this.currentUser && this.currentUser.role === role;
-  },
-
-  /**
-   * Setup auth event listeners
-   */
-  setupAuthListeners() {
-    window.addEventListener("auth:login", () => {
-      console.log("✅ User logged in:", this.currentUser?.email);
-    });
-
-    window.addEventListener("auth:logout", () => {
-      console.log("👋 User logged out");
-    });
-  },
-
-  /**
-   * Refresh token
-   */
-  async refreshToken() {
-    try {
-      const response = await fetch("https://api.yatra-raksha.local/v1/auth/refresh", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${this.getToken()}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem(this.TOKEN_KEY, data.token);
-        return true;
-      }
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-    }
-    return false;
-  }
 };
 
 window.AuthModule = AuthModule;

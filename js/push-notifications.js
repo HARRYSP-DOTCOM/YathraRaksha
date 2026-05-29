@@ -65,8 +65,8 @@ const PushNotificationService = {
 
     try {
       const defaults = {
-        icon: "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
-        badge: "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
+        icon: "./icons/icon-192.png",
+        badge: "./icons/icon-192.png",
         tag: "yatra-raksha-notification",
         requireInteraction: true,
         ...options

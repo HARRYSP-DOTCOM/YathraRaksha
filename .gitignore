@@ -19,9 +19,23 @@ lerna-debug.log*
 node_modules/
 jspm_packages/
 
+# Python backend
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.db
+backend/uploads/
+backend/.env
+*.pyc
+
 # Vercel Cache
 .vercel
 
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Local browser profiles (automation / dev)
+.chrome-profile/
+.chrome-headless-profile/

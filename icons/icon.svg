@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="YatraRaksha">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060a12"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <path d="M96 340 L256 140 L416 340" fill="none" stroke="url(#road)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="300" r="52" fill="#2dd4bf"/>
+  <text x="256" y="322" text-anchor="middle" font-family="Arial,sans-serif" font-size="72" font-weight="700" fill="#060a12">Y</text>
+</svg>

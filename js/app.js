@@ -125,17 +125,20 @@ const App = {
    * Application Bootstrapper
    */
   init() {
-    // Check authentication
     if (!AuthModule.isAuthenticated()) {
-      console.log("⚠️ Not authenticated. Showing login...");
-      this.showLoginModal();
+      window.CaptchaGateUI?.show();
+      window.CaptchaGateUI?.loadChallenge();
       return;
     }
 
-    console.log("✅ User authenticated:", AuthModule.getUser()?.email);
+    console.log("✅ Access granted:", AuthModule.getUser()?.name);
 
     // Initialize core services
     this.registerEventListeners();
+
+    const launchTab = new URLSearchParams(window.location.search).get("tab");
+    if (launchTab) this.switchTab(launchTab);
+
     this.checkNetworkStatus();
     this.requestNotificationPermission();
     this.renderReportsList();
@@ -251,33 +254,6 @@ const App = {
       }
     });
 
-    // Ambient PWA Install Prompter
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      this.deferredInstallPrompt = e;
-      
-      // Display install card in sidebar
-      const installCard = document.getElementById("pwa-install-card");
-      if (installCard) {
-        installCard.style.display = "block";
-      }
-    });
-
-    const installBtn = document.getElementById("btn-pwa-install");
-    if (installBtn) {
-      installBtn.addEventListener("click", () => {
-        if (this.deferredInstallPrompt) {
-          this.deferredInstallPrompt.prompt();
-          this.deferredInstallPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === "accepted") {
-              this.showToast("🚀 YatraRaksha PWA installation accepted!");
-              document.getElementById("pwa-install-card").style.display = "none";
-            }
-            this.deferredInstallPrompt = null;
-          });
-        }
-      });
-    }
   },
 
   /**
@@ -1028,8 +1004,7 @@ const App = {
       try {
         const apiComplaint = {
           ...complaint,
-          userId: AuthModule.getUser()?.id,
-          email: AuthModule.getUser()?.email
+          userId: AuthModule.getUser()?.id
         };
         
         await APIService.fileComplaint(apiComplaint);
@@ -1437,86 +1412,6 @@ const App = {
 
     canvas.style.display = "block";
     wrapper.querySelector(".chart-fallback")?.remove();
-  },
-
-  /**
-   * Show login modal for authentication
-   */
-  showLoginModal() {
-    const modal = document.createElement("div");
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      font-family: 'Outfit', sans-serif;
-    `;
-
-    modal.innerHTML = `
-      <div style="background: #0a0f1d; border: 1px solid #00f5d4; border-radius: 12px; padding: 32px; width: 90%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,245,212,0.2);">
-        <h2 style="color: #00f5d4; margin-bottom: 24px;">YatraRaksha Authentication</h2>
-        
-        <div style="margin-bottom: 16px;">
-          <input type="email" id="login-email" placeholder="Email address" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid #00f5d4; border-radius: 8px; color: #fff; box-sizing: border-box;" />
-        </div>
-        
-        <div style="margin-bottom: 24px;">
-          <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid #00f5d4; border-radius: 8px; color: #fff; box-sizing: border-box;" />
-        </div>
-        
-        <button id="login-btn" style="width: 100%; padding: 12px; background: #00f5d4; color: #0a0f1d; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 12px;">Login</button>
-        
-        <button id="signup-btn" style="width: 100%; padding: 12px; background: transparent; color: #00f5d4; border: 1px solid #00f5d4; border-radius: 8px; font-weight: 700; cursor: pointer;">Create Account</button>
-        
-        <p style="color: #94a3b8; font-size: 12px; margin-top: 16px; text-align: center;">
-          Demo: Use any email and password (mock authentication)
-        </p>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    document.getElementById("login-btn").addEventListener("click", async () => {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-
-      if (!email || !password) {
-        alert("Please enter email and password");
-        return;
-      }
-
-      const result = await AuthModule.login(email, password);
-      if (result.success) {
-        modal.remove();
-        location.reload();
-      } else {
-        alert("Login failed: " + result.error);
-      }
-    });
-
-    document.getElementById("signup-btn").addEventListener("click", async () => {
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
-
-      if (!email || !password) {
-        alert("Please enter email and password");
-        return;
-      }
-
-      const result = await AuthModule.signup(email, password, email.split("@")[0]);
-      if (result.success) {
-        modal.remove();
-        location.reload();
-      } else {
-        alert("Signup failed: " + result.error);
-      }
-    });
   },
 
   /**

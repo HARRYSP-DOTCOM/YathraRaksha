@@ -3,9 +3,17 @@
  * Validates frontend environment settings and dynamically checks for credential leaks.
  */
 
+function resolveApiBaseUrl() {
+  if (window.ENV_API_URL) return window.ENV_API_URL;
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "http://127.0.0.1:8000/v1";
+  }
+  return "https://api.yatra-raksha.local/v1";
+}
+
 const AppConfig = {
-  // Safe environment defaults
-  API_BASE_URL: window.ENV_API_URL || "https://api.yatra-raksha.local/v1",
+  API_BASE_URL: resolveApiBaseUrl(),
   APP_ENV: window.ENV_MODE || "production",
   
   // Security validation checks on boot

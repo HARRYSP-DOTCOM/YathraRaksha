@@ -1,24 +1,60 @@
 {
-  "name": "YatraRaksha Infrastructure Audit",
-  "short_name": "YatraRaksha PWA",
-  "description": "AI-powered citizen road quality monitoring, public spending audits, and complaint routing platform.",
+  "id": "/",
+  "name": "YatraRaksha — Road Safety & Infrastructure Audit",
+  "short_name": "YatraRaksha",
+  "description": "AI-powered road defect reporting, budget audits, safe routing, and citizen complaint tracking. Works offline.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#060913",
-  "theme_color": "#0d9488",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
+  "background_color": "#060a12",
+  "theme_color": "#0d9488",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["navigation", "utilities", "government"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "File complaint",
+      "short_name": "Report",
+      "description": "Upload road damage and file a complaint",
+      "url": "./index.html?tab=capture",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Safe routes",
+      "short_name": "Routes",
+      "description": "Compare safety scores for alternate routes",
+      "url": "./index.html?tab=map",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
