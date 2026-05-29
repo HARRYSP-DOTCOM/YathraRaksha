@@ -4,6 +4,16 @@ AI-powered road safety PWA with a **Python (FastAPI)** backend for hackathon dem
 
 ## Quick start
 
+### Start Both (Recommended)
+
+To start both the frontend and the backend automatically using a single script:
+
+```bash
+./start.sh
+```
+
+This will spin up the backend API on port `8000` and the frontend server on port `5500`, and gracefully shut both down when you press `Ctrl+C`.
+
 ### 1. Backend (Python)
 
 ```bash
