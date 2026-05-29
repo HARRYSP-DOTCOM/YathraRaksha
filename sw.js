@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v5";
+const CACHE_VERSION = "yatra-raksha-v6";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -39,8 +39,11 @@ const APP_SHELL = [
 const CDN_ASSETS = [
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-  "https://cdn.jsdelivr.net/npm/chart.js",
+  "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
 ];
+
+const isCdnLibrary = (url) =>
+  url.includes("cdn.jsdelivr.net") || url.includes("unpkg.com");
 
 const isApiRequest = (url) =>
   url.includes("/v1/") ||
@@ -151,10 +154,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (isCdnLibrary(url)) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   if (
     url.includes(self.location.origin) ||
-    url.includes("leaflet") ||
-    url.includes("chart.js") ||
     url.endsWith(".png") ||
     url.endsWith(".svg")
   ) {

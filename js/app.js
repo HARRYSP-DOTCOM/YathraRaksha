@@ -1269,14 +1269,25 @@ const App = {
     }, 4000);
   },
 
-  initCharts() {
+  initCharts(retry = 0) {
     const ctx1 = document.getElementById("chart-budget-leakage");
     const ctx2 = document.getElementById("chart-contractor-quality");
     if (!ctx1 || !ctx2) return;
 
-    if (typeof Chart === "undefined" || !window.RoadDatabase) {
-      this.renderChartFallback(ctx1, "Budget chart is unavailable while Chart.js is offline.");
-      this.renderChartFallback(ctx2, "Contractor chart is unavailable while Chart.js is offline.");
+    if (typeof Chart === "undefined") {
+      if (retry < 8) {
+        setTimeout(() => this.initCharts(retry + 1), 250);
+        return;
+      }
+      const msg = "Charts could not load. Check your connection and refresh the page.";
+      this.renderChartFallback(ctx1, msg);
+      this.renderChartFallback(ctx2, msg);
+      return;
+    }
+
+    if (!window.RoadDatabase) {
+      this.renderChartFallback(ctx1, "Road data is not available yet.");
+      this.renderChartFallback(ctx2, "Road data is not available yet.");
       return;
     }
 
