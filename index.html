@@ -29,31 +29,87 @@
 </head>
 <body>
 
-  <!-- Human verification gate (replaces login) -->
-  <div id="captcha-gate" class="captcha-gate" hidden aria-hidden="true" role="dialog" aria-labelledby="captcha-title" aria-modal="true">
+  <!-- Human verification gate — required before dashboard -->
+  <div id="captcha-gate" class="captcha-gate" role="dialog" aria-labelledby="captcha-title" aria-modal="true">
     <div class="captcha-gate__bg" aria-hidden="true">
       <div class="captcha-gate__orb captcha-gate__orb--1"></div>
       <div class="captcha-gate__orb captcha-gate__orb--2"></div>
+      <div class="captcha-gate__orb captcha-gate__orb--3"></div>
       <div class="captcha-gate__grid"></div>
     </div>
-    <div class="captcha-card">
-      <div class="captcha-badge">
-        <span aria-hidden="true">🛡️</span> Bot protection
+
+    <div class="captcha-shell">
+      <header class="captcha-brand">
+        <div class="captcha-brand__logo" aria-hidden="true">Y</div>
+        <div class="captcha-brand__text">
+          <span class="captcha-brand__eyebrow">YatraRaksha</span>
+          <span class="captcha-brand__tagline">Road safety &amp; transparency</span>
+        </div>
+      </header>
+
+      <ol class="captcha-steps" aria-label="Access steps">
+        <li class="captcha-steps__item captcha-steps__item--active" aria-current="step">
+          <span class="captcha-steps__num">1</span>
+          <span class="captcha-steps__label">Verify</span>
+        </li>
+        <li class="captcha-steps__item">
+          <span class="captcha-steps__num">2</span>
+          <span class="captcha-steps__label">Welcome</span>
+        </li>
+        <li class="captcha-steps__item">
+          <span class="captcha-steps__num">3</span>
+          <span class="captcha-steps__label">Dashboard</span>
+        </li>
+      </ol>
+
+      <div class="captcha-card">
+        <div class="captcha-card__header">
+          <div class="captcha-badge" aria-hidden="true">
+            <svg class="captcha-badge__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Secure access
+          </div>
+          <h2 id="captcha-title" class="captcha-title">Verify to continue</h2>
+          <p class="captcha-subtitle">Complete the challenge below to unlock the dashboard. This keeps bots off citizen road reports and audit data.</p>
+        </div>
+
+        <div class="captcha-visual">
+          <div class="captcha-visual__label">
+            <span>Security code</span>
+            <span class="captcha-visual__hint">Not case-sensitive</span>
+          </div>
+          <div id="captcha-svg-host" class="captcha-svg-host" aria-live="polite"></div>
+          <button type="button" id="captcha-refresh" class="captcha-refresh" title="New captcha" aria-label="Refresh captcha">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="captcha-field">
+          <label for="captcha-answer">Type the characters shown</label>
+          <input type="text" id="captcha-answer" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" inputmode="text" placeholder="Enter code" aria-describedby="captcha-error" />
+        </div>
+
+        <input type="text" id="captcha-honeypot" class="captcha-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <p id="captcha-error" class="captcha-error" hidden role="alert"></p>
+
+        <button type="button" id="captcha-submit" class="captcha-submit">
+          <span class="captcha-submit__text">Unlock dashboard</span>
+          <svg class="captcha-submit__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+
+        <ul class="captcha-trust" aria-label="Security features">
+          <li>Server-verified</li>
+          <li>5 min expiry</li>
+          <li>Rate limited</li>
+        </ul>
       </div>
-      <h2 id="captcha-title" class="captcha-title">Verify you're human</h2>
-      <p class="captcha-subtitle">Complete the captcha to access YatraRaksha. This keeps automated bots off the road safety platform.</p>
-      <div class="captcha-visual">
-        <div id="captcha-svg-host" aria-live="polite"></div>
-        <button type="button" id="captcha-refresh" class="captcha-refresh" title="New captcha" aria-label="Refresh captcha">↻</button>
-      </div>
-      <div class="captcha-field">
-        <label for="captcha-answer">Enter the code above</label>
-        <input type="text" id="captcha-answer" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="• • • • •" aria-describedby="captcha-error" />
-      </div>
-      <input type="text" id="captcha-honeypot" class="captcha-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-      <p id="captcha-error" class="captcha-error" hidden role="alert"></p>
-      <button type="button" id="captcha-submit" class="captcha-submit">Verify &amp; continue</button>
-      <p class="captcha-footnote">Protected by server-side verification · Case insensitive · Expires in 5 minutes</p>
     </div>
   </div>
 

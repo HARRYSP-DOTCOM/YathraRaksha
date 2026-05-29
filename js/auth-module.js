@@ -7,6 +7,8 @@ const AuthModule = {
   currentUser: null,
   SESSION_KEY: "yatra_raksha_captcha_session",
   TOKEN_KEY: "yatra_raksha_access_token",
+  /** Captcha must be completed each browser session (tab close clears). */
+  VERIFIED_SESSION_KEY: "yatra_raksha_captcha_verified",
 
   get apiBase() {
     return (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
@@ -23,6 +25,10 @@ const AuthModule = {
   },
 
   restoreSession() {
+    if (sessionStorage.getItem(this.VERIFIED_SESSION_KEY) !== "1") {
+      this.currentUser = null;
+      return false;
+    }
     const session = localStorage.getItem(this.SESSION_KEY);
     const token = localStorage.getItem(this.TOKEN_KEY);
     if (session && token) {
@@ -37,7 +43,11 @@ const AuthModule = {
   },
 
   isAuthenticated() {
-    return this.currentUser !== null && !!this.getToken();
+    return (
+      sessionStorage.getItem(this.VERIFIED_SESSION_KEY) === "1" &&
+      this.currentUser !== null &&
+      !!this.getToken()
+    );
   },
 
   getUser() {
@@ -86,6 +96,7 @@ const AuthModule = {
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(this.currentUser));
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem("yatra_raksha_auth_token", token);
+    sessionStorage.setItem(this.VERIFIED_SESSION_KEY, "1");
     window.dispatchEvent(new CustomEvent("access:verified", { detail: { user: this.currentUser } }));
   },
 
@@ -95,6 +106,8 @@ const AuthModule = {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem("yatra_raksha_auth_token");
     localStorage.removeItem("yatra_raksha_user_session");
+    sessionStorage.removeItem(this.VERIFIED_SESSION_KEY);
+    document.body.classList.remove("access-granted");
     window.dispatchEvent(new CustomEvent("access:revoked"));
   },
 };

@@ -57,7 +57,7 @@ const APIService = {
 
         if (!response.ok) {
           if (response.status === 401) {
-            this.clearAuthToken();
+            this.handleUnauthorized();
             throw new Error("Session expired — please complete captcha verification again");
           }
           throw new Error(`API Error: ${response.statusText}`);
@@ -212,6 +212,17 @@ const APIService = {
 
   clearAuthToken() {
     localStorage.removeItem("yatra_raksha_auth_token");
+  },
+
+  handleUnauthorized() {
+    this.clearAuthToken();
+    if (window.AuthModule?.logout) {
+      window.AuthModule.logout();
+    }
+    if (window.App) {
+      window.App._dashboardReady = false;
+    }
+    window.CaptchaGateUI?.requireVerification?.();
   }
 };
 

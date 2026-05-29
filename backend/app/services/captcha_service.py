@@ -54,10 +54,12 @@ def generate_svg_captcha(text: str) -> str:
         )
 
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img">'
-        f'<rect width="100%" height="100%" rx="12" fill="#0f172a"/>'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="Captcha code">'
+        f'<defs><linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">'
+        f'<stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#1e293b"/></linearGradient></defs>'
+        f'<rect width="100%" height="100%" rx="12" fill="url(#cg)"/>'
         f'<rect x="2" y="2" width="{width - 4}" height="{height - 4}" rx="10" fill="none" '
-        f'stroke="#2dd4bf" stroke-opacity="0.25" stroke-width="2"/>'
+        f'stroke="#2dd4bf" stroke-opacity="0.35" stroke-width="2"/>'
         + "".join(noise_lines)
         + "".join(dots)
         + "".join(letters)
