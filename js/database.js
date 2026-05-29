@@ -231,7 +231,43 @@ const RoadDatabase = {
           [12.9716, 77.5946]  // Bengaluru
         ]
       }
-    ]
+    ],
+    "US-NYC-SF-CORRIDOR": [
+      {
+        id: "us-route-safe",
+        name: "Caltrans US-101 Express (Silicon Valley)",
+        safetyScore: 9.5,
+        distanceKm: 4670,
+        travelTimeHours: 44,
+        potholeCount: 12,
+        accidentCount: 24,
+        fatalities: 1,
+        statusColor: "#00f5d4",
+        ratingMessage: "🟢 Lowest accident density per NHTSA FARS + Caltrans District 4 pavement audit.",
+        path: [
+          [40.85, -73.84],
+          [39.5, -80.0],
+          [37.39, -122.08],
+        ],
+      },
+      {
+        id: "us-route-i95",
+        name: "I-95 Coastal Arterial",
+        safetyScore: 6.2,
+        distanceKm: 4520,
+        travelTimeHours: 42,
+        potholeCount: 180,
+        accidentCount: 195,
+        fatalities: 18,
+        statusColor: "#ff9f1c",
+        ratingMessage: "🟡 NYSDOT Region 11 reports winter damage clusters and congestion-related incidents.",
+        path: [
+          [40.85, -73.84],
+          [40.0, -76.5],
+          [37.39, -122.08],
+        ],
+      },
+    ],
   },
 
   getRoadById(id) {

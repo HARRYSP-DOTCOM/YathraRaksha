@@ -6,7 +6,13 @@
 
 const App = {
   activeTab: "overview",
-  selectedCoords: [12.9716, 79.1588], // Default Vellore NH48 coord
+  selectedCoords: [12.9716, 79.1588],
+  coordsLockedByUser: false,
+  liveLocationStatus: "pending",
+  _locationUnsubscribe: null,
+  activeRoutePlan: null,
+  selectedRouteId: null,
+  tripActive: false,
   activeAIReport: null,
   activeCharts: {},
   escapeHTML(str) {
@@ -58,6 +64,64 @@ const App = {
   },
 
   /**
+   * Animated welcome splash before dashboard (once per browser session).
+   */
+  showWelcome(onComplete) {
+    const screen = document.getElementById("welcome-screen");
+    const done = typeof onComplete === "function" ? onComplete : () => {};
+
+    if (!screen) {
+      done();
+      return;
+    }
+
+    if (sessionStorage.getItem("roadwatch_welcome_seen") === "1") {
+      screen.remove();
+      this.revealAppLayout();
+      done();
+      return;
+    }
+
+    document.body.classList.add("welcome-active");
+
+    const enter = () => this.dismissWelcome(done);
+
+    document.getElementById("welcome-enter-btn")?.addEventListener("click", enter);
+    document.getElementById("welcome-skip-btn")?.addEventListener("click", enter);
+
+    document.addEventListener("keydown", function welcomeKey(e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        enter();
+        document.removeEventListener("keydown", welcomeKey);
+      }
+    });
+  },
+
+  dismissWelcome(onComplete) {
+    const screen = document.getElementById("welcome-screen");
+    sessionStorage.setItem("roadwatch_welcome_seen", "1");
+    document.body.classList.remove("welcome-active");
+
+    if (!screen) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    screen.classList.add("welcome-screen--exit");
+
+    setTimeout(() => {
+      screen.remove();
+      this.revealAppLayout();
+      if (onComplete) onComplete();
+    }, 720);
+  },
+
+  revealAppLayout() {
+    document.querySelector(".app-layout")?.classList.add("app-layout--revealed");
+  },
+
+  /**
    * Application Bootstrapper
    */
   init() {
@@ -82,25 +146,27 @@ const App = {
       this.initMiniMap();
     }, 400);
 
-    // Set default input fields
-    document.getElementById("report-lat").value = this.selectedCoords[0];
-    document.getElementById("report-lng").value = this.selectedCoords[1];
+    this.applyCoordinates(this.selectedCoords[0], this.selectedCoords[1], {
+      updateMap: false,
+      silent: true,
+    });
+    this.startLiveLocation();
 
-    // Add initial bot greeting
-    this.addBotMessage("👋 Namaste! I am **YatraGPT**, your AI Transparency Assistant. I can help you inspect contractor scores, verify road budgets in ₹ Crores, find executive engineer contact details, or guide you through filing a complaint. What would you like to know today?");
+    this.addBotMessage(
+      "👋 Namaste! I am <strong>YatraGPT</strong>. Ask me about roads, budgets, contractors, or complaint routing. Your <strong>live GPS</strong> automatically fills latitude & longitude when you file a report — allow location access when prompted."
+    );
 
-    // Monitor storage quota
     this.monitorStorageQuota();
   },
 
   registerEventListeners() {
     // Navigation Tabs (Supports both Desktop sidebar and Mobile bottom tabs)
-    document.querySelectorAll(".nav-link, .mobile-nav-link").forEach(link => {
+    document.querySelectorAll(".nav-link, .mobile-nav-link").forEach((link) => {
       link.addEventListener("click", (e) => {
-        // Handle clicking direct element or parent grid link
-        const target = e.currentTarget;
-        const tab = target.getAttribute("data-tab");
-        this.switchTab(tab);
+        e.preventDefault();
+        e.stopPropagation();
+        const tab = e.currentTarget.getAttribute("data-tab");
+        if (tab) this.switchTab(tab);
       });
     });
 
@@ -145,6 +211,21 @@ const App = {
         this.handleUserChatMessage();
       }
     });
+
+    document.getElementById("map-panel-close")?.addEventListener("click", () => {
+      const panel = document.getElementById("map-audit-panel");
+      if (panel) panel.style.display = "none";
+    });
+
+    document.getElementById("btn-use-live-gps")?.addEventListener("click", () => {
+      this.useLiveGpsLocation(true);
+    });
+
+    document.getElementById("btn-plan-route")?.addEventListener("click", () => this.planSafeRoute());
+    document.getElementById("btn-clear-route")?.addEventListener("click", () => this.clearRoutes());
+    document.getElementById("btn-route-use-gps")?.addEventListener("click", () => this.setRouteFromGps());
+    document.getElementById("btn-start-trip")?.addEventListener("click", () => this.startLiveTrip());
+    document.getElementById("btn-stop-trip")?.addEventListener("click", () => this.stopLiveTrip());
 
     // Offline sync triggers
     window.addEventListener("online", () => {
@@ -204,38 +285,49 @@ const App = {
    */
   initMiniMap() {
     if (this.miniMap) return;
+    if (typeof L === "undefined" || !window.RoadDatabase) {
+      this.renderMapFallback("overview-mini-map", "Map preview is unavailable while the mapping library is offline.");
+      return;
+    }
 
     this.miniMap = L.map("overview-mini-map", {
       center: [20.5937, 78.9629],
       zoom: 4,
       zoomControl: false,
-      attributionControl: false
+      attributionControl: false,
+      dragging: true,
+      scrollWheelZoom: false,
     });
 
-    // Add satellite layer
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19
-    }).addTo(this.miniMap);
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 19 }
+    ).addTo(this.miniMap);
 
-    // Plot preseeded roads (polylines & nodes)
-    const roads = window.RoadDatabase.roads;
-    roads.forEach(road => {
-      if (road.path && road.path.length > 0) {
+    const bounds = [];
+    window.RoadDatabase.roads.forEach((road) => {
+      if (road.path?.length) {
         L.polyline(road.path, {
           color: road.statusColor,
-          weight: 4,
-          opacity: 0.8
+          weight: 5,
+          opacity: 0.85,
+          lineCap: "round",
         }).addTo(this.miniMap);
+        bounds.push(...road.path);
       }
-
       L.circleMarker(road.coordinates, {
-        radius: 4,
+        radius: 5,
         fillColor: road.statusColor,
         color: "#ffffff",
-        weight: 1.5,
-        fillOpacity: 1
+        weight: 2,
+        fillOpacity: 1,
       }).addTo(this.miniMap);
+      bounds.push(road.coordinates);
     });
+
+    if (bounds.length) {
+      this.miniMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 5 });
+    }
   },
 
   /**
@@ -265,13 +357,33 @@ const App = {
     // On-demand Map Hub Loader (Fixes hidden Leaflet projection bugs!)
     if (tabId === "map") {
       setTimeout(() => {
+        if (!window.MapHub || typeof L === "undefined") {
+          this.renderMapFallback("map-container", "Satellite map is unavailable while the mapping library is offline.");
+          return;
+        }
+
         window.MapHub.init("map-container", (lat, lng) => {
-          this.selectedCoords = [lat, lng];
-          document.getElementById("report-lat").value = lat;
-          document.getElementById("report-lng").value = lng;
+          this.coordsLockedByUser = true;
+          this.applyCoordinates(lat, lng, { updateMap: false, silent: true });
         });
-        window.MapHub.map.invalidateSize();
+        if (window.MapHub.map) {
+          window.MapHub.map.invalidateSize();
+          if (window.LocationService?.lastPosition && !this.coordsLockedByUser) {
+            const p = window.LocationService.lastPosition;
+            window.MapHub.updateLivePosition(p.lat, p.lng, {
+              movePicker: true,
+              accuracy: p.accuracy,
+            });
+          }
+        }
       }, 200);
+    }
+
+    if (tabId === "capture" || tabId === "map") {
+      if (window.LocationService?.lastPosition && !this.coordsLockedByUser) {
+        const p = window.LocationService.lastPosition;
+        this.applyCoordinates(p.lat, p.lng, { silent: true, movePicker: tabId === "map" });
+      }
     }
 
     if (tabId === "overview") {
@@ -287,20 +399,430 @@ const App = {
     const isOnline = navigator.onLine;
 
     if (isOnline) {
-      badge.textContent = "🟢 Online";
+      badge.textContent = "Online";
       badge.classList.remove("offline");
     } else {
-      badge.textContent = "🔴 Offline Mode";
+      badge.textContent = "Offline";
       badge.classList.add("offline");
       this.showToast("⚠️ Network lost. YatraRaksha is running in Offline-First mode.");
     }
   },
 
-  onMapCoordsChanged(lat, lng) {
+  renderMapFallback(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = `<div class="map-fallback">${this.escapeHTML(message)}</div>`;
+  },
+
+  startLiveLocation() {
+    if (!window.LocationService) return;
+
+    if (this._locationUnsubscribe) this._locationUnsubscribe();
+
+    const started = window.LocationService.start();
+    if (!started) {
+      this.updateLocationUI("unsupported");
+      return;
+    }
+
+    this.updateLocationUI("acquiring");
+
+    this._locationUnsubscribe = window.LocationService.onUpdate((pos, err) => {
+      if (err || !pos) {
+        const denied = err && err.code === 1;
+        this.updateLocationUI(denied ? "denied" : "error");
+        if (this.tripActive) {
+          this.setTripStatusMessage("GPS lost — check location permissions.");
+        }
+        return;
+      }
+
+      if (this.tripActive && window.TripTracker?.active) {
+        const tripState = window.TripTracker.handlePosition(pos);
+        if (tripState) this.onTripProgress(tripState);
+        return;
+      }
+
+      this.updateLocationUI("active", pos);
+
+      if (!this.coordsLockedByUser) {
+        const centerMap = this.activeTab === "map" && !window.MapHub?.map;
+        this.applyCoordinates(pos.lat, pos.lng, {
+          silent: true,
+          movePicker: true,
+          accuracy: pos.accuracy,
+          centerMap: this.activeTab === "map" && window.MapHub?.map && window.MapHub.map.getZoom() < 8,
+        });
+      } else if (window.MapHub?.map) {
+        window.MapHub.updateLivePosition(pos.lat, pos.lng, {
+          movePicker: false,
+          accuracy: pos.accuracy,
+        });
+      }
+    });
+  },
+
+  useLiveGpsLocation(showToast = false) {
+    this.coordsLockedByUser = false;
+    this.updateLocationUI("acquiring");
+
+    const applyPos = (pos) => {
+      this.applyCoordinates(pos.lat, pos.lng, {
+        silent: !showToast,
+        movePicker: true,
+        accuracy: pos.accuracy,
+        centerMap: true,
+      });
+      if (showToast) this.showToast(`📍 Live GPS: ${pos.lat}, ${pos.lng}`);
+    };
+
+    if (window.LocationService?.lastPosition) {
+      applyPos(window.LocationService.lastPosition);
+      return;
+    }
+
+    window.LocationService?.requestOnce()
+      .then(applyPos)
+      .catch(() => {
+        this.updateLocationUI("denied");
+        this.showToast("Enable location in browser settings to auto-fill coordinates.");
+      });
+  },
+
+  applyCoordinates(lat, lng, options = {}) {
+    const {
+      silent = false,
+      updateMap = true,
+      movePicker = true,
+      accuracy = null,
+      centerMap = false,
+    } = options;
+
     this.selectedCoords = [lat, lng];
-    document.getElementById("report-lat").value = lat;
-    document.getElementById("report-lng").value = lng;
-    this.showToast(`📌 Geolocation pinned to: ${lat}, ${lng}`);
+
+    const latEl = document.getElementById("report-lat");
+    const lngEl = document.getElementById("report-lng");
+    if (latEl) latEl.value = lat;
+    if (lngEl) lngEl.value = lng;
+
+    const nearest = window.RoadDatabase?.findNearestRoad?.(lat, lng);
+    const nearEl = document.getElementById("location-nearest-road");
+    if (nearEl && nearest?.road) {
+      nearEl.textContent = `${nearest.road.id} · ${nearest.distanceKm} km away`;
+    }
+
+    if (updateMap && window.MapHub?.map) {
+      window.MapHub.updateLivePosition(lat, lng, {
+        movePicker,
+        accuracy,
+        centerMap,
+      });
+    }
+
+    if (!silent) {
+      this.showToast(`📌 Location set: ${lat}, ${lng}`);
+    }
+  },
+
+  updateLocationUI(status, pos = null) {
+    this.liveLocationStatus = status;
+    const badge = document.getElementById("location-status-badge");
+    const detail = document.getElementById("location-status-detail");
+    if (!badge) return;
+
+    badge.classList.remove("active", "denied", "pending", "manual");
+
+    if (status === "active") {
+      badge.classList.add("active");
+      badge.textContent = "Live GPS";
+      if (detail && pos) {
+        detail.textContent = `±${pos.accuracy}m · Updated ${new Date(pos.timestamp).toLocaleTimeString()}`;
+      }
+    } else if (status === "manual") {
+      badge.classList.add("manual");
+      badge.textContent = "Manual pin";
+      if (detail) detail.textContent = "Drag the map pin or pick a road to override GPS";
+    } else if (status === "denied") {
+      badge.classList.add("denied");
+      badge.textContent = "GPS blocked";
+      if (detail) detail.textContent = "Allow location access or use “Use live GPS” after enabling";
+    } else if (status === "unsupported") {
+      badge.classList.add("denied");
+      badge.textContent = "No GPS";
+      if (detail) detail.textContent = "This browser does not support geolocation";
+    } else if (status === "error") {
+      badge.classList.add("denied");
+      badge.textContent = "GPS error";
+      if (detail) detail.textContent = "Could not read location — try again outdoors";
+    } else {
+      badge.classList.add("pending");
+      badge.textContent = "Acquiring GPS…";
+      if (detail) detail.textContent = "Waiting for satellite fix…";
+    }
+  },
+
+  onMapCoordsChanged(lat, lng, silent = false) {
+    this.coordsLockedByUser = true;
+    this.applyCoordinates(lat, lng, { updateMap: false, silent });
+    this.updateLocationUI("manual");
+  },
+
+  async setRouteFromGps() {
+    const apply = (pos) => {
+      const label = `${pos.lat}, ${pos.lng}`;
+      const input = document.getElementById("route-from");
+      if (input) input.value = label;
+      this.showToast("Start point set from your GPS");
+    };
+    if (window.LocationService?.lastPosition) {
+      apply(window.LocationService.lastPosition);
+      return;
+    }
+    try {
+      const pos = await window.LocationService.requestOnce();
+      apply(pos);
+    } catch {
+      this.showToast("Enable location to use GPS as start point.");
+    }
+  },
+
+  async planSafeRoute() {
+    const fromEl = document.getElementById("route-from");
+    const toEl = document.getElementById("route-to");
+    const resultsEl = document.getElementById("route-results");
+    if (!fromEl || !toEl || !resultsEl) return;
+
+    const fromQ = fromEl.value.trim();
+    const toQ = toEl.value.trim();
+    if (!fromQ || !toQ) {
+      this.showToast("Enter both From and To locations.");
+      return;
+    }
+
+    if (!window.RoutePlanner) {
+      this.showToast("Route planner module not loaded.");
+      return;
+    }
+
+    resultsEl.innerHTML =
+      '<p class="route-loading">Fetching authority accident data and comparing routes…</p>';
+
+    if (this.activeTab !== "map") this.switchTab("map");
+
+    try {
+      const plan = await window.RoutePlanner.planRoute(fromQ, toQ);
+      this.activeRoutePlan = plan;
+      this.selectedRouteId = plan.routes[0]?.id || null;
+      this.enableTripButton(true);
+      this.renderRouteResults(plan);
+
+      setTimeout(() => {
+        if (!window.MapHub || typeof L === "undefined") return;
+        window.MapHub.init("map-container", (lat, lng) => {
+          this.onMapCoordsChanged(lat, lng, true);
+        });
+        if (window.MapHub.map) {
+          window.MapHub.map.invalidateSize();
+          window.MapHub.displayRoutePlan(plan);
+        }
+      }, 350);
+
+      this.showToast(`Compared ${plan.routes.length} routes — safest highlighted in teal.`);
+    } catch (err) {
+      resultsEl.innerHTML = `<p class="route-error">${this.escapeHTML(err.message || "Routing failed")}</p>`;
+      this.showToast("Could not plan route. Check place names and connection.");
+    }
+  },
+
+  renderRouteResults(plan) {
+    const resultsEl = document.getElementById("route-results");
+    if (!resultsEl || !plan?.routes?.length) return;
+
+    const corridorNote = plan.corridorKey
+      ? `<p class="route-corridor-note">📋 <strong>Authority corridor:</strong> ${plan.corridorKey.replace(/-/g, " ")} — full audit from NHAI, PWD & RAIB registries.</p>`
+      : `<p class="route-corridor-note">📋 Routes scored using nearest DOT/PWD/NHAI accident records along the OSM driving network.</p>`;
+
+    resultsEl.innerHTML = `
+      ${corridorNote}
+      <div class="route-results-list">
+        ${plan.routes
+          .map(
+            (r, i) => `
+          <button type="button" class="route-result-card ${r.isRecommended ? "recommended" : ""}" data-route-id="${r.id}" onclick="window.App.selectRouteResult('${r.id}')">
+            <div class="route-result-top">
+              <span class="route-rank">#${i + 1}</span>
+              <strong>${this.escapeHTML(r.name)}</strong>
+              ${r.isRecommended ? '<span class="badge badge-good">Fewest accidents</span>' : ""}
+            </div>
+            <div class="route-result-stats">
+              <span>🚨 ${r.accidentCount} accidents/yr</span>
+              <span>💀 ${r.fatalities} fatalities</span>
+              <span>📏 ${r.distanceKm} km</span>
+              <span>⏱ ${r.travelTimeHours}h</span>
+              <span>⭐ ${r.safetyScore}/10</span>
+            </div>
+            <p class="route-result-source">${this.escapeHTML(r.dataSource || "")}</p>
+            <p class="route-result-msg">${this.escapeHTML(r.ratingMessage || "")}</p>
+          </button>
+        `
+          )
+          .join("")}
+      </div>
+      <p class="route-trip-hint">Select a route above, then tap <strong>Start live trip</strong> to track your full journey with GPS.</p>
+    `;
+  },
+
+  selectRouteResult(routeId) {
+    if (!this.activeRoutePlan) return;
+    const route = this.activeRoutePlan.routes.find((r) => r.id === routeId);
+    if (!route) return;
+    this.selectedRouteId = routeId;
+    if (window.MapHub?.map) {
+      window.MapHub.highlightRoute(routeId);
+      const idx = this.activeRoutePlan.routes.findIndex((r) => r.id === routeId);
+      if (window.MapHub.routePolylines[idx]) {
+        window.MapHub.routePolylines[idx].openPopup();
+      }
+    }
+    document.querySelectorAll(".route-result-card").forEach((el) => {
+      el.classList.toggle("active", el.getAttribute("data-route-id") === routeId);
+    });
+  },
+
+  enableTripButton(enabled) {
+    const btn = document.getElementById("btn-start-trip");
+    if (btn) btn.disabled = !enabled || this.tripActive;
+  },
+
+  getSelectedRoute() {
+    if (!this.activeRoutePlan?.routes?.length) return null;
+    const id = this.selectedRouteId || this.activeRoutePlan.routes[0].id;
+    return this.activeRoutePlan.routes.find((r) => r.id === id) || this.activeRoutePlan.routes[0];
+  },
+
+  startLiveTrip() {
+    if (!this.activeRoutePlan || !window.TripTracker) {
+      this.showToast("Plan a route first, then start live trip.");
+      return;
+    }
+    const route = this.getSelectedRoute();
+    if (!route?.path?.length) {
+      this.showToast("Selected route has no path data.");
+      return;
+    }
+
+    const dest = {
+      lat: this.activeRoutePlan.to.lat,
+      lng: this.activeRoutePlan.to.lng,
+    };
+
+    this.tripActive = true;
+    this.coordsLockedByUser = true;
+    this.enableTripButton(false);
+
+    const panel = document.getElementById("trip-tracking-panel");
+    const hud = document.getElementById("trip-map-hud");
+    if (panel) panel.hidden = false;
+    if (hud) hud.hidden = false;
+
+    this.setTripStatusMessage("Live tracking started — keep this tab open while traveling.");
+    this.showToast("Live trip tracking started.");
+
+    if (this.activeTab !== "map") this.switchTab("map");
+
+    setTimeout(() => {
+      if (window.MapHub?.map) {
+        window.MapHub.startTripNavigation(route, this.activeRoutePlan);
+      } else {
+        window.MapHub?.init("map-container", () => {});
+        setTimeout(() => window.MapHub?.startTripNavigation(route, this.activeRoutePlan), 300);
+      }
+
+      window.TripTracker.start(route.path, dest);
+
+      if (window.LocationService?.lastPosition) {
+        window.TripTracker.handlePosition(window.LocationService.lastPosition);
+      } else {
+        window.LocationService?.requestOnce().then((pos) => {
+          window.TripTracker.handlePosition(pos);
+        });
+      }
+    }, 200);
+  },
+
+  stopLiveTrip(arrived = false) {
+    this.tripActive = false;
+    window.TripTracker?.stop();
+    window.MapHub?.stopTripNavigation();
+
+    const panel = document.getElementById("trip-tracking-panel");
+    const hud = document.getElementById("trip-map-hud");
+    if (panel) panel.hidden = true;
+    if (hud) hud.hidden = true;
+
+    this.enableTripButton(!!this.activeRoutePlan);
+    this.setTripStatusMessage(arrived ? "You have arrived at your destination." : "Trip tracking ended.");
+    this.showToast(arrived ? "Destination reached." : "Live trip tracking stopped.");
+  },
+
+  onTripProgress(state) {
+    if (window.MapHub?.map) window.MapHub.updateTripNavigation(state);
+    this.updateTripPanel(state);
+
+    this.applyCoordinates(state.raw.lat, state.raw.lng, {
+      silent: true,
+      movePicker: false,
+      accuracy: state.accuracy,
+    });
+
+    if (state.offRoute) {
+      this.setTripStatusMessage(
+        `Off route by ~${Math.round(state.snap.offRouteMeters)}m — return to highlighted path.`
+      );
+    } else if (state.arrived) {
+      this.setTripStatusMessage("Destination reached. Trip complete.");
+      setTimeout(() => this.stopLiveTrip(true), 2500);
+    } else {
+      this.setTripStatusMessage("On route — following your live GPS position.");
+    }
+  },
+
+  updateTripPanel(state) {
+    const fill = document.getElementById("trip-progress-fill");
+    const label = document.getElementById("trip-progress-label");
+    const hudPct = document.getElementById("trip-map-hud-pct");
+
+    if (fill) fill.style.width = `${state.progressPct}%`;
+    if (label) label.textContent = `${state.progressPct}% complete · ${state.traveledKm} / ${state.totalKm} km`;
+    if (hudPct) hudPct.textContent = `${Math.round(state.progressPct)}%`;
+
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    set("trip-stat-traveled", `${state.traveledKm} km`);
+    set("trip-stat-remaining", `${state.remainingKm} km`);
+    set("trip-stat-eta", window.TripTracker.formatDuration(state.etaSeconds));
+    set("trip-stat-speed", state.speedKmh > 0 ? `${state.speedKmh} km/h` : "—");
+    set("trip-stat-dest", `${state.distToDestKm} km`);
+    set("trip-stat-accuracy", state.accuracy ? `±${state.accuracy} m` : "—");
+  },
+
+  setTripStatusMessage(msg) {
+    const el = document.getElementById("trip-status-msg");
+    if (el) el.textContent = msg;
+  },
+
+  clearRoutes() {
+    if (this.tripActive) this.stopLiveTrip(false);
+    this.activeRoutePlan = null;
+    this.selectedRouteId = null;
+    this.enableTripButton(false);
+    const resultsEl = document.getElementById("route-results");
+    if (resultsEl) resultsEl.innerHTML = "";
+    if (window.MapHub?.map) window.MapHub.clearRouteDisplay();
+    this.showToast("Routes cleared.");
   },
 
   selectRoadForReport(roadId) {
@@ -309,16 +831,19 @@ const App = {
     
     this.switchTab("capture");
     
-    this.selectedCoords = [road.coordinates[0], road.coordinates[1]];
-    document.getElementById("report-lat").value = road.coordinates[0];
-    document.getElementById("report-lng").value = road.coordinates[1];
-    
-    // Focus the GPS marker on the map internally (triggers Leaflet init if needed)
+    this.coordsLockedByUser = true;
+    this.applyCoordinates(road.coordinates[0], road.coordinates[1], { silent: true, movePicker: false });
+    this.updateLocationUI("manual");
+
     setTimeout(() => {
+      if (!window.MapHub || typeof L === "undefined") return;
+
       window.MapHub.init("map-container", (lat, lng) => {
-        this.selectedCoords = [lat, lng];
+        this.coordsLockedByUser = true;
+        this.applyCoordinates(lat, lng, { updateMap: false, silent: true });
+        this.updateLocationUI("manual");
       });
-      window.MapHub.setUserPicker(road.coordinates[0], road.coordinates[1]);
+      if (window.MapHub.map) window.MapHub.setUserPicker(road.coordinates[0], road.coordinates[1]);
     }, 300);
 
     this.showToast(`🛣️ Selected Road: ${road.name}`);
@@ -335,16 +860,18 @@ const App = {
       type: "image/jpeg"
     };
 
-    this.selectedCoords = fileData.coords;
-    document.getElementById("report-lat").value = fileData.coords[0];
-    document.getElementById("report-lng").value = fileData.coords[1];
+    this.coordsLockedByUser = true;
+    this.applyCoordinates(fileData.coords[0], fileData.coords[1], { silent: true, movePicker: false });
+    this.updateLocationUI("manual");
     
     // Focus the GPS marker on map tab
     setTimeout(() => {
+      if (!window.MapHub || typeof L === "undefined") return;
+
       window.MapHub.init("map-container", (lat, lng) => {
-        this.selectedCoords = [lat, lng];
+        this.onMapCoordsChanged(lat, lng);
       });
-      window.MapHub.setUserPicker(fileData.coords[0], fileData.coords[1]);
+      if (window.MapHub.map) window.MapHub.setUserPicker(fileData.coords[0], fileData.coords[1]);
     }, 100);
 
     const dropZone = document.getElementById("drop-zone");
@@ -523,10 +1050,12 @@ const App = {
     
     // Register details in MapHub
     setTimeout(() => {
+      if (!window.MapHub || typeof L === "undefined") return;
+
       window.MapHub.init("map-container", (lat, lng) => {
-        this.selectedCoords = [lat, lng];
+        this.onMapCoordsChanged(lat, lng);
       });
-      window.MapHub.plotReportedIssue(complaint);
+      if (window.MapHub.map) window.MapHub.plotReportedIssue(complaint);
     }, 300);
 
     // Reset Form
@@ -660,19 +1189,12 @@ const App = {
   focusRoadOnMap(roadId) {
     const road = window.RoadDatabase.getRoadById(roadId);
     if (!road) return;
-    
+
     this.switchTab("map");
     setTimeout(() => {
-      window.MapHub.focusOnCoordinates(road.coordinates[0], road.coordinates[1], 14);
-      
-      window.MapHub.markers.forEach(marker => {
-        const pos = marker.getLatLng();
-        if (parseFloat(pos.lat.toFixed(4)) === parseFloat(road.coordinates[0].toFixed(4)) &&
-            parseFloat(pos.lng.toFixed(4)) === parseFloat(road.coordinates[1].toFixed(4))) {
-          marker.openPopup();
-        }
-      });
-    }, 400);
+      if (!window.MapHub?.map) return;
+      window.MapHub.focusRoad(roadId);
+    }, 450);
   },
 
   handleUserChatMessage() {
@@ -725,90 +1247,13 @@ const App = {
   },
 
   computeBotResponse(input) {
-    const lower = input.toLowerCase();
-    
-    if (lower.includes("tambaram") || lower.includes("in-mdr12") || lower.includes("mdr12")) {
-      const road = window.RoadDatabase.getRoadById("IN-MDR12");
-      return `
-        <h4>📍 Tambaram-Velachery Main Road (IN-MDR12)</h4>
-        <p style="margin-top: 6px;">Here is the active transparency data retrieved from Chennai PWD database:</p>
-        <ul style="margin: 10px 0; padding-left: 20px; font-size:12px;">
-          <li><strong>Authority:</strong> ${road.authority}</li>
-          <li><strong>Executive Engineer:</strong> ${road.executiveEngineer} (${road.engineerPhone})</li>
-          <li><strong>Registered Contractor:</strong> ${road.contractorName}</li>
-          <li><strong>Performance Rating:</strong> ⚠️ <strong>2.1 / 5.0 (Poor Audit Score)</strong></li>
-          <li><strong>Sanctioned Budget:</strong> ₹32.0 Cr</li>
-          <li><strong>Spent Cost:</strong> ₹45.0 Cr</li>
-          <li><strong>Status:</strong> 🚨 Cost overrun of 40% detected. Guarantee relicensed in 2023.</li>
-        </ul>
-        <button onclick="window.App.selectRoadForReport('IN-MDR12')" class="btn btn-secondary" style="padding: 6px 12px; font-size:11px; margin-top:6px;">Report Pothole on this Road</button>
-      `;
+    if (window.ChatbotResponses) {
+      return window.ChatbotResponses.respond(input, {
+        coords: this.selectedCoords,
+        escapeHTML: (s) => this.escapeHTML(s),
+      });
     }
-
-    if (lower.includes("budget") || lower.includes("overrun") || lower.includes("spent") || lower.includes("leakage")) {
-      return `
-        <h4>💰 Budget Leakage & Overrun Audits (INR ₹)</h4>
-        <p style="margin-top: 6px;">Based on public ledger cross-referencing, here are the projects with the highest financial overruns:</p>
-        <ol style="margin: 10px 0; padding-left: 20px; font-size:12px;">
-          <li style="margin-bottom:6px;"><strong>MDR-12 Tambaram-Velachery Road (India):</strong><br>Sanctioned: ₹32 Cr | Spent: ₹45 Cr <span style="color:var(--accent-red); font-weight:700;">(+40.6%)</span></li>
-          <li style="margin-bottom:6px;"><strong>Congress Avenue Road (USA):</strong><br>Sanctioned: ₹15 Cr | Spent: ₹21 Cr <span style="color:var(--accent-red); font-weight:700;">(+40.0%)</span></li>
-          <li style="margin-bottom:6px;"><strong>NH-48 Golden Quadrilateral (India):</strong><br>Sanctioned: ₹120 Cr | Spent: ₹135 Cr <span style="color:var(--accent-red); font-weight:700;">(+12.5%)</span></li>
-          <li style="margin-bottom:6px;"><strong>L190 Black Forest Link (Germany):</strong><br>Sanctioned: ₹55 Cr | Spent: ₹62 Cr <span style="color:var(--accent-red); font-weight:700;">(+12.7%)</span></li>
-        </ol>
-        <p style="font-size:11px; color:var(--text-muted);">Citizen complaints automatically file audits demanding contractors justify cost overruns.</p>
-      `;
-    }
-
-    if (lower.includes("contractor") || lower.includes("performance") || lower.includes("ranking")) {
-      return `
-        <h4>🛠️ Contractor Integrity Index Rankings</h4>
-        <p style="margin-top: 6px;">A consolidated rating of active contractors based on average relaying guarantee compliance and audit overruns:</p>
-        <ul style="margin: 10px 0; padding-left: 20px; font-size:12px;">
-          <li style="margin-bottom:4px;">🟢 <strong>Granite Construction Co. (USA):</strong> 4.8 / 5.0 (High Integrity)</li>
-          <li style="margin-bottom:4px;">🟢 <strong>Hochtief AG (Germany):</strong> 4.7 / 5.0 (High Integrity)</li>
-          <li style="margin-bottom:4px;">🟡 <strong>KNR Constructions (India):</strong> 4.5 / 5.0 (Excellent Quality)</li>
-          <li style="margin-bottom:4px;">🟡 <strong>Balfour Beatty plc (UK):</strong> 4.2 / 5.0 (Reliable)</li>
-          <li style="margin-bottom:4px;">🔴 <strong>Texas Paving Solutions (USA):</strong> 2.8 / 5.0 (Audit Warning)</li>
-          <li style="margin-bottom:4px;">🔴 <strong>Sri Balaji Roadworks (India):</strong> 2.1 / 5.0 (⚠️ High Risk Alert)</li>
-        </ul>
-      `;
-    }
-
-    if (lower.includes("offline")) {
-      return `
-        <h4>📶 Offline Capability Guide</h4>
-        <p style="margin-top: 6px;">YatraRaksha has robust offline support using Service Workers and Local Outbox sync:</p>
-        <ul style="margin: 10px 0; padding-left: 20px; font-size:12px; line-height:1.4;">
-          <li><strong>Offline Verification:</strong> If you lose connection in rural grids, YatraRaksha AI runs local heuristic validations on image parameters to check defect contours.</li>
-          <li><strong>Outbox Queue:</strong> Your filed complaint notice is stored securely in your browser's local storage database.</li>
-          <li><strong>Auto-Sync:</strong> As soon as your device registers a 3G/4G/Wi-Fi connection, the outbox queue automatically pushes reports to PWD, triggers emails, and assigns engineers!</li>
-        </ul>
-      `;
-    }
-
-    if (lower.includes("how to report") || lower.includes("pothole") || lower.includes("file")) {
-      return `
-        <h4>📝 How to File a Verified Road Complaint:</h4>
-        <ol style="margin: 10px 0; padding-left: 20px; font-size:12px; line-height:1.4;">
-          <li>Go to the <strong>AI Verification Capture</strong> tab.</li>
-          <li>Tap the <strong>Camera Outbox</strong> or drag-drop a photo/video showing a road defect (potholes, cracks, faded lane markings).</li>
-          <li>The **YOLO AI Vision** will automatically scan the media. It verifies the defect class, measures width/depth, and computes an urgency priority rating.</li>
-          <li>The AI geolocates your coordinate map pin to locate the exact contractor responsible and matching engineer.</li>
-          <li>Add a short field description and click **File Complaint**. The platform routes the formal audit notice instantly!</li>
-        </ol>
-      `;
-    }
-
-    return `
-      <p>I processed your query: <em>"${this.escapeHTML(input)}"</em></p>
-      <p style="margin-top:6px;">I didn't find an exact keyword match. Try asking one of these popular questions:</p>
-      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
-        <button onclick="window.App.sendBotMessage('Show contractor performance rankings')" class="quick-action-pill" style="border:1px solid rgba(0,187,249,0.3)">Rankings</button>
-        <button onclick="window.App.sendBotMessage('Who is responsible for Tambaram Road (IN-MDR12)?')" class="quick-action-pill" style="border:1px solid rgba(0,187,249,0.3)">Tambaram Road</button>
-        <button onclick="window.App.sendBotMessage('Which roads are over budget?')" class="quick-action-pill" style="border:1px solid rgba(0,187,249,0.3)">Over Budget</button>
-        <button onclick="window.App.sendBotMessage('How does offline sync work?')" class="quick-action-pill" style="border:1px solid rgba(0,187,249,0.3)">Offline Support</button>
-      </div>
-    `;
+    return `<p>Chatbot module not loaded. Please refresh the page.</p>`;
   },
 
   sendBotMessage(text) {
@@ -854,16 +1299,25 @@ const App = {
   },
 
   initCharts() {
+    const ctx1 = document.getElementById("chart-budget-leakage");
+    const ctx2 = document.getElementById("chart-contractor-quality");
+    if (!ctx1 || !ctx2) return;
+
+    if (typeof Chart === "undefined" || !window.RoadDatabase) {
+      this.renderChartFallback(ctx1, "Budget chart is unavailable while Chart.js is offline.");
+      this.renderChartFallback(ctx2, "Contractor chart is unavailable while Chart.js is offline.");
+      return;
+    }
+
+    this.clearChartFallback(ctx1);
+    this.clearChartFallback(ctx2);
+
     if (this.activeCharts.budgetLeakage) {
       this.activeCharts.budgetLeakage.destroy();
     }
     if (this.activeCharts.contractorPerformance) {
       this.activeCharts.contractorPerformance.destroy();
     }
-
-    const ctx1 = document.getElementById("chart-budget-leakage");
-    const ctx2 = document.getElementById("chart-contractor-quality");
-    if (!ctx1 || !ctx2) return;
 
     const roads = window.RoadDatabase.roads;
     const roadLabels = roads.map(r => r.id);
@@ -964,6 +1418,27 @@ const App = {
     });
   },
 
+  renderChartFallback(canvas, message) {
+    const wrapper = canvas.parentElement;
+    if (!wrapper) return;
+
+    canvas.style.display = "none";
+    if (!wrapper.querySelector(".chart-fallback")) {
+      const fallback = document.createElement("div");
+      fallback.className = "chart-fallback";
+      fallback.textContent = message;
+      wrapper.appendChild(fallback);
+    }
+  },
+
+  clearChartFallback(canvas) {
+    const wrapper = canvas.parentElement;
+    if (!wrapper) return;
+
+    canvas.style.display = "block";
+    wrapper.querySelector(".chart-fallback")?.remove();
+  },
+
   /**
    * Show login modal for authentication
    */
@@ -1048,6 +1523,10 @@ const App = {
    * Request notification permission from user
    */
   async requestNotificationPermission() {
+    if (!("Notification" in window) || !window.PushNotificationService) {
+      return;
+    }
+
     if (Notification.permission === "default") {
       const granted = await PushNotificationService.requestPermission();
       if (granted) {
@@ -1060,6 +1539,8 @@ const App = {
    * Monitor storage quota and warn if running low
    */
   async monitorStorageQuota() {
+    if (!window.StorageOptimizer) return;
+
     const quota = await StorageOptimizer.getStorageQuota();
     if (quota) {
       console.log(`📊 Storage: ${quota.formattedUsage} / ${quota.formattedQuota} (${quota.percentUsed}% used)`);
@@ -1073,4 +1554,6 @@ const App = {
 };
 
 window.App = App;
-window.onload = () => window.App.init();
+window.onload = () => {
+  window.App.showWelcome(() => window.App.init());
+};

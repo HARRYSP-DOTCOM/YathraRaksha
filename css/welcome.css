@@ -1,0 +1,456 @@
+/* Welcome / splash screen — shown before dashboard */
+
+body.welcome-active {
+  overflow: hidden;
+}
+
+body.welcome-active .app-layout {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app-layout.app-layout--revealed {
+  visibility: visible;
+  pointer-events: auto;
+  animation: appLayoutReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes appLayoutReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #060a12;
+}
+
+.welcome-screen--exit {
+  animation: welcomeExit 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes welcomeExit {
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(8px);
+  }
+}
+
+/* Animated background */
+.welcome-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.welcome-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45, 212, 191, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 212, 191, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  animation: welcomeGridDrift 20s linear infinite;
+}
+
+@keyframes welcomeGridDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(48px); }
+}
+
+.welcome-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  animation: welcomeOrbFloat 8s ease-in-out infinite;
+}
+
+.welcome-orb--1 {
+  width: 420px;
+  height: 420px;
+  background: #2dd4bf;
+  top: -12%;
+  left: -8%;
+  animation-delay: 0s;
+}
+
+.welcome-orb--2 {
+  width: 380px;
+  height: 380px;
+  background: #38bdf8;
+  bottom: -15%;
+  right: -10%;
+  animation-delay: -2.5s;
+}
+
+.welcome-orb--3 {
+  width: 280px;
+  height: 280px;
+  background: #fbbf24;
+  top: 40%;
+  right: 20%;
+  animation-delay: -4s;
+  opacity: 0.35;
+}
+
+@keyframes welcomeOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 25px) scale(0.95); }
+}
+
+.welcome-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.welcome-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.6);
+  animation: welcomeParticleRise 6s ease-in infinite;
+}
+
+.welcome-particle:nth-child(1) { left: 12%; bottom: 10%; animation-delay: 0s; }
+.welcome-particle:nth-child(2) { left: 28%; bottom: 5%; animation-delay: 1.2s; width: 3px; height: 3px; }
+.welcome-particle:nth-child(3) { left: 45%; bottom: 15%; animation-delay: 0.4s; }
+.welcome-particle:nth-child(4) { left: 62%; bottom: 8%; animation-delay: 2s; background: rgba(56, 189, 248, 0.7); }
+.welcome-particle:nth-child(5) { left: 78%; bottom: 12%; animation-delay: 0.8s; }
+.welcome-particle:nth-child(6) { left: 88%; bottom: 6%; animation-delay: 1.6s; width: 5px; height: 5px; }
+.welcome-particle:nth-child(7) { left: 35%; bottom: 20%; animation-delay: 2.4s; }
+.welcome-particle:nth-child(8) { left: 55%; bottom: 18%; animation-delay: 3s; background: rgba(251, 191, 36, 0.6); }
+
+@keyframes welcomeParticleRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) scale(1);
+  }
+}
+
+/* Road path SVG */
+.welcome-road-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.welcome-road-path {
+  fill: none;
+  stroke: url(#welcomeRoadGrad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: welcomeRoadDraw 2.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+}
+
+@keyframes welcomeRoadDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Content */
+.welcome-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 24px 28px 40px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.welcome-logo-wrap {
+  margin-bottom: 28px;
+  animation: welcomeFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.welcome-logo {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 50%, #38bdf8 100%);
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: #042f2e;
+  box-shadow:
+    0 0 0 1px rgba(45, 212, 191, 0.4),
+    0 20px 50px rgba(45, 212, 191, 0.35),
+    0 0 80px rgba(45, 212, 191, 0.2);
+  animation: welcomeLogoPulse 3s ease-in-out infinite 1.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-logo::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  animation: welcomeShimmer 3s ease-in-out infinite;
+}
+
+@keyframes welcomeLogoPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.4), 0 20px 50px rgba(45, 212, 191, 0.35); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.6), 0 24px 60px rgba(45, 212, 191, 0.45); }
+}
+
+@keyframes welcomeShimmer {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(100%) rotate(25deg); }
+}
+
+.welcome-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2dd4bf;
+  margin-bottom: 10px;
+  animation: welcomeFadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+.welcome-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(36px, 8vw, 48px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 50%, #2dd4bf 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    welcomeFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both,
+    welcomeTitleShine 4s ease-in-out infinite 1.5s;
+}
+
+@keyframes welcomeTitleShine {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+.welcome-subtitle {
+  font-size: 15px;
+  color: #94a3b8;
+  line-height: 1.55;
+  margin-bottom: 32px;
+  animation: welcomeFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+}
+
+.welcome-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+
+.welcome-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  opacity: 0;
+  animation: welcomeFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.welcome-feature:nth-child(1) { animation-delay: 0.7s; }
+.welcome-feature:nth-child(2) { animation-delay: 0.82s; }
+.welcome-feature:nth-child(3) { animation-delay: 0.94s; }
+
+.welcome-feature-icon {
+  font-size: 16px;
+}
+
+@keyframes welcomeFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: welcomeFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+}
+
+.welcome-cta {
+  position: relative;
+  min-width: 220px;
+  padding: 16px 36px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #042f2e;
+  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(45, 212, 191, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.welcome-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.welcome-cta:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(45, 212, 191, 0.5);
+}
+
+.welcome-cta:hover::before {
+  transform: translateX(100%);
+}
+
+.welcome-cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.welcome-skip {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  transition: color 0.2s ease;
+}
+
+.welcome-skip:hover {
+  color: #94a3b8;
+}
+
+.welcome-hackathon {
+  margin-top: 28px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  animation: welcomeFadeUp 0.8s ease 1.2s both;
+}
+
+/* Loader bar under CTA while "preparing" optional */
+.welcome-loader {
+  width: 120px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  margin: 0 auto;
+  overflow: hidden;
+  opacity: 0;
+  animation: welcomeFadeUp 0.5s ease 1.1s forwards;
+}
+
+.welcome-loader-bar {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #2dd4bf, #38bdf8);
+  border-radius: 999px;
+  animation: welcomeLoaderSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes welcomeLoaderSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-orb,
+  .welcome-grid,
+  .welcome-particle,
+  .welcome-logo,
+  .welcome-logo::after,
+  .welcome-title,
+  .welcome-road-path {
+    animation: none !important;
+  }
+
+  .welcome-road-path {
+    stroke-dashoffset: 0;
+  }
+
+  .welcome-feature,
+  .welcome-logo-wrap,
+  .welcome-eyebrow,
+  .welcome-title,
+  .welcome-subtitle,
+  .welcome-actions,
+  .welcome-hackathon {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-features {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcome-feature {
+    justify-content: center;
+  }
+}

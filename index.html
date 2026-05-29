@@ -8,7 +8,7 @@
   
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#00f5d4">
+  <meta name="theme-color" content="#0d9488">
   
   <!-- Leaflet and Chart.js CDNs (cached locally by service worker) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -17,8 +17,63 @@
 
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/welcome.css">
 </head>
 <body>
+
+  <!-- Welcome splash (before dashboard) -->
+  <div id="welcome-screen" class="welcome-screen" role="dialog" aria-label="Welcome to YatraRaksha">
+    <div class="welcome-bg" aria-hidden="true">
+      <div class="welcome-grid"></div>
+      <div class="welcome-orb welcome-orb--1"></div>
+      <div class="welcome-orb welcome-orb--2"></div>
+      <div class="welcome-orb welcome-orb--3"></div>
+      <div class="welcome-particles">
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+        <span class="welcome-particle"></span>
+      </div>
+      <svg class="welcome-road-svg" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="welcomeRoadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.2"/>
+            <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/>
+          </linearGradient>
+        </defs>
+        <path class="welcome-road-path" d="M0,160 Q200,80 400,120 T800,100 T1200,140 L1200,200 L0,200 Z"/>
+      </svg>
+    </div>
+
+    <div class="welcome-content">
+      <div class="welcome-logo-wrap">
+        <div class="welcome-logo" aria-hidden="true">Y</div>
+        <span class="welcome-eyebrow">Road Safety Hackathon 2026 · CoERS</span>
+      </div>
+      <h1 class="welcome-title">YatraRaksha</h1>
+      <p class="welcome-subtitle">Monitor road quality, audit public spending, and route complaints with AI — built for citizen transparency.</p>
+
+      <div class="welcome-features">
+        <div class="welcome-feature"><span class="welcome-feature-icon">🗺️</span> Live maps & safe routes</div>
+        <div class="welcome-feature"><span class="welcome-feature-icon">🤖</span> AI defect verification</div>
+        <div class="welcome-feature"><span class="welcome-feature-icon">📊</span> Authority budget data</div>
+      </div>
+
+      <div class="welcome-loader" aria-hidden="true"><div class="welcome-loader-bar"></div></div>
+
+      <div class="welcome-actions">
+        <button type="button" class="welcome-cta" id="welcome-enter-btn">Enter dashboard</button>
+        <button type="button" class="welcome-skip" id="welcome-skip-btn">Skip intro</button>
+      </div>
+
+      <p class="welcome-hackathon">RoadWatch · AI in Road Safety</p>
+    </div>
+  </div>
 
   <div class="app-layout">
     
@@ -60,42 +115,14 @@
 
       <!-- PWA Install prompt in Sidebar -->
       <div class="pwa-install-card" id="pwa-install-card">
-        <div style="font-size: 26px;">📲</div>
+        <div class="badge badge-nh">PWA</div>
         <h4>Install YatraRaksha PWA</h4>
         <p>Enable native performance, camera streams, and background offline outbox syncing.</p>
         <button class="btn btn-primary btn-sm" id="btn-pwa-install" style="width: 100%; margin-top: 6px;">Install App</button>
       </div>
     </aside>
 
-    <!-- B. Mobile Bottom Navigation Tab Bar (Hidden on Desktop) -->
-    <nav class="mobile-nav">
-      <div class="mobile-nav-link active" data-tab="overview">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-        <span>Overview</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="capture">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-        <span>AI Vision</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="transparency">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-        <span>Tenders</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="map">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        <span>Map</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="tracker">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        <span>Outbox</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="chatbot">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        <span>YatraGPT</span>
-      </div>
-    </nav>
-
-    <!-- C. Right Core Canvas -->
+    <!-- B. Main canvas (mobile nav is after this block for correct tap stacking) -->
     <div class="main-canvas">
       
       <!-- Top header strip for status/online -->
@@ -106,12 +133,12 @@
           <div class="logo-text">YATRA RAKSHA</div>
         </div>
         
-        <div style="font-size: 13px; font-weight: 700; color: var(--text-muted);">
-          ROAD SAFETY HACKATHON 2026
+        <div class="header-kicker">
+          RoadWatch · AI in Road Safety · CoERS 2026
         </div>
 
         <div class="network-badge" id="network-badge">
-          🟢 Online
+          Online
         </div>
       </header>
 
@@ -120,8 +147,14 @@
         
         <!-- 1. OVERVIEW & METRICS TAB -->
         <section class="tab-content active" id="overview-tab">
-          <h2 class="section-title">Infrastructure Quality & Audit Telemetry</h2>
-          <p class="section-desc">Real-time ledger audit of verified road defects, active contractor quality indexes, and municipal spending metrics scaled in Indian Rupees (₹).</p>
+          <div class="page-hero">
+            <div class="page-hero-content">
+              <span class="hero-eyebrow">Citizen transparency platform</span>
+              <h2 class="section-title hero-title">Monitor roads. Audit spending. Report defects.</h2>
+              <p class="section-desc hero-desc">Location-based road quality data, contractor accountability, and AI-verified complaint routing — built for the Road Safety Hackathon 2026.</p>
+            </div>
+            <div class="hero-orbs" aria-hidden="true"></div>
+          </div>
 
           <!-- Metric Cards in INR -->
           <div class="metrics-grid">
@@ -169,16 +202,20 @@
 
             <!-- Right panel: Interactive mini map widget -->
             <div>
-              <div class="glass-card highlight-orange" style="display:flex; flex-direction:column; justify-content:space-between; height: 100%;">
-                <div>
-                  <h3>🗺️ Active Audit Map Widget</h3>
-                  <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Showing pre-seeded road networks traced by defect condition polylines (Red = Critical, Orange = Warning, Green = Healthy) and pinned issue nodes.</p>
-                  
-                  <!-- Leaflet Mini Map Container -->
+              <div class="glass-card highlight-orange mini-map-card">
+                <div class="mini-map-header">
+                  <h3>Live road network</h3>
+                  <div class="mini-map-legend">
+                    <span class="legend-dot legend-critical"></span> Critical
+                    <span class="legend-dot legend-warning"></span> Warning
+                    <span class="legend-dot legend-healthy"></span> Healthy
+                  </div>
+                </div>
+                <p class="mini-map-desc">Global sample corridors — tap a segment in the full map for contractor, budget, and engineer details.</p>
+                <div class="mini-map-shell">
                   <div id="overview-mini-map"></div>
                 </div>
-                
-                <button onclick="window.App.switchTab('map')" class="btn btn-primary" style="margin-top: 20px; width: 100%;">🗺️ Open Full Satellite Hub</button>
+                <button type="button" onclick="window.App.switchTab('map')" class="btn btn-primary btn-block">Open satellite map hub</button>
               </div>
             </div>
           </div>
@@ -258,20 +295,28 @@
 
             <!-- AI assessment side card -->
             <div>
-              <div class="glass-card highlight-orange">
-                <h3 style="margin-bottom: 14px;">📍 Pin Geolocation</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Map coordinates pinpoint which regional authority and contractor is legally bound to repair this asset.</p>
-                <div style="display: flex; gap: 10px; margin-bottom:12px;">
-                  <div class="form-group" style="flex: 1; margin:0;">
+              <div class="glass-card highlight-orange location-card">
+                <div class="location-card-head">
+                  <h3>Live geolocation</h3>
+                  <span class="location-status-badge pending" id="location-status-badge">Acquiring GPS…</span>
+                </div>
+                <p class="location-card-desc">Latitude and longitude auto-fill from your device GPS for accurate complaint routing. Values update as you move.</p>
+                <p class="location-status-detail" id="location-status-detail">Waiting for satellite fix…</p>
+                <div class="location-coords-row">
+                  <div class="form-group">
                     <label>Latitude</label>
                     <input type="number" id="report-lat" class="form-control" step="any" readonly>
                   </div>
-                  <div class="form-group" style="flex: 1; margin:0;">
+                  <div class="form-group">
                     <label>Longitude</label>
                     <input type="number" id="report-lng" class="form-control" step="any" readonly>
                   </div>
                 </div>
-                <p style="font-size: 11px; color: var(--tertiary); font-weight: 600;">💡 Tip: You can adjust this pin by dragging the locator node in the "Interactive Map" tab.</p>
+                <p class="location-nearest"><strong>Nearest corridor:</strong> <span id="location-nearest-road">—</span></p>
+                <div class="location-actions">
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-use-live-gps">Use live GPS</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.App.switchTab('map')">Adjust on map</button>
+                </div>
               </div>
 
               <!-- Bounding box telemetry parameters -->
@@ -455,21 +500,77 @@
 
         <!-- 4. MAP HUB TAB -->
         <section class="tab-content" id="map-tab">
-          <h2 class="section-title">Satellite Map Hub & Polyline Overlays</h2>
-          <p class="section-desc">Interactive satellite view tracking actual road quality coordinates. Traced segments map structural conditions color-coded according to the issues of the road (Green = Stable, Orange = Minor Defects, Red = Critical).</p>
+          <h2 class="section-title">Satellite map hub</h2>
+          <p class="section-desc">Plan a trip with authority-sourced accident data (NHAI, PWD, NYSDOT, Caltrans, RAIB). We compare corridors and highlight the route with the fewest reported accidents.</p>
+
+          <div class="glass-card route-planner-card">
+            <div class="route-planner-head">
+              <h3>Safe route planner</h3>
+              <span class="route-planner-badge">Authority data</span>
+            </div>
+            <div class="route-input-grid">
+              <div class="form-group">
+                <label for="route-from">From</label>
+                <input type="text" id="route-from" class="form-control" list="route-place-list" placeholder="e.g. Chennai, Tamil Nadu" value="Chennai, Tamil Nadu">
+              </div>
+              <div class="form-group">
+                <label for="route-to">To</label>
+                <input type="text" id="route-to" class="form-control" list="route-place-list" placeholder="e.g. Bengaluru, Karnataka" value="Bengaluru, Karnataka">
+              </div>
+            </div>
+            <datalist id="route-place-list">
+              <option value="Chennai, Tamil Nadu"></option>
+              <option value="Bengaluru, Karnataka"></option>
+              <option value="Vellore, Tamil Nadu"></option>
+              <option value="Mysuru, Karnataka"></option>
+              <option value="Tambaram, Chennai"></option>
+              <option value="New York, NY"></option>
+              <option value="San Jose, CA"></option>
+              <option value="Munich, Germany"></option>
+            </datalist>
+            <div class="route-planner-actions">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-plan-route">Find safest route</button>
+              <button type="button" class="btn btn-success btn-sm" id="btn-start-trip" disabled>Start live trip</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-route-use-gps">From: my location</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-route">Clear routes</button>
+            </div>
+            <div id="trip-tracking-panel" class="trip-tracking-panel" hidden>
+              <div class="trip-panel-head">
+                <span class="trip-live-badge"><span class="trip-pulse"></span> Live trip tracking</span>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-stop-trip">End trip</button>
+              </div>
+              <div class="trip-progress-track">
+                <div class="trip-progress-fill" id="trip-progress-fill" style="width:0%"></div>
+              </div>
+              <p class="trip-progress-label" id="trip-progress-label">0% complete</p>
+              <div class="trip-stats-grid">
+                <div class="trip-stat"><span class="trip-stat-k">Traveled</span><span class="trip-stat-v" id="trip-stat-traveled">0 km</span></div>
+                <div class="trip-stat"><span class="trip-stat-k">Remaining</span><span class="trip-stat-v" id="trip-stat-remaining">—</span></div>
+                <div class="trip-stat"><span class="trip-stat-k">ETA</span><span class="trip-stat-v" id="trip-stat-eta">—</span></div>
+                <div class="trip-stat"><span class="trip-stat-k">Speed</span><span class="trip-stat-v" id="trip-stat-speed">—</span></div>
+                <div class="trip-stat"><span class="trip-stat-k">To destination</span><span class="trip-stat-v" id="trip-stat-dest">—</span></div>
+                <div class="trip-stat"><span class="trip-stat-k">GPS accuracy</span><span class="trip-stat-v" id="trip-stat-accuracy">—</span></div>
+              </div>
+              <p class="trip-status-msg" id="trip-status-msg">Waiting for GPS…</p>
+            </div>
+            <p class="route-planner-hint">Chennai → Bengaluru uses NHAI/PWD/RAIB corridor audits. Other trips use OSM routing scored against registered accident registries.</p>
+            <div id="route-results" class="route-results" aria-live="polite"></div>
+          </div>
           
-          <div class="map-wrapper" style="position: relative; width: 100%; height: 600px;">
-            <div id="map-container" style="height: 100%;"></div>
+          <div class="map-wrapper">
+            <div id="map-container" class="map-canvas"></div>
+
+            <div id="trip-map-hud" class="trip-map-hud" hidden>
+              <span class="trip-map-hud-label">Navigating</span>
+              <strong id="trip-map-hud-pct">0%</strong>
+            </div>
             
-            <!-- Floating Road Details Panel -->
-            <div class="glass-card map-audit-panel" id="map-audit-panel" style="position: absolute; top: 20px; right: 20px; width: 340px; max-height: calc(100% - 40px); z-index: 1000; background: rgba(6, 9, 19, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); padding: 20px; border-radius: var(--border-radius-lg); overflow-y: auto; display: none; flex-direction: column; transition: var(--transition-smooth); pointer-events: auto;">
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 12px;">
+            <div class="glass-card map-audit-panel" id="map-audit-panel">
+              <div class="map-audit-panel-head">
                 <span class="badge badge-nh" id="map-panel-road-id">ROAD CODE</span>
-                <button onclick="document.getElementById('map-audit-panel').style.display = 'none'" style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
+                <button type="button" class="map-panel-close" id="map-panel-close" aria-label="Close panel">&times;</button>
               </div>
-              <div id="map-panel-body" style="font-size: 13px;">
-                <!-- Populated dynamically -->
-              </div>
+              <div id="map-panel-body"></div>
             </div>
           </div>
         </section>
@@ -523,11 +624,14 @@
             <div class="chat-history" id="chat-box"></div>
 
             <div class="chat-quick-actions">
-              <span style="font-size:11px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; margin-right:8px;">💡 Ask:</span>
-              <button onclick="window.App.sendBotMessage('Show contractor performance rankings')" class="quick-action-pill">🛠️ Contractor Rankings</button>
-              <button onclick="window.App.sendBotMessage('Who is responsible for Tambaram Road (IN-MDR12)?')" class="quick-action-pill">📍 Tambaram Road</button>
-              <button onclick="window.App.sendBotMessage('Which roads are over budget?')" class="quick-action-pill">💸 Budget Overruns</button>
-              <button onclick="window.App.sendBotMessage('How does offline sync work?')" class="quick-action-pill">📶 Offline Support</button>
+              <span class="chat-quick-label">Ask:</span>
+              <button type="button" onclick="window.App.sendBotMessage('What road is nearest to my location?')" class="quick-action-pill">📍 Near me</button>
+              <button type="button" onclick="window.App.sendBotMessage('NH-48 contractor and engineer')" class="quick-action-pill">🛣️ NH-48</button>
+              <button type="button" onclick="window.App.sendBotMessage('Show budget overruns')" class="quick-action-pill">💸 Budget</button>
+              <button type="button" onclick="window.App.sendBotMessage('Worst roads by safety')" class="quick-action-pill">🚨 Risk</button>
+              <button type="button" onclick="window.App.sendBotMessage('How does complaint routing work?')" class="quick-action-pill">📬 Routing</button>
+              <button type="button" onclick="window.App.sendBotMessage('How to report a pothole')" class="quick-action-pill">📝 Report</button>
+              <button type="button" onclick="window.App.sendBotMessage('Help')" class="quick-action-pill">❓ Help</button>
             </div>
 
             <div class="chat-input-row">
@@ -539,6 +643,33 @@
 
       </main>
     </div>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <div class="mobile-nav-link active" data-tab="overview">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        <span>Overview</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="capture">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span>AI Vision</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="transparency">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        <span>Tenders</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="map">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>Map</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="tracker">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Outbox</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="chatbot">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>YatraGPT</span>
+      </div>
+    </nav>
   </div>
 
   <!-- PWA Service Worker Registration -->
@@ -571,6 +702,10 @@
   
   <!-- AI & Tracking -->
   <script src="js/ai-engine.js"></script>
+  <script src="js/location-service.js"></script>
+  <script src="js/chatbot-responses.js"></script>
+  <script src="js/route-planner.js"></script>
+  <script src="js/trip-tracker.js"></script>
   <script src="js/map-hub.js"></script>
   <script src="js/tracker.js"></script>
   
