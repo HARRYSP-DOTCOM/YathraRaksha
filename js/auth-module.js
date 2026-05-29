@@ -1,53 +1,37 @@
 /**
- * YatraRaksha Access Gate — captcha verification (replaces email/password login).
- * Keeps AuthModule name so the rest of the app continues to work.
+ * Lightweight client session for YatraRaksha (guest citizen profile).
  */
 
 const AuthModule = {
-  currentUser: null,
-  SESSION_KEY: "yatra_raksha_captcha_session",
-  TOKEN_KEY: "yatra_raksha_access_token",
-  /** Captcha must be completed each browser session (tab close clears). */
-  VERIFIED_SESSION_KEY: "yatra_raksha_captcha_verified",
+  SESSION_KEY: "yatra_raksha_user_session",
 
-  get apiBase() {
-    return (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
-  },
+  currentUser: null,
 
   init() {
     this.restoreSession();
-    window.addEventListener("access:verified", () => {
-      console.log("Human verification passed");
-    });
-    window.addEventListener("access:revoked", () => {
-      console.log("Access revoked");
-    });
   },
 
   restoreSession() {
-    if (sessionStorage.getItem(this.VERIFIED_SESSION_KEY) !== "1") {
-      this.currentUser = null;
-      return false;
-    }
-    const session = localStorage.getItem(this.SESSION_KEY);
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    if (session && token) {
+    const raw = localStorage.getItem(this.SESSION_KEY);
+    if (raw) {
       try {
-        this.currentUser = JSON.parse(session);
+        this.currentUser = JSON.parse(raw);
         return true;
       } catch {
-        this.logout();
+        localStorage.removeItem(this.SESSION_KEY);
       }
     }
-    return false;
+    this.currentUser = {
+      id: "citizen_guest",
+      name: "Citizen",
+      role: "citizen",
+    };
+    localStorage.setItem(this.SESSION_KEY, JSON.stringify(this.currentUser));
+    return true;
   },
 
   isAuthenticated() {
-    return (
-      sessionStorage.getItem(this.VERIFIED_SESSION_KEY) === "1" &&
-      this.currentUser !== null &&
-      !!this.getToken()
-    );
+    return this.currentUser !== null;
   },
 
   getUser() {
@@ -55,60 +39,7 @@ const AuthModule = {
   },
 
   getToken() {
-    return localStorage.getItem(this.TOKEN_KEY);
-  },
-
-  async fetchChallenge() {
-    const response = await fetch(`${this.apiBase}/captcha/challenge`);
-    if (!response.ok) throw new Error("Could not load captcha");
-    return response.json();
-  },
-
-  async verifyCaptcha(challengeId, answer, honeypot = "") {
-    try {
-      const response = await fetch(`${this.apiBase}/captcha/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeId, answer, honeypot }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const detail = err.detail;
-        throw new Error(typeof detail === "string" ? detail : "Verification failed");
-      }
-
-      const data = await response.json();
-      this.setSession(data.token);
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  },
-
-  setSession(token) {
-    this.currentUser = {
-      id: "citizen_" + Date.now(),
-      name: "Verified Citizen",
-      role: "citizen",
-      verifiedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(this.currentUser));
-    localStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem("yatra_raksha_auth_token", token);
-    sessionStorage.setItem(this.VERIFIED_SESSION_KEY, "1");
-    window.dispatchEvent(new CustomEvent("access:verified", { detail: { user: this.currentUser } }));
-  },
-
-  logout() {
-    this.currentUser = null;
-    localStorage.removeItem(this.SESSION_KEY);
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem("yatra_raksha_auth_token");
-    localStorage.removeItem("yatra_raksha_user_session");
-    sessionStorage.removeItem(this.VERIFIED_SESSION_KEY);
-    document.body.classList.remove("access-granted");
-    window.dispatchEvent(new CustomEvent("access:revoked"));
+    return localStorage.getItem("yatra_raksha_auth_token") || "";
   },
 };
 

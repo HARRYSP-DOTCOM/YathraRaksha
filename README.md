@@ -40,8 +40,6 @@ The app works **offline** for the dashboard shell; complaints queue locally and 
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/v1/captcha/challenge` | New captcha (SVG) |
-| POST | `/v1/captcha/verify` | Verify & get access token |
 | POST | `/v1/complaints` | File complaint |
 | GET | `/v1/roads` | Road infrastructure data |
 | GET | `/v1/contractors` | Contractor rankings |

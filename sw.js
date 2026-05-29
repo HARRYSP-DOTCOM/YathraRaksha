@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v3";
+const CACHE_VERSION = "yatra-raksha-v5";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -14,8 +14,6 @@ const APP_SHELL = [
   "./manifest.json",
   "./css/styles.css",
   "./css/welcome.css",
-  "./css/captcha-gate.css",
-  "./js/captcha-gate-ui.js",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -141,7 +139,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // App shell: always try network first so captcha/auth updates are not stuck on old cache
+  // App shell: always try network first so UI updates are not stuck on old cache
   const isAppShell =
     url.includes(self.location.origin) &&
     (url.endsWith(".html") ||

@@ -122,40 +122,13 @@ const App = {
   },
 
   /**
-   * App entry: captcha first, then welcome splash, then dashboard.
+   * Application bootstrapper
    */
-  bootstrap() {
-    if (!AuthModule.isAuthenticated()) {
-      document.body.classList.remove("access-granted");
-      window.CaptchaGateUI?.show();
-      window.CaptchaGateUI?.loadChallenge();
-      return;
-    }
-    window.CaptchaGateUI?.grantAccess?.();
-    this.launchDashboard();
-  },
-
-  launchDashboard() {
-    if (!AuthModule.isAuthenticated()) {
-      window.CaptchaGateUI?.requireVerification?.();
-      return;
-    }
-    this.showWelcome(() => this.enterDashboard());
-  },
-
-  /**
-   * Initialize dashboard (only after captcha + welcome).
-   */
-  enterDashboard() {
-    if (!AuthModule.isAuthenticated()) {
-      window.CaptchaGateUI?.requireVerification?.();
-      return;
-    }
-
+  init() {
     if (this._dashboardReady) return;
     this._dashboardReady = true;
 
-    console.log("✅ Access granted:", AuthModule.getUser()?.name);
+    console.log("✅ YatraRaksha ready:", AuthModule.getUser()?.name);
 
     // Initialize core services
     this.registerEventListeners();
@@ -184,11 +157,6 @@ const App = {
     );
 
     this.monitorStorageQuota();
-  },
-
-  /** @deprecated Use enterDashboard — kept for captcha callback compatibility */
-  init() {
-    this.enterDashboard();
   },
 
   registerEventListeners() {
@@ -339,11 +307,6 @@ const App = {
    * Handle dynamic tab switching
    */
   switchTab(tabId) {
-    if (!AuthModule.isAuthenticated()) {
-      window.CaptchaGateUI?.requireVerification?.();
-      return;
-    }
-
     this.activeTab = tabId;
     
     // Update both Desktop sidebar links and Mobile bottom navigation active states
@@ -1483,4 +1446,4 @@ const App = {
 };
 
 window.App = App;
-window.onload = () => window.App.bootstrap();
+window.onload = () => window.App.showWelcome(() => window.App.init());

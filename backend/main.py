@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import ai, audit, auth, captcha, complaints, contractors, media, roads
+from app.routers import ai, audit, auth, complaints, contractors, media, roads
 
 
 @asynccontextmanager
@@ -35,7 +35,6 @@ app.add_middleware(
 prefix = settings.api_prefix
 
 app.include_router(auth.router, prefix=prefix)
-app.include_router(captcha.router, prefix=prefix)
 app.include_router(complaints.router, prefix=prefix)
 app.include_router(roads.router, prefix=prefix)
 app.include_router(contractors.router, prefix=prefix)
