@@ -5,6 +5,7 @@
 .env.test.local
 .env.production.local
 .env.*
+!.env.example
 
 # Logs
 logs
@@ -28,6 +29,17 @@ backend/*.db
 backend/uploads/
 backend/.env
 *.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# SQLite databases (generated at runtime)
+*.db
+*.sqlite3
 
 # Vercel Cache
 .vercel
@@ -35,7 +47,19 @@ backend/.env
 # OS metadata
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Local browser profiles (automation / dev)
 .chrome-profile/
 .chrome-headless-profile/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# API keys (prevent accidental commit)
+**/secrets/
+**/credentials/

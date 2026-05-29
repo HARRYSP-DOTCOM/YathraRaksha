@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import ai, audit, auth, complaints, contractors, media, roads
+from app.routers import ai, audit, auth, captcha, chatbot, complaints, contractors, media, roads
 
 
 @asynccontextmanager
@@ -35,12 +35,14 @@ app.add_middleware(
 prefix = settings.api_prefix
 
 app.include_router(auth.router, prefix=prefix)
+app.include_router(captcha.router, prefix=prefix)
 app.include_router(complaints.router, prefix=prefix)
 app.include_router(roads.router, prefix=prefix)
 app.include_router(contractors.router, prefix=prefix)
 app.include_router(audit.router, prefix=prefix)
 app.include_router(media.router, prefix=prefix)
 app.include_router(ai.router, prefix=prefix)
+app.include_router(chatbot.router, prefix=prefix)
 
 upload_dir = Path(__file__).parent / settings.media_upload_dir
 upload_dir.mkdir(parents=True, exist_ok=True)
