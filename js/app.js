@@ -360,10 +360,12 @@ const App = {
     }
 
     if (tabId === "overview") {
-      this.initCharts();
       setTimeout(() => {
+        this.initCharts();
         if (this.miniMap) this.miniMap.invalidateSize();
-      }, 200);
+        this.activeCharts.budgetLeakage?.resize?.();
+        this.activeCharts.contractorPerformance?.resize?.();
+      }, 100);
     }
   },
 
@@ -1270,29 +1272,37 @@ const App = {
   },
 
   initCharts(retry = 0) {
-    const ctx1 = document.getElementById("chart-budget-leakage");
-    const ctx2 = document.getElementById("chart-contractor-quality");
-    if (!ctx1 || !ctx2) return;
+    const canvas1 = document.getElementById("chart-budget-leakage");
+    const canvas2 = document.getElementById("chart-contractor-quality");
+    if (!canvas1 || !canvas2) return;
 
     if (typeof Chart === "undefined") {
-      if (retry < 8) {
-        setTimeout(() => this.initCharts(retry + 1), 250);
+      if (retry < 12) {
+        setTimeout(() => this.initCharts(retry + 1), 200);
         return;
       }
-      const msg = "Charts could not load. Check your connection and refresh the page.";
-      this.renderChartFallback(ctx1, msg);
-      this.renderChartFallback(ctx2, msg);
+      const msg = "Charts could not load. Hard-refresh the page (Ctrl+Shift+R).";
+      this.renderChartFallback(canvas1, msg);
+      this.renderChartFallback(canvas2, msg);
       return;
     }
 
-    if (!window.RoadDatabase) {
-      this.renderChartFallback(ctx1, "Road data is not available yet.");
-      this.renderChartFallback(ctx2, "Road data is not available yet.");
+    if (!window.RoadDatabase?.roads?.length) {
+      if (retry < 12) {
+        setTimeout(() => this.initCharts(retry + 1), 200);
+        return;
+      }
+      this.renderChartFallback(canvas1, "Road data is not available yet.");
+      this.renderChartFallback(canvas2, "Road data is not available yet.");
       return;
     }
 
-    this.clearChartFallback(ctx1);
-    this.clearChartFallback(ctx2);
+    this.clearChartFallback(canvas1);
+    this.clearChartFallback(canvas2);
+
+    const ctx1 = canvas1.getContext("2d");
+    const ctx2 = canvas2.getContext("2d");
+    if (!ctx1 || !ctx2) return;
 
     if (this.activeCharts.budgetLeakage) {
       this.activeCharts.budgetLeakage.destroy();
@@ -1405,12 +1415,13 @@ const App = {
     if (!wrapper) return;
 
     canvas.style.display = "none";
-    if (!wrapper.querySelector(".chart-fallback")) {
-      const fallback = document.createElement("div");
+    let fallback = wrapper.querySelector(".chart-fallback");
+    if (!fallback) {
+      fallback = document.createElement("div");
       fallback.className = "chart-fallback";
-      fallback.textContent = message;
       wrapper.appendChild(fallback);
     }
+    fallback.textContent = message;
   },
 
   clearChartFallback(canvas) {

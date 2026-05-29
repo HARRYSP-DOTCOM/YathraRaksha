@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v6";
+const CACHE_VERSION = "yatra-raksha-v7";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -18,6 +18,7 @@ const APP_SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
+  "./js/vendor/chart.umd.min.js",
   "./js/config-env.js",
   "./js/database.js",
   "./js/storage-optimizer.js",
@@ -39,7 +40,6 @@ const APP_SHELL = [
 const CDN_ASSETS = [
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-  "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
 ];
 
 const isCdnLibrary = (url) =>
