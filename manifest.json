@@ -1,0 +1,24 @@
+{
+  "name": "YatraRaksha Infrastructure Audit",
+  "short_name": "YatraRaksha PWA",
+  "description": "AI-powered citizen road quality monitoring, public spending audits, and complaint routing platform.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#060913",
+  "theme_color": "#00f5d4",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048329.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

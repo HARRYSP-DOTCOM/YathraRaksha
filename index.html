@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="YatraRaksha PWA: AI-powered road safety verification, public spending audit, and complaint routing platform.">
+  <title>YatraRaksha - Infrastructure Audit & Transparency</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00f5d4">
+  
+  <!-- Leaflet and Chart.js CDNs (cached locally by service worker) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- A. Desktop Sidebar Navigation (Hidden on Mobile) -->
+    <aside class="sidebar">
+      <div>
+        <div class="logo-container">
+          <div class="logo-icon">Y</div>
+          <div class="logo-text">YATRA RAKSHA</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <div class="nav-link active" data-tab="overview">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+            <span>Dashboard</span>
+          </div>
+          <div class="nav-link" data-tab="capture">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span>AI Defect Capture</span>
+          </div>
+          <div class="nav-link" data-tab="transparency">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+            <span>Tender Registry</span>
+          </div>
+          <div class="nav-link" data-tab="map">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>Satellite Map Hub</span>
+          </div>
+          <div class="nav-link" data-tab="tracker">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Outbox Tracker</span>
+          </div>
+          <div class="nav-link" data-tab="chatbot">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span>YatraGPT Assistant</span>
+          </div>
+        </nav>
+      </div>
+
+      <!-- PWA Install prompt in Sidebar -->
+      <div class="pwa-install-card" id="pwa-install-card">
+        <div style="font-size: 26px;">📲</div>
+        <h4>Install YatraRaksha PWA</h4>
+        <p>Enable native performance, camera streams, and background offline outbox syncing.</p>
+        <button class="btn btn-primary btn-sm" id="btn-pwa-install" style="width: 100%; margin-top: 6px;">Install App</button>
+      </div>
+    </aside>
+
+    <!-- B. Mobile Bottom Navigation Tab Bar (Hidden on Desktop) -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-link active" data-tab="overview">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        <span>Overview</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="capture">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span>AI Vision</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="transparency">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+        <span>Tenders</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="map">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>Map</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="tracker">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Outbox</span>
+      </div>
+      <div class="mobile-nav-link" data-tab="chatbot">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>YatraGPT</span>
+      </div>
+    </nav>
+
+    <!-- C. Right Core Canvas -->
+    <div class="main-canvas">
+      
+      <!-- Top header strip for status/online -->
+      <header class="mobile-header">
+        <!-- Logo for mobile view toggle -->
+        <div class="logo-container">
+          <div class="logo-icon">Y</div>
+          <div class="logo-text">YATRA RAKSHA</div>
+        </div>
+        
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-muted);">
+          ROAD SAFETY HACKATHON 2026
+        </div>
+
+        <div class="network-badge" id="network-badge">
+          🟢 Online
+        </div>
+      </header>
+
+      <!-- Main Contents Panels -->
+      <main>
+        
+        <!-- 1. OVERVIEW & METRICS TAB -->
+        <section class="tab-content active" id="overview-tab">
+          <h2 class="section-title">Infrastructure Quality & Audit Telemetry</h2>
+          <p class="section-desc">Real-time ledger audit of verified road defects, active contractor quality indexes, and municipal spending metrics scaled in Indian Rupees (₹).</p>
+
+          <!-- Metric Cards in INR -->
+          <div class="metrics-grid">
+            <div class="glass-card metric-card highlight-teal">
+              <span class="label">Total Grievances Filed</span>
+              <span class="value" id="overview-total">0</span>
+              <span class="trend positive">🟢 Active Citizen Audits</span>
+            </div>
+            <div class="glass-card metric-card">
+              <span class="label">Remedied Defect Points</span>
+              <span class="value" id="overview-resolved">0</span>
+              <span class="trend positive">✨ Repaired under Warranty</span>
+            </div>
+            <div class="glass-card metric-card highlight-orange">
+              <span class="label">Audited Road Budgets</span>
+              <span class="value" id="overview-budget">₹832.2 Cr</span>
+              <span class="trend warning">📊 Public Funds Monitored</span>
+            </div>
+            <div class="glass-card metric-card">
+              <span class="label">Avg Contractor Rating</span>
+              <span class="value">3.8 / 5.0</span>
+              <span class="trend positive">🌟 Quality Standard Index</span>
+            </div>
+          </div>
+
+          <!-- Charts and miniature map -->
+          <div class="dashboard-grid">
+            <!-- Left panel: Charts -->
+            <div>
+              <div class="glass-card highlight-teal">
+                <h3 style="margin-bottom: 16px;">💸 Audit Ledger: Sanctioned vs Spent Capital (₹ Crores)</h3>
+                <div style="height: 320px; position: relative;">
+                  <canvas id="chart-budget-leakage"></canvas>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">⚠️ Red markers represent budget overruns (potential contractor overcharging). Green markers denote projects completed on-time and within public funding allocations.</p>
+              </div>
+
+              <div class="glass-card">
+                <h3 style="margin-bottom: 16px;">🛠️ Registered Contractor Performance Rating</h3>
+                <div style="height: 250px; position: relative;">
+                  <canvas id="chart-contractor-quality"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right panel: Interactive mini map widget -->
+            <div>
+              <div class="glass-card highlight-orange" style="display:flex; flex-direction:column; justify-content:space-between; height: 100%;">
+                <div>
+                  <h3>🗺️ Active Audit Map Widget</h3>
+                  <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Showing pre-seeded road networks traced by defect condition polylines (Red = Critical, Orange = Warning, Green = Healthy) and pinned issue nodes.</p>
+                  
+                  <!-- Leaflet Mini Map Container -->
+                  <div id="overview-mini-map"></div>
+                </div>
+                
+                <button onclick="window.App.switchTab('map')" class="btn btn-primary" style="margin-top: 20px; width: 100%;">🗺️ Open Full Satellite Hub</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. AI CAPTURE & VERIFICATION TAB -->
+        <section class="tab-content" id="capture-tab">
+          <h2 class="section-title">Visual AI Pavement Analyzer</h2>
+          <p class="section-desc">Drag or drop field photos/videos showing road defects. YOLOv8 convolutional networks analyze structural wear, verify defects, estimate costs in INR (₹), and route complaints.</p>
+
+          <div class="capture-layout">
+            <!-- Input media capture -->
+            <div>
+              <div class="glass-card highlight-teal">
+                <h3 style="margin-bottom: 14px;">📸 Upload Media Stream</h3>
+                
+                <div class="drop-zone" id="drop-zone">
+                  <div id="drop-instructions">
+                    <div class="drop-zone-icon">📤</div>
+                    <h4>Select Road Photo/Video</h4>
+                    <p class="text-muted" style="font-size: 12px; margin-top: 4px;">Camera streams or files (JPEG, PNG, MP4)</p>
+                    <button class="btn btn-secondary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Browse Device</button>
+                  </div>
+                  
+                  <!-- Video Scanner overlay frames -->
+                  <div class="preview-media-container" id="preview-media-container">
+                    <img id="preview-img" src="" alt="Defect Preview">
+                    <div class="ai-scan-overlay" id="ai-scan-overlay">
+                      <div class="ai-scan-bar"></div>
+                      <div class="ai-scan-bounding-box" id="ai-scan-bounding-box"></div>
+                    </div>
+                  </div>
+
+                  <input type="file" id="file-input" class="file-input" accept="image/*,video/*">
+                </div>
+
+                <!-- Sandbox files sandbox -->
+                <div class="sample-media-section">
+                  <span class="sample-headline">Quick Test Sandbox (Try positive vs negative inputs)</span>
+                  <div class="sample-grid">
+                    <button onclick="window.App.triggerSampleUpload('pothole')" class="sample-btn">
+                      <span class="validity-badge valid">Valid Defect</span>
+                      <span class="thumb-label">🕳️ Highway Pothole</span>
+                    </button>
+                    <button onclick="window.App.triggerSampleUpload('crack')" class="sample-btn">
+                      <span class="validity-badge valid">Valid Defect</span>
+                      <span class="thumb-label">🕸️ Alligator Cracks</span>
+                    </button>
+                    <button onclick="window.App.triggerSampleUpload('marking')" class="sample-btn">
+                      <span class="validity-badge valid">Valid Defect</span>
+                      <span class="thumb-label">🛣️ Faded Markings</span>
+                    </button>
+                    <button onclick="window.App.triggerSampleUpload('light')" class="sample-btn">
+                      <span class="validity-badge valid">Valid Defect</span>
+                      <span class="thumb-label">💡 Broken Utility</span>
+                    </button>
+                    <button onclick="window.App.triggerSampleUpload('cat')" class="sample-btn">
+                      <span class="validity-badge invalid">Blocked Class</span>
+                      <span class="thumb-label">🐱 Office Kitten</span>
+                    </button>
+                    <button onclick="window.App.triggerSampleUpload('coffee')" class="sample-btn">
+                      <span class="validity-badge invalid">Blocked Class</span>
+                      <span class="thumb-label">☕ Espresso Mug</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live AI Logging Terminal -->
+              <div class="glass-card ai-logger-card">
+                <div class="logger-title">📟 YatraRaksha AI Vision Diagnostic Console</div>
+                <div class="logger-logs" id="ai-logger-logs">
+                  <div class="log-entry text-muted">System waiting for media stream upload...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI assessment side card -->
+            <div>
+              <div class="glass-card highlight-orange">
+                <h3 style="margin-bottom: 14px;">📍 Pin Geolocation</h3>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Map coordinates pinpoint which regional authority and contractor is legally bound to repair this asset.</p>
+                <div style="display: flex; gap: 10px; margin-bottom:12px;">
+                  <div class="form-group" style="flex: 1; margin:0;">
+                    <label>Latitude</label>
+                    <input type="number" id="report-lat" class="form-control" step="any" readonly>
+                  </div>
+                  <div class="form-group" style="flex: 1; margin:0;">
+                    <label>Longitude</label>
+                    <input type="number" id="report-lng" class="form-control" step="any" readonly>
+                  </div>
+                </div>
+                <p style="font-size: 11px; color: var(--tertiary); font-weight: 600;">💡 Tip: You can adjust this pin by dragging the locator node in the "Interactive Map" tab.</p>
+              </div>
+
+              <!-- Bounding box telemetry parameters -->
+              <div class="glass-card highlight-teal" id="ai-results-card" style="display: none;">
+                <h3 style="margin-bottom: 12px; color: var(--primary);">🤖 AI Vision Diagnostics Report</h3>
+                
+                <div class="popup-body" style="padding:0; font-size:13px;">
+                  <div class="popup-row"><strong>Verified ID:</strong> <span id="ai-id">-</span></div>
+                  <div class="popup-row"><strong>Defect Class:</strong> <span id="ai-class" style="color:var(--text-white); font-weight:700;">-</span></div>
+                  <div class="popup-row"><strong>Classifier Cert.:</strong> <span id="ai-confidence">-</span></div>
+                  <div class="popup-row"><strong>Grievance Severity:</strong> <span id="ai-severity" class="badge">-</span></div>
+                  <div class="popup-row"><strong>Damage Area:</strong> <span id="ai-dimensions">-</span></div>
+                  <div class="popup-row"><strong>Avg Defect Depth:</strong> <span id="ai-depth">-</span></div>
+                  <div class="popup-row"><strong>Public Safety Risk:</strong> <span id="ai-risk" style="color:var(--secondary); font-weight:700;">-</span></div>
+                  
+                  <hr class="popup-divider">
+                  <h4 style="margin: 10px 0 6px 0; font-size:13px; color:var(--tertiary);">🏛️ Geolocated Contract Ownership</h4>
+                  <div class="popup-row"><strong>Nearest Road Node:</strong> <span id="ai-road">-</span></div>
+                  <div class="popup-row"><strong>Responsible PWD:</strong> <span id="ai-authority">-</span></div>
+                  <div class="popup-row"><strong>Executive Engineer:</strong> <span id="ai-engineer">-</span></div>
+                </div>
+
+                <!-- Citizen submission form -->
+                <form id="complaint-form" style="margin-top: 16px;">
+                  <div class="form-group">
+                    <label for="user-desc">Citizens Notes & Field Remarks</label>
+                    <textarea id="user-desc" class="form-control" rows="3" placeholder="Provide details about the issue location or specific safety concern..." required></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="user-contact">Complainant Contact (Citizen Name / Phone)</label>
+                    <input type="text" id="user-contact" class="form-control" placeholder="Enter name or phone (Can be anonymous)" value="Anonymous Citizen">
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" id="file-complaint-btn" style="width: 100%; margin-top: 8px;" disabled>📄 File Formal Complaint Notice</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. TRANSPARENCY AUDIT BOARD -->
+        <section class="tab-content" id="transparency-tab">
+          <h2 class="section-title">Contractor & Project Audit Registry</h2>
+          <p class="section-desc">Consolidated infrastructure directory mapping road relayed dates, contractor performance index ratings, and spending in Indian Rupees (₹).</p>
+
+          <div class="glass-card">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Road Asset Code</th>
+                    <th>Asset Name / Region</th>
+                    <th>Classification</th>
+                    <th>Responsible Contractor</th>
+                    <th>Sanctioned Budget (INR)</th>
+                    <th>Spent Cost (INR)</th>
+                    <th>Guarantee Period</th>
+                    <th>Executive Engineer</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>IN-NH48</strong></td>
+                    <td>NH-48 Golden Quadrilateral (Chennai-Bengaluru)</td>
+                    <td><span class="badge badge-nh">NH</span></td>
+                    <td>Infratech Builders Group Ltd. (★3.4)</td>
+                    <td>₹120.0 Cr</td>
+                    <td><span style="color:var(--accent-red); font-weight:700;">₹135.0 Cr</span></td>
+                    <td>Last Relaid: 2024</td>
+                    <td>Er. Rajesh K. Vardhan<br><small>+91-98402-12345</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('IN-NH48')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('IN-NH48')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>IN-SH17</strong></td>
+                    <td>SH-17 (Bengaluru-Mysuru Expressway Link)</td>
+                    <td><span class="badge badge-sh">SH</span></td>
+                    <td>KNR Constructions Ltd. (★4.5)</td>
+                    <td>₹85.0 Cr</td>
+                    <td><span style="color:#10b981; font-weight:700;">₹82.5 Cr</span></td>
+                    <td>Last Relaid: 2025</td>
+                    <td>Er. Manjunath Swamy<br><small>+91-94480-56789</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('IN-SH17')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('IN-SH17')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>IN-MDR12</strong></td>
+                    <td>MDR-12 Tambaram-Velachery Main Road</td>
+                    <td><span class="badge badge-mdr">MDR</span></td>
+                    <td>⚠️ Sri Balaji Roadworks Co. (★2.1)</td>
+                    <td>₹32.0 Cr</td>
+                    <td><span style="color:var(--accent-red); font-weight:700;">₹45.0 Cr</span></td>
+                    <td>Last Relaid: 2023</td>
+                    <td>Er. Selvakumar Arumugam<br><small>+91-94440-98765</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('IN-MDR12')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('IN-MDR12')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>US-I95</strong></td>
+                    <td>Interstate 95 (New York Bronx Corridor)</td>
+                    <td><span class="badge badge-nh">Interstate</span></td>
+                    <td>Tully Construction Co. (★3.9)</td>
+                    <td>₹185.0 Cr</td>
+                    <td><span style="color:var(--accent-red); font-weight:700;">₹198.0 Cr</span></td>
+                    <td>Last Relaid: 2023</td>
+                    <td>Eng. Sarah Jenkins<br><small>+1-518-555-0195</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('US-I95')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('US-I95')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>US-CA101</strong></td>
+                    <td>US Route 101 (Silicon Valley Expressway)</td>
+                    <td><span class="badge badge-sh">US Highway</span></td>
+                    <td>Granite Construction Co. (★4.8)</td>
+                    <td>₹94.0 Cr</td>
+                    <td><span style="color:#10b981; font-weight:700;">₹91.2 Cr</span></td>
+                    <td>Last Relaid: 2024</td>
+                    <td>Eng. David Vance<br><small>+1-510-555-2345</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('US-CA101')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('US-CA101')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>DE-A8</strong></td>
+                    <td>A8 Autobahn (München-Salzburg)</td>
+                    <td><span class="badge badge-nh">Autobahn</span></td>
+                    <td>Hochtief AG (★4.7)</td>
+                    <td>₹220.0 Cr</td>
+                    <td><span style="color:#10b981; font-weight:700;">₹218.5 Cr</span></td>
+                    <td>Last Relaid: 2025</td>
+                    <td>Dipl.-Ing. Hans-D. Weber<br><small>+49-89-5456-7890</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('DE-A8')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('DE-A8')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>DE-L190</strong></td>
+                    <td>L190 Landesstraße (Schwarzwald Link)</td>
+                    <td><span class="badge badge-sh">State Road</span></td>
+                    <td>Strabag AG (★4.1)</td>
+                    <td>₹55.0 Cr</td>
+                    <td><span style="color:var(--accent-red); font-weight:700;">₹62.0 Cr</span></td>
+                    <td>Last Relaid: 2022</td>
+                    <td>Dipl.-Ing. Brigitte Müller<br><small>+49-721-926-0</small></td>
+                    <td>
+                      <div style="display:flex; gap:6px;">
+                        <button onclick="window.App.focusRoadOnMap('DE-L190')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
+                        <button onclick="window.App.selectRoadForReport('DE-L190')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. MAP HUB TAB -->
+        <section class="tab-content" id="map-tab">
+          <h2 class="section-title">Satellite Map Hub & Polyline Overlays</h2>
+          <p class="section-desc">Interactive satellite view tracking actual road quality coordinates. Traced segments map structural conditions color-coded according to the issues of the road (Green = Stable, Orange = Minor Defects, Red = Critical).</p>
+          
+          <div id="map-container"></div>
+        </section>
+
+        <!-- 5. TRACKER & COMPLAINTS REGISTRY TAB -->
+        <section class="tab-content" id="tracker-tab">
+          <h2 class="section-title">Citizen Grievance & Outbox Tracker</h2>
+          <p class="section-desc">Track status updates of filed complaints in real-time. Offline outbox queues will sync automatically as soon as internet connection is recognized.</p>
+
+          <div class="capture-layout">
+            <!-- Logged complaints outbox list -->
+            <div>
+              <h3 style="margin-bottom:14px;">📁 Filed Complaints Outbox</h3>
+              <div id="complaints-list" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+
+            <!-- Dynamic details tracking -->
+            <div id="tracker-details-panel" style="display: none;">
+              <div class="glass-card highlight-orange" id="active-tracker-container" data-id="">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--glass-border); padding-bottom:12px; margin-bottom:14px;">
+                  <div>
+                    <span class="badge badge-sh" id="details-ref-id">RWAI-000000</span>
+                    <h3 id="details-defect-type" style="margin-top: 6px;">Pothole Defect</h3>
+                    <p id="details-road" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Tambaram Link</p>
+                  </div>
+                  <button onclick="window.print()" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;">🖨️ Print Audit Sheet</button>
+                </div>
+
+                <!-- Formal civil grievance notice -->
+                <h4>📄 Formal Civil Grievance Audit Notice</h4>
+                <div class="notice-text-area" id="details-notice"></div>
+
+                <hr class="popup-divider">
+                
+                <!-- Timeline status steps -->
+                <h4>⏳ Grievance Administrative Status Timeline</h4>
+                <div class="timeline-tracker" id="timeline-tracker-box"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. CHATBOT TAB -->
+        <section class="tab-content" id="chatbot-tab">
+          <h2 class="section-title">YatraGPT - AI Transparency Assistant</h2>
+          <p class="section-desc">Ask natural questions about contract budgets, overruns, contractor integrity standings, or offline-sync operations.</p>
+
+          <div class="glass-card chat-container">
+            <div class="chat-history" id="chat-box"></div>
+
+            <div class="chat-quick-actions">
+              <span style="font-size:11px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; margin-right:8px;">💡 Ask:</span>
+              <button onclick="window.App.sendBotMessage('Show contractor performance rankings')" class="quick-action-pill">🛠️ Contractor Rankings</button>
+              <button onclick="window.App.sendBotMessage('Who is responsible for Tambaram Road (IN-MDR12)?')" class="quick-action-pill">📍 Tambaram Road</button>
+              <button onclick="window.App.sendBotMessage('Which roads are over budget?')" class="quick-action-pill">💸 Budget Overruns</button>
+              <button onclick="window.App.sendBotMessage('How does offline sync work?')" class="quick-action-pill">📶 Offline Support</button>
+            </div>
+
+            <div class="chat-input-row">
+              <input type="text" id="chat-input" class="form-control" placeholder="Ask YatraGPT anything (e.g. 'Tell me who is in charge of SH17' or 'Who is the worst contractor?')...">
+              <button onclick="window.App.handleUserChatMessage()" class="btn btn-primary">⚡ Send</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("./sw.js")
+          .then((reg) => console.log("🚀 YatraRaksha PWA Service Worker registered:", reg.scope))
+          .catch((err) => console.error("❌ Service Worker failed:", err));
+      });
+    }
+  </script>
+
+  <!-- Load script modules -->
+  <!-- Core Infrastructure -->
+  <script src="js/database.js"></script>
+  <script src="js/storage-optimizer.js"></script>
+  
+  <!-- Authentication & API -->
+  <script src="js/auth-module.js"></script>
+  <script src="js/api-service.js"></script>
+  
+  <!-- Image & Media Processing -->
+  <script src="js/image-compressor.js"></script>
+  
+  <!-- Notifications & Features -->
+  <script src="js/push-notifications.js"></script>
+  
+  <!-- AI & Tracking -->
+  <script src="js/ai-engine.js"></script>
+  <script src="js/map-hub.js"></script>
+  <script src="js/tracker.js"></script>
+  
+  <!-- Main Application -->
+  <script src="js/app.js"></script>
+</body>
+</html>
