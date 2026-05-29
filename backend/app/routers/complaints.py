@@ -17,6 +17,8 @@ def _serialize_complaint(row: Complaint) -> dict[str, Any]:
     data = json.loads(row.payload_json)
     data["status"] = row.status
     data["userId"] = row.user_id
+    data["escalation_level"] = row.escalation_level
+    data["sla_deadline"] = row.sla_deadline.isoformat() + "Z" if row.sla_deadline else None
     return data
 
 
@@ -37,16 +39,41 @@ def create_complaint(
     user_id = payload.get("userId") or (user.id if user else None)
     status_value = payload.get("status", "Submitted")
 
+    created_at = datetime.utcnow()
+    severity = payload.get("severity", "Medium")
+    from app.services.escalation_service import compute_sla_deadline
+    sla_deadline = compute_sla_deadline(created_at, severity)
+
     row = Complaint(
         id=complaint_id,
         user_id=user_id,
         payload_json=json.dumps(payload),
         status=status_value,
+        created_at=created_at,
+        sla_deadline=sla_deadline,
     )
     db.add(row)
     db.commit()
     db.refresh(row)
     return _serialize_complaint(row)
+
+
+@router.patch("/{complaint_id}/escalate")
+def manual_escalate_complaint(
+    complaint_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_user),
+):
+    if current_user.role not in ("engineer", "admin"):
+        raise HTTPException(status_code=403, detail="Only engineers and admins can manually escalate complaints")
+
+    complaint = db.get(Complaint, complaint_id)
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    from app.services.escalation_service import escalate_complaint
+    escalate_complaint(complaint, db)
+    return _serialize_complaint(complaint)
 
 
 @router.get("")

@@ -1,19 +1,55 @@
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from app.config import settings
-from app.database import Base, engine
+from app.database import Base, engine, SessionLocal
 from app.routers import ai, audit, auth, chatbot, complaints, contractors, media, roads
+from app.services.escalation_service import run_escalation_sweep
+
+
+async def escalation_sweep_loop():
+    while True:
+        try:
+            db = SessionLocal()
+            try:
+                run_escalation_sweep(db)
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"Error during escalation sweep background task: {e}", flush=True)
+        # Sleep for 15 minutes
+        await asyncio.sleep(900)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    
+    # SQLite lightweight migration to add columns to an existing table if they don't exist
+    with engine.begin() as conn:
+        inspector = inspect(engine)
+        if "complaints" in inspector.get_table_names():
+            columns = [c["name"] for c in inspector.get_columns("complaints")]
+            if "escalation_level" not in columns:
+                conn.execute(text("ALTER TABLE complaints ADD COLUMN escalation_level INTEGER DEFAULT 0"))
+            if "sla_deadline" not in columns:
+                conn.execute(text("ALTER TABLE complaints ADD COLUMN sla_deadline DATETIME NULL"))
+                
+    # Launch escalation background worker
+    task = asyncio.create_task(escalation_sweep_loop())
     yield
+    # Shutdown background task gracefully
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(

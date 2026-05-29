@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -26,6 +26,8 @@ class Complaint(Base):
     user_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("users.id"), nullable=True)
     payload_json: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(64), default="Submitted")
+    escalation_level: Mapped[int] = mapped_column(Integer, default=0)
+    sla_deadline: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
