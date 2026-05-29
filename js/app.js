@@ -377,7 +377,6 @@ const App = {
     } else {
       badge.textContent = "Offline";
       badge.classList.add("offline");
-      this.showToast("⚠️ Network lost. YatraRaksha is running in Offline-First mode.");
     }
   },
 

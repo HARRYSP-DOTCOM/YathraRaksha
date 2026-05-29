@@ -8,7 +8,7 @@ const PWAManager = {
   init() {
     this.registerServiceWorkerUpdates();
     this.bindInstallPrompt();
-    this.bindOfflineBar();
+    this.bindOfflineSync();
     this.detectStandalone();
     this.showIosInstallHint();
   },
@@ -89,19 +89,8 @@ const PWAManager = {
     this.deferredInstallPrompt = null;
   },
 
-  bindOfflineBar() {
-    let bar = document.getElementById("pwa-offline-bar");
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "pwa-offline-bar";
-      bar.className = "pwa-offline-bar";
-      bar.hidden = true;
-      bar.textContent = "Offline — complaints save locally and sync when you’re back online.";
-      document.body.appendChild(bar);
-    }
-
+  bindOfflineSync() {
     const setOnline = () => {
-      bar.hidden = true;
       document.documentElement.classList.remove("is-offline");
       if (navigator.onLine && window.RoadTracker?.syncOfflineQueue) {
         window.RoadTracker.syncOfflineQueue();
@@ -114,7 +103,6 @@ const PWAManager = {
     };
 
     const setOffline = () => {
-      bar.hidden = false;
       document.documentElement.classList.add("is-offline");
     };
 
@@ -122,6 +110,8 @@ const PWAManager = {
     window.addEventListener("offline", setOffline);
     if (!navigator.onLine) setOffline();
     else setOnline();
+
+    document.getElementById("pwa-offline-bar")?.remove();
   },
 
   detectStandalone() {
