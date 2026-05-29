@@ -20,7 +20,7 @@ This will spin up the backend API on port `8000` and the frontend server on port
 cd backend
 python -m venv .venv
 .venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS/Linux
+
 pip install -r requirements.txt
 python run.py
 ```
