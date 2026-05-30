@@ -106,6 +106,40 @@ def list_complaints(
     return results
 
 
+@router.get("/{complaint_id}/priority")
+def get_complaint_priority(complaint_id: str, db: Session = Depends(get_db)):
+    from app.services.priority_scorer import compute_priority_score
+    from app.seed_data import get_roads
+    row = db.get(Complaint, complaint_id)
+    if not row:
+        raise HTTPException(404, "Not found")
+    data = json.loads(row.payload_json)
+    road_id = (data.get("matchedRoad") or {}).get("id")
+    road = next((r for r in get_roads() if r["id"] == road_id), None) if road_id else None
+    priority = compute_priority_score(data, road)
+    return {"complaintId": complaint_id, **priority}
+
+@router.get("/ranked")
+def ranked_complaints(status: str | None = Query(None), db: Session = Depends(get_db)):
+    from app.services.priority_scorer import compute_priority_score
+    from app.seed_data import get_roads
+    all_roads = {r["id"]: r for r in get_roads()}
+    rows = db.query(Complaint).all()
+    results = []
+    for row in rows:
+        data = json.loads(row.payload_json)
+        if status and row.status != status:
+            continue
+        road_id = (data.get("matchedRoad") or {}).get("id")
+        road = all_roads.get(road_id)
+        priority = compute_priority_score(data, road)
+        data["priorityScore"] = priority["score"]
+        data["priorityCategory"] = priority["category"]
+        data["status"] = row.status
+        results.append(data)
+    return sorted(results, key=lambda x: x["priorityScore"], reverse=True)
+
+
 @router.post("/check-duplicate")
 def check_duplicate(body: dict, db: Session = Depends(get_db)):
     from app.services.duplicate_detector import find_nearby_complaints
@@ -172,6 +206,15 @@ def update_complaint_status(
     )
     data["statusLogs"] = logs
     row.status = body.status
+
+    from app.services.priority_scorer import compute_priority_score
+    from app.seed_data import get_roads
+    road_id = (data.get("matchedRoad") or {}).get("id")
+    road = next((r for r in get_roads() if r["id"] == road_id), None) if road_id else None
+    priority = compute_priority_score(data, road)
+    data["priorityScore"] = priority["score"]
+    data["priorityCategory"] = priority["category"]
+
     row.payload_json = json.dumps(data)
     row.updated_at = datetime.utcnow()
     db.commit()

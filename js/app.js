@@ -1400,6 +1400,12 @@ const App = {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="badge ${statusClass}">${report.status}</span>
               ${report.status.startsWith("Escalated") ? `<span class="badge badge-warn" style="font-size:10px;">⚠️ Escalated</span>` : ''}
+              ${report.priorityCategory ? (() => {
+                const s = window.App.getPriorityStyle(report.priorityCategory);
+                return `<span style="display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; background:${s.bg}; color:${s.color}; border:${s.border}; margin-left:4px;">
+                  P: ${report.priorityCategory} ${report.priorityScore ? '(' + report.priorityScore + ')' : ''}
+                </span>`;
+              })() : ''}
               <span style="font-size: 11px; color: var(--text-muted);">REF: ${report.id}</span>
             </div>
             <h4 style="margin-top: 6px; font-size: 15px;">${report.defectType}</h4>
@@ -1519,6 +1525,16 @@ const App = {
     document.getElementById('public-timeline-modal').style.display = 'block';
   },
 
+  getPriorityStyle(category) {
+    const map = {
+      Critical: { bg: 'rgba(248,113,113,0.15)', color: 'var(--accent-red)', border: '1px solid rgba(248,113,113,0.3)' },
+      High:     { bg: 'rgba(251,191,36,0.15)',  color: 'var(--secondary)',  border: '1px solid rgba(251,191,36,0.3)' },
+      Medium:   { bg: 'rgba(56,189,248,0.12)',  color: 'var(--tertiary)',   border: '1px solid rgba(56,189,248,0.3)' },
+      Low:      { bg: 'rgba(148,163,184,0.1)',  color: 'var(--text-muted)', border: '1px solid rgba(148,163,184,0.2)' },
+    };
+    return map[category] || map.Low;
+  },
+
   viewComplaintDetails(complaintId) {
     const reports = window.RoadTracker.getAllReports();
     const complaint = reports.find(c => c.id === complaintId);
@@ -1534,6 +1550,21 @@ const App = {
     document.getElementById("details-escalation").textContent = complaint.escalationHierarchy ? `Escalation path: ${complaint.escalationHierarchy.join(" → ")}` : "Escalation path: Engineer → Superintending Engineer → Chief Engineer";
 
     document.getElementById("details-notice").textContent = complaint.formalNoticeText;
+
+    const priorityEl = document.getElementById('details-priority-card');
+    if (priorityEl && complaint.priorityScore) {
+      const s = this.getPriorityStyle(complaint.priorityCategory);
+      priorityEl.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="font-size:28px; font-weight:800; color:${s.color};">${complaint.priorityScore}</div>
+          <div>
+            <div style="font-size:11px; color:var(--text-muted);">PRIORITY SCORE</div>
+            <span style="padding:3px 10px; border-radius:6px; font-size:11px; font-weight:700; background:${s.bg}; color:${s.color}; border:${s.border};">${complaint.priorityCategory}</span>
+          </div>
+        </div>
+      `;
+      priorityEl.style.display = 'block';
+    }
 
     const steps = [
       { name: "Submitted", desc: "Defect logged and visual telemetry verified." },
