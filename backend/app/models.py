@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, Integer
+from sqlalchemy import DateTime, ForeignKey, Float, String, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -32,3 +33,43 @@ class Complaint(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user: Mapped["User | None"] = relationship(back_populates="complaints")
+
+
+class Road(Base):
+    __tablename__ = "roads"
+
+    id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    country: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    authority: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contractor_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contractor_performance: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sanctioned_budget: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    spent_budget: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    funding_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    source_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    data_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "country": self.country,
+            "authority": self.authority,
+            "contractorName": self.contractor_name,
+            "contractorPerformance": self.contractor_performance,
+            "sanctionedBudget": self.sanctioned_budget,
+            "spentBudget": self.spent_budget,
+            "fundingSource": self.funding_source,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "sourceName": self.source_name,
+            "sourceUrl": self.source_url,
+            "sourceVerifiedAt": self.source_verified_at.isoformat() + "Z" if self.source_verified_at else None,
+        }

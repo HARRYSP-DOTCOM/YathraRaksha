@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     media_upload_dir: str = "uploads"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
+    open_roads_data_url: str = ""
+    open_data_refresh_on_startup: bool = False
 
 
 settings = Settings()

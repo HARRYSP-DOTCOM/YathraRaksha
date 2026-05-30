@@ -9,7 +9,9 @@ from sqlalchemy import inspect, text
 
 from app.config import settings
 from app.database import Base, engine, SessionLocal
-from app.routers import ai, audit, auth, chatbot, complaints, contractors, media, roads
+from app.models import Road
+from app.routers import ai, audit, auth, chatbot, complaints, contractors, data, media, roads
+from app.services.data_ingestion import refresh_road_data
 from app.services.escalation_service import run_escalation_sweep
 
 
@@ -40,6 +42,10 @@ async def lifespan(_: FastAPI):
                 conn.execute(text("ALTER TABLE complaints ADD COLUMN escalation_level INTEGER DEFAULT 0"))
             if "sla_deadline" not in columns:
                 conn.execute(text("ALTER TABLE complaints ADD COLUMN sla_deadline DATETIME NULL"))
+
+    with SessionLocal() as db:
+        if settings.open_data_refresh_on_startup or not db.query(Road).first():
+            refresh_road_data(db)
                 
     # Launch escalation background worker
     task = asyncio.create_task(escalation_sweep_loop())
@@ -75,6 +81,7 @@ app.include_router(complaints.router, prefix=prefix)
 app.include_router(roads.router, prefix=prefix)
 app.include_router(contractors.router, prefix=prefix)
 app.include_router(audit.router, prefix=prefix)
+app.include_router(data.router, prefix=prefix)
 app.include_router(media.router, prefix=prefix)
 app.include_router(ai.router, prefix=prefix)
 app.include_router(chatbot.router, prefix=prefix)

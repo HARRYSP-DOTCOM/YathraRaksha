@@ -1969,6 +1969,9 @@ label {
   .main-canvas {
     position: relative;
     z-index: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    height: calc(100vh - 70px);
   }
 
   .mobile-nav {
@@ -2034,6 +2037,7 @@ label {
   .dashboard-grid,
   .capture-layout {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .mobile-header {
@@ -2054,10 +2058,12 @@ label {
 
   .route-input-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .trip-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
 
   .map-wrapper {
@@ -2066,6 +2072,16 @@ label {
 
   .page-hero {
     padding: 22px 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .mini-map-card .mini-map-header {
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .map-audit-panel {
@@ -2095,11 +2111,12 @@ label {
   }
 
   main {
-    padding: 18px 14px 92px 14px;
+    padding: 18px 14px 112px 14px;
   }
 
   .metrics-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .section-title {
@@ -2113,6 +2130,45 @@ label {
 
   .chat-container {
     height: 620px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .page-hero {
+    padding: 18px 14px;
+  }
+
+  .drop-zone {
+    padding: 32px 16px;
+    min-height: 240px;
+  }
+
+  .mobile-nav {
+    height: 66px;
+    bottom: 10px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .mobile-nav-link {
+    min-width: 0;
+    padding: 8px 0;
+    font-size: 10px;
+  }
+
+  .mobile-nav-link span {
+    display: none;
+  }
+
+  .map-wrapper {
+    height: min(42vh, 320px) !important;
+  }
+
+  .glass-card {
+    padding: 18px;
   }
 
   .chat-input-row {

@@ -448,9 +448,33 @@ body.welcome-active .app-layout {
   .welcome-features {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .welcome-feature {
     justify-content: center;
+  }
+
+  .welcome-content {
+    padding: 24px 18px;
+  }
+
+  .welcome-title {
+    font-size: 2.4rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .welcome-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .welcome-cta,
+  .welcome-skip {
+    width: 100%;
   }
 }
