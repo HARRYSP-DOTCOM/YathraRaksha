@@ -1,91 +1,50 @@
 import json
 from datetime import datetime, timedelta
-from typing import Any
 from sqlalchemy.orm import Session
 from app.models import Complaint
 
-SLA_HOURS = {
-    "Low": 72,
-    "Medium": 48,
-    "High": 24,
-    "Critical": 6
-}
+SLA_HOURS = { "Low": 72, "Medium": 48, "High": 24, "Critical": 6 }
+
+HIERARCHY = { 0: "Assistant Engineer", 1: "Executive Engineer", 2: "Chief Engineer" }
 
 def compute_sla_deadline(created_at: datetime, severity: str) -> datetime:
-    """Compute the SLA deadline based on the creation time and severity."""
-    # Handle casing and defaults gracefully
-    sev_key = (severity or "Medium").strip().title()
-    hours = SLA_HOURS.get(sev_key, SLA_HOURS["Medium"])
+    hours = SLA_HOURS.get(severity, 48)
     return created_at + timedelta(hours=hours)
 
-def get_escalation_authority(level: int) -> str:
-    """Return the engineering authority corresponding to the escalation level."""
-    authorities = {
-        0: "Assistant Engineer",
-        1: "Executive Engineer",
-        2: "Chief Engineer"
-    }
-    # Clamp to max level of 2
-    clamped_level = min(max(level, 0), 2)
-    return authorities[clamped_level]
-
-def escalate_complaint(complaint: Complaint, db: Session):
-    """Escalates a complaint to the next authority level, updating its status and payload logs."""
-    # Only escalate if we haven't reached the maximum level (level 2 -> Chief Engineer)
-    if complaint.escalation_level < 2:
-        complaint.escalation_level += 1
-    
-    authority = get_escalation_authority(complaint.escalation_level)
-    new_status = f"Escalated - {authority}"
-    complaint.status = new_status
-    
-    # Load existing payload JSON data
-    try:
-        data = json.loads(complaint.payload_json) if complaint.payload_json else {}
-    except Exception:
-        data = {}
-        
-    # Append to statusLogs
-    status_logs = data.get("statusLogs", [])
-    timestamp_str = datetime.utcnow().isoformat() + "Z"
-    status_logs.append({
+def escalate_complaint(complaint: Complaint, db: Session) -> Complaint:
+    # Only escalate up to level 2
+    if complaint.escalation_level >= 2:
+        return complaint
+    complaint.escalation_level += 1
+    authority = HIERARCHY[complaint.escalation_level]
+    data = json.loads(complaint.payload_json)
+    logs = data.get("statusLogs", [])
+    logs.append({
         "status": "Escalated",
-        "timestamp": timestamp_str,
-        "message": f"Escalated to {authority}"
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "message": f"Complaint escalated to {authority} due to SLA breach.",
+        "authority": authority
     })
-    data["statusLogs"] = status_logs
-    
-    # Append to auditLogs
-    audit_logs = data.get("auditLogs", [])
-    audit_logs.append({
-        "action": "Escalation",
-        "timestamp": timestamp_str,
-        "message": f"Complaint escalated to level {complaint.escalation_level} ({authority})"
-    })
-    data["auditLogs"] = audit_logs
-    
-    # Update payload
+    data["statusLogs"] = logs
+    complaint.status = f"Escalated — {authority}"
     complaint.payload_json = json.dumps(data)
     complaint.updated_at = datetime.utcnow()
-    
-    # Commit changes
     db.commit()
     db.refresh(complaint)
+    return complaint
 
-def run_escalation_sweep(db: Session):
-    """Queries all unresolved complaints that have exceeded their SLA deadline and escalates them."""
+def run_escalation_sweep(db: Session) -> int:
+    # Returns count of escalated complaints
     now = datetime.utcnow()
-    
-    # Query complaints that are not in resolved, closed, or rejected states,
-    # have an SLA deadline set, are overdue, and haven't reached the max escalation level (2)
-    overdue_complaints = (
-        db.query(Complaint)
-        .filter(~Complaint.status.in_(["Resolved", "Closed", "Rejected"]))
-        .filter(Complaint.sla_deadline.isnot(None))
-        .filter(Complaint.sla_deadline < now)
-        .filter(Complaint.escalation_level < 2)
-        .all()
-    )
-    
-    for complaint in overdue_complaints:
-        escalate_complaint(complaint, db)
+    terminal = ("Resolved", "Closed", "Rejected")
+    rows = db.query(Complaint).filter(
+        Complaint.sla_deadline != None,
+        Complaint.sla_deadline < now,
+        Complaint.escalation_level < 2
+    ).all()
+    count = 0
+    for row in rows:
+        if row.status not in terminal and not row.status.startswith("Resolved") and not row.status.startswith("Closed"):
+            escalate_complaint(row, db)
+            count += 1
+    return count

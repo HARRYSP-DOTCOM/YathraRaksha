@@ -10,23 +10,19 @@ from sqlalchemy import inspect, text
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import Road
-from app.routers import ai, audit, auth, chatbot, complaints, contractors, data, media, roads
+from app.routers import ai, audit, auth, chatbot, complaints, contractors, data, media, roads, sla
 from app.services.data_ingestion import refresh_road_data
 from app.services.escalation_service import run_escalation_sweep
 
 
-async def escalation_sweep_loop():
+async def escalation_loop():
     while True:
+        await asyncio.sleep(900)  # 15 minutes
+        db = SessionLocal()
         try:
-            db = SessionLocal()
-            try:
-                run_escalation_sweep(db)
-            finally:
-                db.close()
-        except Exception as e:
-            print(f"Error during escalation sweep background task: {e}", flush=True)
-        # Sleep for 15 minutes
-        await asyncio.sleep(900)
+            run_escalation_sweep(db)
+        finally:
+            db.close()
 
 
 @asynccontextmanager
@@ -48,7 +44,7 @@ async def lifespan(_: FastAPI):
             refresh_road_data(db)
                 
     # Launch escalation background worker
-    task = asyncio.create_task(escalation_sweep_loop())
+    task = asyncio.create_task(escalation_loop())
     yield
     # Shutdown background task gracefully
     task.cancel()
@@ -85,6 +81,7 @@ app.include_router(data.router, prefix=prefix)
 app.include_router(media.router, prefix=prefix)
 app.include_router(ai.router, prefix=prefix)
 app.include_router(chatbot.router, prefix=prefix)
+app.include_router(sla.router, prefix=prefix)
 
 upload_dir = Path(__file__).parent / settings.media_upload_dir
 upload_dir.mkdir(parents=True, exist_ok=True)

@@ -1365,6 +1365,7 @@ const App = {
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="badge ${statusClass}">${report.status}</span>
+              ${report.status.startsWith("Escalated") ? `<span class="badge badge-warn" style="font-size:10px;">⚠️ Escalated</span>` : ''}
               <span style="font-size: 11px; color: var(--text-muted);">REF: ${report.id}</span>
             </div>
             <h4 style="margin-top: 6px; font-size: 15px;">${report.defectType}</h4>
@@ -1436,7 +1437,35 @@ const App = {
       `;
     }).join("");
 
-    document.getElementById("timeline-tracker-box").innerHTML = timelineHtml;
+    function buildLiveEventFeed(logs) {
+      if (!logs || logs.length === 0) return '';
+      const sorted = [...logs].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+      return `
+        <div class="live-event-feed" style="margin-top:20px;">
+          <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:10px; letter-spacing:0.05em;">LIVE AUDIT TRAIL</h4>
+          ${sorted.map(log => {
+            const isEscalated = log.status === 'Escalated';
+            const dotColor = isEscalated ? 'var(--accent-red)' : 'var(--primary)';
+            const time = new Date(log.timestamp).toLocaleString();
+            return `
+              <div style="display:flex; gap:12px; margin-bottom:12px; align-items:flex-start;">
+                <div style="width:8px; height:8px; border-radius:50%; background:${dotColor}; flex-shrink:0; margin-top:4px;"></div>
+                <div>
+                  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-white);">${log.status}</span>
+                    ${log.authority ? `<span class="badge badge-warn" style="font-size:10px;">${log.authority}</span>` : ''}
+                    <span style="font-size:11px; color:var(--text-muted);">${time}</span>
+                  </div>
+                  <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">${log.message}</p>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    document.getElementById("timeline-tracker-box").innerHTML = timelineHtml + buildLiveEventFeed(logs);
   },
 
   focusRoadOnMap(roadId) {

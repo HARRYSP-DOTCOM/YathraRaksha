@@ -76,6 +76,16 @@ def manual_escalate_complaint(
     return _serialize_complaint(complaint)
 
 
+@router.post("/{complaint_id}/escalate")
+def manual_escalate(complaint_id: str, db: Session = Depends(get_db), user: User = Depends(require_user)):
+    row = db.get(Complaint, complaint_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    from app.services.escalation_service import escalate_complaint
+    updated = escalate_complaint(row, db)
+    return _serialize_complaint(updated)
+
+
 @router.get("")
 def list_complaints(
     status: str | None = Query(None),
