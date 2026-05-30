@@ -1275,6 +1275,33 @@ const App = {
 
     this.updateActiveReportLocation();
 
+    // Check for nearby duplicates via API (non-blocking, warn only)
+    if (navigator.onLine && this.activeAIReport) {
+      try {
+        const dupCheck = await APIService.checkDuplicate(
+          this.activeAIReport.coordinates[0],
+          this.activeAIReport.coordinates[1],
+          this.activeAIReport.defectType
+        );
+        if (dupCheck.isDuplicate && dupCheck.nearbyComplaints.length > 0) {
+          const nearest = dupCheck.nearbyComplaints[0];
+          const proceed = confirm(
+            `⚠️ A similar ${nearest.defectType} complaint already exists ${nearest.distanceKm} km away (ID: ${nearest.id}).\n\n` +
+            `Tap "OK" to file anyway, or "Cancel" to support the existing complaint instead.`
+          );
+          if (!proceed) {
+            // Support the existing complaint instead
+            await APIService.supportComplaint(nearest.id);
+            this.showToast(`✅ You've confirmed the existing complaint ${nearest.id}!`);
+            this.switchTab('tracker');
+            return; // Don't file a new complaint
+          }
+        }
+      } catch(e) {
+        console.warn('Duplicate check failed (non-fatal):', e);
+      }
+    }
+
     // File complaint locally first
     const complaint = window.RoadTracker.fileComplaint(this.activeAIReport, userDesc, userContact);
 
@@ -1377,6 +1404,13 @@ const App = {
             </div>
             <h4 style="margin-top: 6px; font-size: 15px;">${report.defectType}</h4>
             <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">📍 ${report.matchedRoad ? report.matchedRoad.name : 'Unknown Road'}</p>
+            ${report.supportCount > 0 ? `<p style="font-size:11px; color:var(--primary); margin-top:4px;">👥 ${report.supportCount} citizen${report.supportCount > 1 ? 's' : ''} confirmed</p>` : ''}
+            ${!['Resolved','Closed','Merged'].includes(report.status) ? `
+              <button onclick="event.stopPropagation(); window.App.supportExistingComplaint('${report.id}')"
+                class="btn btn-secondary btn-sm" style="margin-top:8px; font-size:11px;">
+                👍 Confirm Issue
+              </button>
+            ` : ''}
           </div>
           <div style="text-align: right;">
             <span class="badge" style="background: rgba(255,255,255,0.03); color: var(--text-muted);">${new Date(report.timestamp).toLocaleDateString()}</span>
@@ -1390,6 +1424,21 @@ const App = {
         </div>
       `;
     }).join("");
+  },
+
+  async supportExistingComplaint(complaintId) {
+    try {
+      if (navigator.onLine) {
+        await APIService.supportComplaint(complaintId);
+      }
+      // Also update local storage
+      window.RoadTracker.updateComplaintStatus(complaintId, 'Community Support',
+        'You confirmed this issue exists. Thank you for validating!');
+      this.showToast('👍 Thank you! Your confirmation has been recorded.');
+      this.renderReportsList();
+    } catch(e) {
+      this.showToast('Could not submit confirmation — try again.');
+    }
   },
 
   openPublicTimeline(complaintId) {

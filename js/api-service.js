@@ -97,6 +97,16 @@ const APIService = {
     }
   },
 
+  async checkDuplicate(lat, lng, defectType) {
+    return this.request('/complaints/check-duplicate', {
+      method: 'POST',
+      body: JSON.stringify({ lat, lng, defectType })
+    });
+  },
+  async supportComplaint(complaintId) {
+    return this.request(`/complaints/${complaintId}/support`, { method: 'POST' });
+  },
+
   /**
    * File complaint with AI report
    */

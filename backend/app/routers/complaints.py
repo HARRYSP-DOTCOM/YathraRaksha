@@ -106,6 +106,41 @@ def list_complaints(
     return results
 
 
+@router.post("/check-duplicate")
+def check_duplicate(body: dict, db: Session = Depends(get_db)):
+    from app.services.duplicate_detector import find_nearby_complaints
+    lat = body.get("lat"); lng = body.get("lng"); defect_type = body.get("defectType","")
+    if lat is None or lng is None:
+        raise HTTPException(400, "lat and lng required")
+    nearby = find_nearby_complaints(lat, lng, defect_type, db)
+    return {"isDuplicate": len(nearby) > 0, "nearbyComplaints": nearby}
+
+
+@router.post("/{complaint_id}/support")
+def support_complaint(complaint_id: str, db: Session = Depends(get_db), user: User = Depends(require_user)):
+    row = db.get(Complaint, complaint_id)
+    if not row:
+        raise HTTPException(404, "Not found")
+    data = json.loads(row.payload_json)
+    data["supportCount"] = data.get("supportCount", 0) + 1
+    logs = data.get("statusLogs", [])
+    logs.append({"status": "Community Support", "timestamp": datetime.utcnow().isoformat()+"Z",
+                 "message": f"A citizen confirmed this issue. Total support: {data['supportCount']}"})
+    data["statusLogs"] = logs
+    row.payload_json = json.dumps(data)
+    db.commit()
+    return _serialize_complaint(row)
+
+
+@router.post("/{original_id}/merge/{duplicate_id}")
+def merge_complaints(original_id: str, duplicate_id: str, db: Session = Depends(get_db), user: User = Depends(require_user)):
+    from app.services.duplicate_detector import merge_as_duplicate
+    result = merge_as_duplicate(original_id, duplicate_id, db)
+    if not result:
+        raise HTTPException(404, "One or both complaints not found")
+    return result
+
+
 @router.get("/{complaint_id}")
 def get_complaint(complaint_id: str, db: Session = Depends(get_db)):
     row = db.get(Complaint, complaint_id)
