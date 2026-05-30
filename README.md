@@ -1,60 +1,174 @@
-# RoadWatch (YatraRaksha)
+# RoadWatch / YatraRaksha
 
-AI-powered road safety PWA with a **Python (FastAPI)** backend for hackathon demos.
+RoadWatch is a Progressive Web App for road safety monitoring, with a static frontend and a Python FastAPI backend. The project supports offline use, complaint submission, media upload, infrastructure insight, and server-side analysis.
 
-## Quick start
+## Overview
 
-### Start Both (Recommended)
+The frontend is a static PWA built with HTML, CSS, and JavaScript. The backend uses FastAPI and SQLite for local data persistence and provides a REST API for the app.
 
-To start both the frontend and the backend automatically using a single script:
+Key capabilities:
+- Complaint submission and offline queueing
+- Road and contractor data retrieval
+- Media uploads for supporting evidence
+- AI-assisted analysis endpoint
+- PWA installability and offline fallback handling
+
+## Repository Structure
+
+- `index.html` — main application shell
+- `manifest.json` — PWA metadata
+- `sw.js` — service worker logic
+- `offline.html` — offline fallback page
+- `css/` — styling resources
+- `js/` — frontend application code
+- `backend/` — FastAPI backend service
+  - `main.py` — app initialization and router registration
+  - `run.py` — local backend launch script
+  - `requirements.txt` — Python dependencies
+  - `app/` — backend package
+    - `routers/` — API route modules
+    - `services/` — background workers and business logic
+    - `models.py` — SQLAlchemy models
+    - `database.py` — database engine and session management
+    - `config.py` — application settings and environment variables
+
+## Requirements
+
+- Python 3.10 or newer
+- A modern browser with PWA support
+- A shell for `./start.sh` on Windows (Git Bash, WSL, or similar)
+
+## Installation
+
+### Clone the repository
+
+```bash
+git clone https://github.com/your-repo/roadwatch.git
+cd roadwatch
+```
+
+### Set up the backend
+
+```bash
+cd backend
+python -m venv .venv
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# Windows CMD
+.venv\Scripts\activate.bat
+
+# macOS / Linux
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Optional configuration
+
+The backend reads optional settings from a `.env` file located in `backend/`.
+
+Example `.env`:
+
+```env
+APP_NAME=YatraRaksha API
+API_PREFIX=/v1
+SECRET_KEY=replace-this-for-production
+DATABASE_URL=sqlite:///./yatra_raksha.db
+CORS_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
+GROQ_API_KEY=
+OPEN_DATA_REFRESH_ON_STARTUP=False
+```
+
+### Start the backend
+
+From `backend/`:
+
+```bash
+python run.py
+```
+
+Access the backend at:
+- `http://127.0.0.1:8000`
+- `http://127.0.0.1:8000/docs`
+
+### Start the frontend
+
+From the project root:
+
+```bash
+python -m http.server 5500
+```
+
+Then open:
+- `http://127.0.0.1:5500`
+
+The frontend is configured to use the backend API at `http://127.0.0.1:8000/v1`.
+
+### Start both services together
+
+From the repository root, use the provided startup script:
 
 ```bash
 ./start.sh
 ```
 
-This will spin up the backend API on port `8000` and the frontend server on port `5500`, and gracefully shut both down when you press `Ctrl+C`.
+This starts the frontend on port `5500` and the backend on port `8000`. Use `Ctrl+C` to stop both services.
 
-### 1. Backend (Python)
+## Windows setup
 
-```bash
+If you prefer not to use the shell script, run the backend and frontend separately.
+
+Backend in PowerShell:
+
+```powershell
 cd backend
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
 python run.py
 ```
 
-API: [http://127.0.0.1:8000](http://127.0.0.1:8000) · Docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+Frontend in another terminal:
 
-### 2. Frontend (static)
-
-Serve the project root with any static server, for example:
-
-```bash
-# From repo root (Python 3)
+```powershell
+cd e:\roadwatch
 python -m http.server 5500
 ```
 
-Open [http://127.0.0.1:5500](http://127.0.0.1:5500). When the page is served from `localhost` or `127.0.0.1`, the app automatically calls the API at `http://127.0.0.1:8000/v1`.
+Then open `http://127.0.0.1:5500`.
 
-### Install as PWA
+## API Endpoints
 
-1. Open the site in **Chrome** or **Edge** (use `http://127.0.0.1:5500`, not `file://`).
-2. Click **Install App** in the sidebar, or use the browser install icon in the address bar.
-3. On **iPhone**: Safari → Share → **Add to Home Screen**.
+The backend exposes these core routes under `/v1`:
 
-The app works **offline** for the dashboard shell; complaints queue locally and sync when online.
+- `POST /v1/complaints` — submit a road complaint
+- `GET /v1/roads` — retrieve road data
+- `GET /v1/contractors` — retrieve contractor information
+- `GET /v1/audit/budget` — view budget audit data
+- `POST /v1/media/upload` — upload media files
+- `POST /v1/ai/analyze` — request AI analysis
+- `GET /v1/health` — health check endpoint
 
-## API overview
+The backend also exposes uploaded media files under `/uploads`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/v1/complaints` | File complaint |
-| GET | `/v1/roads` | Road infrastructure data |
-| GET | `/v1/contractors` | Contractor rankings |
-| GET | `/v1/audit/budget` | Budget audit |
-| POST | `/v1/media/upload` | Media upload |
-| POST | `/v1/ai/analyze` | Server-side AI analysis |
+## Features
 
-Stack: **FastAPI**, **SQLAlchemy** (SQLite), **JWT** auth.
+- PWA install support
+- Offline caching and fallback page
+- Local complaint queueing when the network is unavailable
+- Media upload handling
+- Road data and contractor analytics
+- Server-side analysis endpoint for additional processing
+
+## Development notes
+
+- Backend: FastAPI, SQLAlchemy, SQLite
+- Frontend: static HTML, CSS, and JavaScript
+- The project is intended as a demo/proof of concept and is suitable for local development
+
+## Notes
+
+- If you modify backend ports or origins, update `backend/app/config.py` or use the `.env` file.
+- The frontend assumes the API prefix is `/v1` and the API is available from `localhost`.
+- For production, replace the default secret key and choose a production database.
