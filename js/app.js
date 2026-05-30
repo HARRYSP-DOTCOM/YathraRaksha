@@ -662,6 +662,161 @@ const App = {
     alert(`${road.name}\n\nFunding: ${road.fundingSource}\nContractor: ${road.contractorName} (${road.contractorPerformance}/5★)\nAllocated: ${formatCr(road.sanctionedBudget)}\nSpent: ${formatCr(road.spentBudget)}\n${overrun ? '⚠️ BUDGET OVERRUN: ' + formatCr(road.spentBudget - road.sanctionedBudget) + ' over budget' : '✅ Within budget'}\nLast relayed: ${road.lastRelayingDate}\nGuarantee period: ${road.maintenanceGuaranteePeriod} years`);
   },
 
+  _alertsData: [],
+
+  async loadAlertsTab() {
+    const listEl = document.getElementById('alerts-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">Loading alerts…</p>';
+    try {
+      this._alertsData = await APIService.request('/alerts/roads');
+      this.renderAlertsList(this._alertsData);
+    } catch(e) {
+      listEl.innerHTML = '<p style="color:var(--text-muted);">Alerts unavailable — check backend connection.</p>';
+    }
+  },
+
+  filterAlerts(level) {
+    if (!this._alertsData.length) return;
+    const filtered = level === 'all' ? this._alertsData : this._alertsData.filter(r => r.overallRisk === level);
+    this.renderAlertsList(filtered);
+  },
+
+  renderAlertsList(data) {
+    const listEl = document.getElementById('alerts-list');
+    if (!listEl) return;
+    const ICONS = { BUDGET_OVERRUN:'💸', EXCESSIVE_POTHOLES:'🕳️', HIGH_COMPLAINTS:'📋', LOW_CONTRACTOR_RATING:'⭐', POOR_SAFETY:'🛡️', GUARANTEE_EXPIRED:'📅' };
+    const RISK_BADGE = { Critical:'badge-warn', High:'badge-sh', Medium:'badge-nh', Low:'badge-good' };
+    if (!data.length) { listEl.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No alerts match this filter.</p>'; return; }
+    listEl.innerHTML = data.map(r => `
+      <div class="glass-card ${r.overallRisk === 'Critical' ? 'highlight-orange' : ''}" style="padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+          <div style="flex:1;">
+            <p style="font-weight:700; font-size:13px; color:var(--text-white);">${r.roadName}</p>
+            <p style="font-size:11px; color:var(--text-muted);">Risk Score: ${r.riskScore}/100</p>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span class="badge ${RISK_BADGE[r.overallRisk] || 'badge-sh'}" style="font-size:10px;">${r.overallRisk}</span>
+            <button class="btn btn-secondary btn-sm" style="font-size:10px;" onclick="window.App.focusRoadOnMap('${r.roadId}')">🗺️ View</button>
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
+          ${r.alerts.map(a => `
+            <div style="display:flex; gap:8px; align-items:center; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:var(--border-radius-sm);">
+              <span style="font-size:14px;">${ICONS[a.type] || '⚠️'}</span>
+              <div>
+                <span class="badge ${a.severity === 'Critical' ? 'badge-warn' : 'badge-sh'}" style="font-size:9px; margin-right:6px;">${a.severity}</span>
+                <span style="font-size:12px; color:var(--text-muted);">${a.message}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  },
+
+  _accountabilityData: [],
+
+  async loadAccountabilityTab() {
+    const listEl = document.getElementById('accountability-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<p style="color:var(--text-muted); font-size:13px; padding:20px 0;">Loading scores…</p>';
+    try {
+      const lb = await APIService.request('/accountability/leaderboard');
+      const all = await APIService.request('/accountability/scores');
+      this._accountabilityData = all;
+
+      // Animate national gauge
+      const arc = document.getElementById('gauge-arc');
+      const scoreText = document.getElementById('national-score-text');
+      const totalEl = document.getElementById('national-total-roads');
+      if (arc && scoreText) {
+        const pct = lb.nationalAverage / 100;
+        arc.style.strokeDashoffset = 314 - (314 * pct);
+        arc.style.stroke = pct >= 0.75 ? 'var(--primary)' : pct >= 0.5 ? 'var(--secondary)' : 'var(--accent-red)';
+        scoreText.textContent = lb.nationalAverage;
+        if (totalEl) totalEl.textContent = `${lb.totalRoads} roads monitored`;
+      }
+
+      this.renderAccountabilityList(all);
+    } catch(e) {
+      if (listEl) listEl.innerHTML = '<p style="color:var(--text-muted);">Accountability data unavailable — check backend.</p>';
+    }
+  },
+
+  filterAccountability(filter) {
+    if (!this._accountabilityData.length) return;
+    let filtered = this._accountabilityData;
+    if (filter === 'A') filtered = filtered.filter(r => r.grade === 'A' || r.grade === 'A+');
+    else if (filter === 'B') filtered = filtered.filter(r => r.grade === 'B');
+    else if (filter === 'needs') filtered = filtered.filter(r => ['C','D','F'].includes(r.grade));
+    this.renderAccountabilityList(filtered);
+  },
+
+  renderAccountabilityList(data) {
+    const listEl = document.getElementById('accountability-list');
+    if (!listEl) return;
+    if (!data.length) { listEl.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">No roads match this filter.</p>'; return; }
+
+    const GRADE_STYLE = {
+      'A+': { color:'#fbbf24', bg:'rgba(251,191,36,0.12)', border:'rgba(251,191,36,0.3)' },
+      'A':  { color:'#10b981', bg:'rgba(16,185,129,0.12)', border:'rgba(16,185,129,0.3)' },
+      'B':  { color:'var(--tertiary)', bg:'rgba(56,189,248,0.1)', border:'rgba(56,189,248,0.25)' },
+      'C':  { color:'var(--secondary)', bg:'rgba(251,191,36,0.1)', border:'rgba(251,191,36,0.25)' },
+      'D':  { color:'var(--accent-red)', bg:'rgba(248,113,113,0.1)', border:'rgba(248,113,113,0.25)' },
+      'F':  { color:'#ef4444', bg:'rgba(239,68,68,0.15)', border:'rgba(239,68,68,0.35)' },
+    };
+
+    listEl.innerHTML = data.map((r, idx) => {
+      const gs = GRADE_STYLE[r.grade] || GRADE_STYLE['C'];
+      const pct = r.accountabilityScore;
+      const barColor = pct >= 75 ? 'var(--primary)' : pct >= 50 ? 'var(--secondary)' : 'var(--accent-red)';
+      const breakdown = r.scoreBreakdown || {};
+      return `
+        <div class="glass-card" style="padding:14px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <!-- Rank -->
+            <div style="font-size:11px; font-weight:700; color:var(--text-muted); width:24px; text-align:center;">#${idx+1}</div>
+            <!-- Grade circle -->
+            <div style="width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex-shrink:0; color:${gs.color}; background:${gs.bg}; border:2px solid ${gs.border};">${r.grade}</div>
+            <!-- Name + score -->
+            <div style="flex:1; min-width:0;">
+              <p style="font-weight:700; font-size:13px; color:var(--text-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.roadName}</p>
+              <p style="font-size:11px; color:var(--text-muted);">Score: <strong style="color:${barColor};">${r.accountabilityScore}/100</strong></p>
+            </div>
+            <!-- Share button -->
+            <button class="btn btn-secondary btn-sm" style="font-size:10px; flex-shrink:0;" onclick="window.App.shareAccountabilityScore('${r.roadId}','${r.roadName}',${r.accountabilityScore},'${r.grade}')">📤</button>
+          </div>
+
+          <!-- Score bar -->
+          <div style="margin:10px 0 6px; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">
+            <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:2px; transition:width 0.8s ease;"></div>
+          </div>
+
+          <!-- 5 metric rows -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; font-size:11px; margin-top:6px;">
+            <span style="color:var(--text-muted);">Resolution Rate: <strong style="color:var(--text-white);">${r.resolutionRate}%</strong></span>
+            <span style="color:var(--text-muted);">Avg Time: <strong style="color:var(--text-white);">${r.avgResolutionTimeHours}h</strong></span>
+            <span style="color:var(--text-muted);">Budget Util: <strong style="color:var(--text-white);">${r.budgetUtilization}%</strong></span>
+            <span style="color:var(--text-muted);">Satisfaction: <strong style="color:var(--text-white);">${r.citizenSatisfaction}%</strong></span>
+            <span style="color:var(--text-muted);">Spending Eff: <strong style="color:var(--text-white);">${r.spendingEfficiency}%</strong></span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  shareAccountabilityScore(roadId, roadName, score, grade) {
+    const text = `🏆 Road Accountability Score\n${roadName}\nScore: ${score}/100 | Grade: ${grade}\n\n#RoadWatch #YathraRaksha #RoadSafety`;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        this.showToast('Score copied to clipboard!');
+      });
+    }
+  },
+
   switchTab(tabId) {
     this.activeTab = tabId;
     
@@ -717,6 +872,14 @@ const App = {
 
     if (tabId === "transparency") {
       this.loadBudgetDashboard();
+    }
+
+    if (tabId === 'alerts') {
+      this.loadAlertsTab();
+    }
+
+    if (tabId === 'accountability') {
+      this.loadAccountabilityTab();
     }
 
     if (tabId === "overview") {

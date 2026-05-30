@@ -123,6 +123,10 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <span>Satellite Map Hub</span>
           </div>
+          <div class="nav-link" data-tab="alerts">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span>Alerts</span>
+          </div>
           <div class="nav-link" data-tab="tracker">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             <span>Outbox Tracker</span>
@@ -130,6 +134,10 @@
           <div class="nav-link" data-tab="chatbot">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             <span>YatraGPT Assistant</span>
+          </div>
+          <div class="nav-link" data-tab="accountability">
+            <span style="font-size:18px;">🏆</span>
+            <span>Score</span>
           </div>
         </nav>
       </div>
@@ -624,6 +632,19 @@
           </div>
         </section>
 
+        <section class="tab-content" id="alerts-tab">
+          <div style="padding:0 4px;">
+            <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">⚠️ Risk Alerts</h2>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;" id="alerts-filter-chips">
+              <button class="btn btn-sm btn-primary" onclick="window.App.filterAlerts('all')">All</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('Critical')">🔴 Critical</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('High')">🟠 High</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('Medium')">🟡 Medium</button>
+            </div>
+            <div id="alerts-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+          </div>
+        </section>
+
         <!-- 6. CHATBOT TAB -->
         <section class="tab-content" id="chatbot-tab">
           <h2 class="section-title">YatraGPT - AI Transparency Assistant</h2>
@@ -650,6 +671,42 @@
           </div>
         </section>
 
+        <section class="tab-content" id="accountability-tab">
+          <div style="padding:0 4px;">
+            <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:4px;">🏆 Accountability Score</h2>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">A single composite metric measuring transparency, resolution, and budget efficiency.</p>
+
+            <!-- National Average Gauge -->
+            <div class="glass-card" style="padding:20px; text-align:center; margin-bottom:20px;">
+              <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.08em;">NATIONAL ROAD NETWORK AVERAGE</p>
+              <div id="national-gauge" style="position:relative; width:120px; height:120px; margin:0 auto 12px;">
+                <svg viewBox="0 0 120 120" width="120" height="120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"/>
+                  <circle id="gauge-arc" cx="60" cy="60" r="50" fill="none" stroke="var(--primary)" stroke-width="12"
+                    stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"
+                    transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease;"/>
+                </svg>
+                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                  <span id="national-score-text" style="font-size:28px; font-weight:800; font-family:var(--font-heading); color:var(--text-white);">—</span>
+                  <span style="font-size:10px; color:var(--text-muted);">/100</span>
+                </div>
+              </div>
+              <p id="national-total-roads" style="font-size:11px; color:var(--text-muted);"></p>
+            </div>
+
+            <!-- Filter chips -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+              <button class="btn btn-sm btn-primary" onclick="window.App.filterAccountability('all')">All Roads</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('A')">A Grade</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('B')">B Grade</button>
+              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('needs')">⚠️ Needs Attention</button>
+            </div>
+
+            <!-- Leaderboard -->
+            <div id="accountability-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+        </section>
+
       </main>
     </div>
 
@@ -670,6 +727,10 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         <span>Map</span>
       </div>
+      <div class="mobile-nav-link" data-tab="alerts">
+        <div style="font-size:18px;">⚠️</div>
+        <span>Alerts</span>
+      </div>
       <div class="mobile-nav-link" data-tab="tracker">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         <span>Outbox</span>
@@ -678,6 +739,7 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         <span>YatraGPT</span>
       </div>
+      <div class="mobile-nav-link" data-tab="accountability">🏆<span>Score</span></div>
     </nav>
   </div>
 

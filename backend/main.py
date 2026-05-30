@@ -10,7 +10,7 @@ from sqlalchemy import inspect, text
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import Road
-from app.routers import ai, audit, auth, chatbot, complaints, contractors, data, media, roads, sla
+from app.routers import accountability, ai, alerts, audit, auth, chatbot, complaints, contractors, data, media, roads, sla
 from app.services.data_ingestion import refresh_road_data
 from app.services.escalation_service import run_escalation_sweep
 
@@ -82,6 +82,8 @@ app.include_router(media.router, prefix=prefix)
 app.include_router(ai.router, prefix=prefix)
 app.include_router(chatbot.router, prefix=prefix)
 app.include_router(sla.router, prefix=prefix)
+app.include_router(alerts.router, prefix=prefix)
+app.include_router(accountability.router, prefix=prefix)
 
 upload_dir = Path(__file__).parent / settings.media_upload_dir
 upload_dir.mkdir(parents=True, exist_ok=True)
