@@ -21,6 +21,8 @@ const RoadDatabase = {
       sanctionedBudget: 1200000000,
       spentBudget: 1350000000,
       fundingSource: "National Highway Development Project (NHDP) Fund",
+      budgetSourceName: "NHAI eTender notice",
+      budgetSourceUrl: "https://etenders.gov.in/eprocure/app?component=%24DirectLink&page=FrontEndLink&service=direct&action=publication",
       lastRelayingDate: "2024-03-15",
       maintenanceGuaranteePeriod: 5,
       statusColor: "#ff9f1c", // Warning
@@ -53,6 +55,8 @@ const RoadDatabase = {
       sanctionedBudget: 850000000,
       spentBudget: 825000000,
       fundingSource: "State Road Development Fund (SRDF)",
+      budgetSourceName: "Karnataka eTender portal",
+      budgetSourceUrl: "https://etenders.karnataka.gov.in/nicgep/app",
       lastRelayingDate: "2025-01-10",
       maintenanceGuaranteePeriod: 3,
       statusColor: "#00f5d4", // Green
@@ -85,6 +89,8 @@ const RoadDatabase = {
       sanctionedBudget: 320000000,
       spentBudget: 450000000,
       fundingSource: "Municipal Infrastructure Development Scheme (MIDS)",
+      budgetSourceName: "Tamil Nadu eTender portal",
+      budgetSourceUrl: "https://tntenders.gov.in/nicgep/app",
       lastRelayingDate: "2023-08-20",
       maintenanceGuaranteePeriod: 2,
       statusColor: "#ff3b30", // Red
@@ -102,6 +108,176 @@ const RoadDatabase = {
       },
       coordinates: [12.9229, 80.1239],
       jurisdiction: "Tambaram Division, Tamil Nadu Highways"
+    },
+    {
+      id: "IN-NH44",
+      name: "NH-44 Salem–Madurai Corridor",
+      country: "India",
+      type: "National Highway (NH)",
+      authority: "NHAI - National Highways Authority of India",
+      executiveEngineer: "Er. Karthik Raman",
+      engineerEmail: "ee.nh44.tnr@nhai.gov.in",
+      engineerPhone: "+91-94430-56789",
+      contractorName: "Ashoka Infratech Ltd.",
+      contractorPerformance: 3.8,
+      sanctionedBudget: 980000000,
+      spentBudget: 1015000000,
+      fundingSource: "NHDP Phase VII",
+      budgetSourceName: "NHAI eTender notice",
+      budgetSourceUrl: "https://etenders.gov.in/eprocure/app?component=%24DirectLink&page=FrontEndLink&service=direct&action=publication",
+      lastRelayingDate: "2024-04-18",
+      maintenanceGuaranteePeriod: 5,
+      statusColor: "#ff9f1c",
+      path: [
+        [11.6643, 78.1460], // Salem
+        [10.7905, 78.7047], // Karur
+        [9.9252, 78.1198]   // Madurai
+      ],
+      accidentRecords: {
+        annualAccidents: 126,
+        fatalities: 16,
+        potholesPerKm: 2.7,
+        safetyRating: 5.9,
+        primaryCauses: "Heavy freight movements, junction congestion, monsoon water pooling."
+      },
+      coordinates: [10.7905, 78.7047],
+      jurisdiction: "Karur Division, Tamil Nadu"
+    },
+    {
+      id: "IN-SH49",
+      name: "SH-49 Chennai–Kanchipuram Ring Link",
+      country: "India",
+      type: "State Highway (SH)",
+      authority: "PWD - Tamil Nadu Public Works Department",
+      executiveEngineer: "Er. Ananya Subramanian",
+      engineerEmail: "ee.chennai.sh49@tn.gov.in",
+      engineerPhone: "+91-94444-99000",
+      contractorName: "Trichy Roadtech Ltd.",
+      contractorPerformance: 4.6,
+      sanctionedBudget: 540000000,
+      spentBudget: 502000000,
+      fundingSource: "Tamil Nadu State Road Fund",
+      budgetSourceName: "Tamil Nadu eTender portal",
+      budgetSourceUrl: "https://tntenders.gov.in/nicgep/app",
+      lastRelayingDate: "2024-06-07",
+      maintenanceGuaranteePeriod: 4,
+      statusColor: "#00f5d4",
+      path: [
+        [12.9716, 79.1588], // Chennai
+        [12.9525, 79.5610], // Sriperumbudur
+        [12.8342, 79.7036]  // Kanchipuram
+      ],
+      accidentRecords: {
+        annualAccidents: 64,
+        fatalities: 4,
+        potholesPerKm: 1.2,
+        safetyRating: 8.3,
+        primaryCauses: "High commuter traffic, pedestrian crossings near industrial estates."
+      },
+      coordinates: [12.9525, 79.5610],
+      jurisdiction: "Chennai South Division, Tamil Nadu"
+    },
+    {
+      id: "IN-SH79",
+      name: "SH-79 Coimbatore–Pollachi Expressway",
+      country: "India",
+      type: "State Highway (SH)",
+      authority: "PWD - Tamil Nadu Public Works Department",
+      executiveEngineer: "Er. Madhavan Krishnan",
+      engineerEmail: "ee.coimbatore.sh79@tn.gov.in",
+      engineerPhone: "+91-94450-87654",
+      contractorName: "Sundaram Buildcon Pvt. Ltd.",
+      contractorPerformance: 4.0,
+      sanctionedBudget: 450000000,
+      spentBudget: 487000000,
+      fundingSource: "Tamil Nadu State Road Fund",
+      budgetSourceName: "Tamil Nadu eTender portal",
+      budgetSourceUrl: "https://tntenders.gov.in/nicgep/app",
+      lastRelayingDate: "2024-03-30",
+      maintenanceGuaranteePeriod: 4,
+      statusColor: "#ff9f1c",
+      path: [
+        [11.0168, 76.9558], // Coimbatore
+        [10.8260, 77.0000], // Pollachi
+        [10.6620, 77.0080]  // Anaimalai
+      ],
+      accidentRecords: {
+        annualAccidents: 58,
+        fatalities: 6,
+        potholesPerKm: 2.9,
+        safetyRating: 7.1,
+        primaryCauses: "Heavy agricultural traffic, fast curves in ghats section."
+      },
+      coordinates: [11.0168, 76.9558],
+      jurisdiction: "Coimbatore Division, Tamil Nadu"
+    },
+    {
+      id: "IN-MDR34",
+      name: "MDR-34 Theni–Bodinayakkanur Rural Link",
+      country: "India",
+      type: "Major District Road (MDR)",
+      authority: "PWD - Tamil Nadu Public Works Department",
+      executiveEngineer: "Er. V. Ravichandran",
+      engineerEmail: "ee.theni.mdr@tn.gov.in",
+      engineerPhone: "+91-94432-21122",
+      contractorName: "Madurai Infra Services Pvt. Ltd.",
+      contractorPerformance: 3.7,
+      sanctionedBudget: 280000000,
+      spentBudget: 321000000,
+      fundingSource: "Tamil Nadu Rural Road Fund",
+      budgetSourceName: "Tamil Nadu eTender portal",
+      budgetSourceUrl: "https://tntenders.gov.in/nicgep/app",
+      lastRelayingDate: "2023-09-05",
+      maintenanceGuaranteePeriod: 3,
+      statusColor: "#ff3b30",
+      path: [
+        [9.9199, 77.4770], // Theni
+        [9.8406, 77.4844], // Bodinayakkanur
+        [9.7397, 77.4904]  // Gudalur
+      ],
+      accidentRecords: {
+        annualAccidents: 72,
+        fatalities: 10,
+        potholesPerKm: 4.5,
+        safetyRating: 3.9,
+        primaryCauses: "Monsoon runoff damage, overloaded local buses."
+      },
+      coordinates: [9.9199, 77.4770],
+      jurisdiction: "Theni Division, Tamil Nadu"
+    },
+    {
+      id: "IN-SH8",
+      name: "SH-8 Kothamangalam - Muvattupuzha State Highway",
+      country: "India",
+      type: "State Highway (SH)",
+      authority: "PWD - Kerala Public Works Department",
+      executiveEngineer: "Er. Leena Thomas",
+      engineerEmail: "ee.kothamangalam@kerala.gov.in",
+      engineerPhone: "+91-94475-12345",
+      contractorName: "Vishnu Road Infra Pvt. Ltd.",
+      contractorPerformance: 4.2,
+      sanctionedBudget: 620000000,
+      spentBudget: 685000000,
+      fundingSource: "Kerala State Road Development Fund",
+      budgetSourceName: "Kerala eTender portal",
+      budgetSourceUrl: "https://etenders.kerala.gov.in/nicgep/app",
+      lastRelayingDate: "2024-01-22",
+      maintenanceGuaranteePeriod: 4,
+      statusColor: "#00f5d4",
+      path: [
+        [10.0895, 76.5313], // Kothamangalam
+        [9.9816, 76.4744], // Muvattupuzha
+        [9.8764, 76.3935]  // Kolenchery
+      ],
+      accidentRecords: {
+        annualAccidents: 48,
+        fatalities: 5,
+        potholesPerKm: 3.2,
+        safetyRating: 7.4,
+        primaryCauses: "Monsoon waterlogging, heavy local commuter traffic."
+      },
+      coordinates: [10.0895, 76.5313],
+      jurisdiction: "Kothamangalam Subdivision, Kerala"
     },
 
     // --- UNITED STATES ---

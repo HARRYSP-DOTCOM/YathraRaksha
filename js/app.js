@@ -325,6 +325,142 @@ const App = {
       }
     });
 
+    // Language switcher (sidebar)
+    this.initLanguageSwitcher();
+  },
+
+  /* ─── Language / Accessibility Switcher ─── */
+  _currentLang: "en",
+  _langNames: {
+    en: "English", hi: "हिन्दी", ml: "മലയാളം",
+    ta: "தமிழ்", kn: "ಕನ್ನಡ", te: "తెలుగు",
+    bn: "বাংলা", mr: "मराठी",
+  },
+
+  initLanguageSwitcher() {
+    /* Sidebar toggle */
+    const sidebarToggle = document.getElementById("lang-toggle-sidebar");
+    const sidebarDropdown = document.getElementById("lang-dropdown-sidebar");
+    if (sidebarToggle && sidebarDropdown) {
+      sidebarToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = sidebarDropdown.classList.toggle("open");
+        sidebarToggle.setAttribute("aria-expanded", open);
+      });
+
+      sidebarDropdown.querySelectorAll(".lang-option").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          this.selectLanguage(btn.dataset.lang, sidebarDropdown);
+        });
+      });
+    }
+
+    /* Mobile globe button → bottom sheet modal */
+    document.getElementById("lang-toggle-mobile")?.addEventListener("click", () => {
+      this.showMobileLangModal();
+    });
+
+    /* Close dropdown on outside click */
+    document.addEventListener("click", () => {
+      if (sidebarDropdown?.classList.contains("open")) {
+        sidebarDropdown.classList.remove("open");
+        sidebarToggle?.setAttribute("aria-expanded", "false");
+      }
+    });
+  },
+
+  selectLanguage(langCode, container) {
+    this._currentLang = langCode;
+    const nativeName = this._langNames[langCode] || langCode;
+
+    /* Update active states in the given container */
+    container?.querySelectorAll(".lang-option").forEach((opt) => {
+      const isActive = opt.dataset.lang === langCode;
+      opt.classList.toggle("active", isActive);
+      opt.setAttribute("aria-selected", isActive);
+      /* Toggle checkmark */
+      let check = opt.querySelector(".lang-check");
+      if (isActive && !check) {
+        check = document.createElement("span");
+        check.className = "lang-check";
+        check.textContent = "✓";
+        opt.appendChild(check);
+      }
+    });
+
+    /* Update sidebar label */
+    const label = document.getElementById("lang-current-label");
+    if (label) label.textContent = nativeName;
+
+    /* Set lang attribute on html element */
+    document.documentElement.lang = langCode;
+
+    /* Close sidebar dropdown */
+    const dropdown = document.getElementById("lang-dropdown-sidebar");
+    dropdown?.classList.remove("open");
+    document.getElementById("lang-toggle-sidebar")?.setAttribute("aria-expanded", "false");
+
+    /* Close mobile modal if open */
+    document.getElementById("lang-modal-overlay")?.remove();
+
+    if (langCode === "en") {
+      this.showToast("🌐 Language: English (default)");
+    } else {
+      this.showToast(`🌐 Language set to ${nativeName} — translation support coming soon!`);
+    }
+  },
+
+  showMobileLangModal() {
+    if (document.getElementById("lang-modal-overlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "lang-modal-overlay";
+    overlay.className = "lang-modal-overlay";
+
+    const langEntries = Object.entries(this._langNames)
+      .map(([code, native]) => {
+        const isActive = code === this._currentLang;
+        const flag = code === "en" ? "🇬🇧" : "🇮🇳";
+        const engLabel = code === "en" ? "" : `<span class="lang-label">${
+          { hi: "Hindi", ml: "Malayalam", ta: "Tamil", kn: "Kannada",
+            te: "Telugu", bn: "Bengali", mr: "Marathi" }[code] || ""
+        }</span>`;
+        return `<button type="button" class="lang-option ${isActive ? 'active' : ''}" data-lang="${code}" role="option" aria-selected="${isActive}">
+          <span class="lang-flag">${flag}</span>
+          <span class="lang-native">${native}</span>
+          ${engLabel}
+          ${isActive ? '<span class="lang-check">✓</span>' : ''}
+        </button>`;
+      })
+      .join("");
+
+    overlay.innerHTML = `
+      <div class="lang-modal-panel">
+        <div class="lang-dropdown-header">
+          <span>🌐 Interface language</span>
+          <span class="lang-dropdown-badge">Accessibility</span>
+        </div>
+        ${langEntries}
+        <div class="lang-dropdown-footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          Translation support coming soon
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    /* Tap on backdrop to close */
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    /* Wire lang buttons */
+    overlay.querySelectorAll(".lang-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        this.selectLanguage(btn.dataset.lang, overlay.querySelector(".lang-modal-panel"));
+      });
+    });
   },
 
   /**
@@ -528,9 +664,9 @@ const App = {
       return;
     }
 
-    if (!window.LocationService.watchId) {
-      window.LocationService.start();
-    }
+    window.LocationService.stop();
+    window.LocationService.lastPosition = null;
+    window.LocationService.start();
 
     const applyPos = (pos) => {
       this.applyCoordinates(pos.lat, pos.lng, {
@@ -542,18 +678,23 @@ const App = {
       window.MapHub?.updateGpsDisplay?.(pos.lat, pos.lng, pos.accuracy);
       if (showToast) {
         const acc =
-          pos.accuracy <= 30
+          pos.accuracy <= 20
             ? `±${pos.accuracy}m`
-            : pos.accuracy <= 100
-              ? `±${pos.accuracy}m (fair)`
-              : `±${pos.accuracy}m (approximate — try outdoors)`;
+            : pos.accuracy <= 50
+              ? `±${pos.accuracy}m (good)`
+              : pos.accuracy <= 100
+                ? `±${pos.accuracy}m (fair)`
+                : `±${pos.accuracy}m (approximate — hold still for better fix)`;
         this.showToast(`📍 GPS fix: ${pos.lat}, ${pos.lng} (${acc})`);
       }
     };
 
     try {
-      const pos = await window.LocationService.requestBestFix();
+      const pos = await window.LocationService.requestBestFix({ fresh: true });
       applyPos(pos);
+      if (pos.accuracy > 40) {
+        this.showToast("⚠️ GPS fix is still approximate. Hold still for a better location and tap Use live GPS again.");
+      }
     } catch (err) {
       this.updateLocationUI(err?.code === 1 ? "denied" : "error");
       this.showToast(
@@ -586,6 +727,11 @@ const App = {
       nearEl.textContent = `${nearest.road.id} · ${nearest.distanceKm} km away`;
     }
 
+    if (this.activeAIReport) {
+      this.updateActiveReportLocation();
+      this.renderAIResultsCard(this.activeAIReport);
+    }
+
     if (updateMap && window.MapHub?.map) {
       window.MapHub.updatePinDisplay?.(lat, lng);
       window.MapHub.updateLivePosition(lat, lng, {
@@ -597,6 +743,19 @@ const App = {
 
     if (!silent) {
       this.showToast(`📌 Location set: ${lat}, ${lng}`);
+    }
+  },
+
+  updateActiveReportLocation() {
+    if (!this.activeAIReport || !this.selectedCoords) return;
+
+    const [lat, lng] = this.selectedCoords;
+    this.activeAIReport.coordinates = [lat, lng];
+
+    const nearest = window.RoadDatabase?.findNearestRoad?.(lat, lng);
+    if (nearest?.road) {
+      this.activeAIReport.matchedRoad = nearest.road;
+      this.activeAIReport.distanceToRoadKm = nearest.distanceKm;
     }
   },
 
@@ -1086,13 +1245,18 @@ const App = {
     document.getElementById("ai-risk").textContent = `${report.urgencyScore} / 10`;
     
     if (report.matchedRoad) {
+      const routing = window.RoadTracker.determineRoutingDetails(report.matchedRoad);
       document.getElementById("ai-road").textContent = `${report.matchedRoad.name} (${report.distanceToRoadKm} km away)`;
       document.getElementById("ai-authority").textContent = report.matchedRoad.authority;
       document.getElementById("ai-engineer").textContent = `${report.matchedRoad.executiveEngineer} (${report.matchedRoad.engineerPhone})`;
+      document.getElementById("ai-route-to").textContent = routing.routeTo;
+      document.getElementById("ai-escalation-hierarchy").textContent = routing.escalationHierarchy.join(" → ");
     } else {
       document.getElementById("ai-road").textContent = "No registered roadway matching coordinates.";
       document.getElementById("ai-authority").textContent = "Local District PWD / Municipal Council";
       document.getElementById("ai-engineer").textContent = "TBD - Regional Administrative Division";
+      document.getElementById("ai-route-to").textContent = "Local grievance office / Municipal Works division";
+      document.getElementById("ai-escalation-hierarchy").textContent = "Executive Engineer → Superintending Engineer → Chief Engineer";
     }
   },
 
@@ -1101,6 +1265,8 @@ const App = {
 
     const userDesc = document.getElementById("user-desc").value;
     const userContact = document.getElementById("user-contact").value;
+
+    this.updateActiveReportLocation();
 
     // File complaint locally first
     const complaint = window.RoadTracker.fileComplaint(this.activeAIReport, userDesc, userContact);
@@ -1226,6 +1392,8 @@ const App = {
     document.getElementById("details-ref-id").textContent = complaint.id;
     document.getElementById("details-defect-type").textContent = complaint.defectType;
     document.getElementById("details-road").textContent = complaint.matchedRoad ? complaint.matchedRoad.name : "Unregistered Road Asset";
+    document.getElementById("details-routing").textContent = complaint.routeTo ? `Routed to ${complaint.routeTo}` : "Routed to local grievance authority.";
+    document.getElementById("details-escalation").textContent = complaint.escalationHierarchy ? `Escalation path: ${complaint.escalationHierarchy.join(" → ")}` : "Escalation path: Engineer → Superintending Engineer → Chief Engineer";
 
     document.getElementById("details-notice").textContent = complaint.formalNoticeText;
 
@@ -1233,6 +1401,8 @@ const App = {
       { name: "Submitted", desc: "Defect logged and visual telemetry verified." },
       { name: "Accepted", desc: "Regional Public Works intake confirmed. Authority audit started." },
       { name: "Engineer Assigned", desc: "Site jurisdiction assigned to Chief Division Engineer for field review." },
+      { name: "Escalated to Superintending Engineer", desc: "Escalation to the supervising engineering authority for secondary review." },
+      { name: "Escalated to Chief Engineer", desc: "Escalation to the chief engineering authority for final oversight." },
       { name: "Budget Allocated", desc: "Scope validated. Repair budget sanctioned under guarantee." },
       { name: "Work Commenced", desc: "Contractor mobilized on coordinates. Site barricaded." },
       { name: "Resolved", desc: "Asphalt relaid. Core testing complete. Road signed off." }

@@ -88,8 +88,8 @@ const LocationService = {
   _geoOptions(fresh = false) {
     return {
       enableHighAccuracy: true,
-      maximumAge: fresh ? 0 : 500,
-      timeout: fresh ? 25000 : 20000,
+      maximumAge: 0,
+      timeout: fresh ? 25000 : 30000,
     };
   },
 
@@ -152,39 +152,66 @@ const LocationService = {
   },
 
   /** Try watch briefly then fall back to getCurrentPosition for best fix */
-  async requestBestFix() {
+  async requestBestFix(options = {}) {
+    const { fresh = false } = options;
+
     if (!navigator.geolocation) {
       throw { code: "UNSUPPORTED", message: "Geolocation not supported" };
     }
 
+    if (fresh) {
+      this.stop();
+      this.lastPosition = null;
+    }
+
+    let initial = null;
     try {
-      const pos = await this.requestOnce();
-      if (pos.accuracy <= 50) return pos;
+      initial = await this.requestOnce();
+      if (initial.accuracy <= 25) return initial;
     } catch {
       /* continue to watch fallback */
     }
 
     return new Promise((resolve, reject) => {
       let watchId = null;
-      let best = null;
+      let best = initial;
       const deadline = setTimeout(() => {
         if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-        if (best) resolve(best);
+        if (best && best.accuracy <= 500) resolve(best);
         else reject({ code: "TIMEOUT", message: "Could not get accurate GPS fix" });
-      }, 22000);
+      }, 30000);
+
+      /* Resolved flag prevents double-resolve from racing watch + timeout */
+      let resolved = false;
+      const finish = (result) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(deadline);
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        resolve(result);
+      };
+
+      const acceptPosition = (pos) => {
+        const parsed = this._parsePosition(pos);
+        if (!best || parsed.accuracy < best.accuracy) {
+          best = parsed;
+        }
+
+        if (!this.lastPosition || parsed.accuracy < this.lastPosition.accuracy) {
+          this.lastPosition = parsed;
+          this.lastEmitTime = Date.now();
+          this._emit(parsed, null);
+        }
+
+        /* Accept once we reach good GPS-level accuracy */
+        if (parsed.accuracy <= 50) {
+          finish(parsed);
+        }
+      };
 
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          const parsed = this._parsePosition(pos);
-          if (!best || parsed.accuracy < best.accuracy) {
-            best = parsed;
-            this._handlePosition(pos, true);
-          }
-          if (parsed.accuracy <= 25) {
-            clearTimeout(deadline);
-            navigator.geolocation.clearWatch(watchId);
-            resolve(parsed);
-          }
+          acceptPosition(pos);
         },
         (err) => {
           clearTimeout(deadline);

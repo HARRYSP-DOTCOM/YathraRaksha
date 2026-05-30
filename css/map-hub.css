@@ -350,6 +350,23 @@
   border-color: rgba(45, 212, 191, 0.35);
 }
 
+/* GPS acquiring animation */
+#map-tab .map-tool-btn.locating {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: rgba(45, 212, 191, 0.5);
+  animation: gps-pulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+#map-tab .map-tool-btn.locating svg {
+  color: #2dd4bf;
+}
+
+@keyframes gps-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(45, 212, 191, 0); }
+}
+
 /* Legend */
 #map-tab .map-legend {
   background: rgba(8, 11, 15, 0.94) !important;

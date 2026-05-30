@@ -8,8 +8,50 @@ const RoadTracker = {
   STORAGE_REPORTS_KEY: "yatra_raksha_user_reports",
   STORAGE_SYNC_QUEUE_KEY: "yatra_raksha_offline_sync_queue",
 
+  determineRoutingDetails(road) {
+    const fallback = {
+      routeTo: "Local PWD / Municipal Works Division",
+      routeAuthority: "Local Public Works / Zilla Parishad",
+      escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
+      routingMessage: "Issue routed through regional maintenance grievance channels."
+    };
+
+    if (!road || !road.type) return fallback;
+    const type = road.type.toUpperCase();
+
+    if (type.includes("NH") || type.includes("NATIONAL HIGHWAY")) {
+      return {
+        routeTo: "NHAI Regional Officer",
+        routeAuthority: "NHAI - National Highways Authority of India",
+        escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
+        routingMessage: "National Highway grievances are routed through the NHAI regional grievance cell."
+      };
+    }
+
+    if (type.includes("SH") || type.includes("STATE HIGHWAY")) {
+      return {
+        routeTo: "State PWD / State Nodal Officer",
+        routeAuthority: road.authority || "State Public Works Department",
+        escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
+        routingMessage: "State Highway complaints are routed via the State PWD divisional grievance desk."
+      };
+    }
+
+    if (type.includes("MDR") || type.includes("MAJOR DISTRICT ROAD")) {
+      return {
+        routeTo: "District Collector / Zilla Parishad",
+        routeAuthority: road.authority || "District Administration / Zilla Parishad",
+        escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
+        routingMessage: "Major District Road issues are routed to the district collector / ZP grievance cell."
+      };
+    }
+
+    return fallback;
+  },
+
   fileComplaint(aiReport, userDescription, userContact) {
     const isOnline = navigator.onLine;
+    const routing = this.determineRoutingDetails(aiReport.matchedRoad);
 
     const complaint = {
       id: aiReport.integrityVerificationId,
@@ -31,6 +73,10 @@ const RoadTracker = {
         { status: "Submitted", timestamp: new Date().toISOString(), message: "Complaint uploaded and validated via YatraRaksha Visual AI." }
       ],
       synced: isOnline,
+      routeTo: routing.routeTo,
+      routeAuthority: routing.routeAuthority,
+      escalationHierarchy: routing.escalationHierarchy,
+      routingMessage: routing.routingMessage,
       formalNoticeText: this.generateFormalNoticeText(aiReport, userDescription, userContact)
     };
 
@@ -99,19 +145,34 @@ const RoadTracker = {
 
   simulateInitialReview(complaintId) {
     setTimeout(() => {
-      this.updateComplaintStatus(complaintId, "Accepted", "Public Grievance department accepted complaint. Forwarding to Regional Executive Division.");
+      const reports = this.getAllReports();
+      const comp = reports.find(c => c.id === complaintId);
+      if (!comp) return;
+      const routing = this.determineRoutingDetails(comp.matchedRoad);
+
+      this.updateComplaintStatus(complaintId, "Accepted", `Complaint accepted by ${routing.routeTo}. Forwarding to assigned ${routing.escalationHierarchy[0]} for local review.`);
       
       setTimeout(() => {
-        const reports = this.getAllReports();
-        const comp = reports.find(c => c.id === complaintId);
-        if (!comp) return;
-        const engineerName = comp.matchedRoad ? comp.matchedRoad.executiveEngineer : "Er. G. P. Saxena";
-        
-        this.updateComplaintStatus(complaintId, "Engineer Assigned", `Assigned to Senior Executive Division. Chief Engineer (${engineerName}) has assumed jurisdiction for site inspection.`);
-        
+        const reports2 = this.getAllReports();
+        const comp2 = reports2.find(c => c.id === complaintId);
+        if (!comp2) return;
+
+        this.updateComplaintStatus(complaintId, "Engineer Assigned", `Assigned to ${routing.escalationHierarchy[0]} for site inspection and action plan review.`);
+
         setTimeout(() => {
-          this.updateComplaintStatus(complaintId, "Budget Allocated", `Project engineering scope approved. Repair warrant of ${comp.repairBudgetEstimate} sanctioned under public road infrastructure maintenance account.`);
-        }, 12000);
+          this.updateComplaintStatus(complaintId, "Escalated to Superintending Engineer", `Issue elevated to ${routing.escalationHierarchy[1]} for oversight review and approval.`);
+        }, 9000);
+
+        setTimeout(() => {
+          this.updateComplaintStatus(complaintId, "Escalated to Chief Engineer", `Further escalated to ${routing.escalationHierarchy[2]} as per grievance escalation hierarchy.`);
+        }, 14000);
+
+        setTimeout(() => {
+          const reports3 = this.getAllReports();
+          const comp3 = reports3.find(c => c.id === complaintId);
+          if (!comp3) return;
+          this.updateComplaintStatus(complaintId, "Budget Allocated", `Project engineering scope approved. Repair warrant of ${comp3.repairBudgetEstimate} sanctioned under public road infrastructure maintenance account.`);
+        }, 18000);
       }, 10000);
     }, 6000);
   },
@@ -139,9 +200,10 @@ const RoadTracker = {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     
+    const routing = this.determineRoutingDetails(aiReport.matchedRoad);
     const road = aiReport.matchedRoad;
     const roadName = road ? road.name : "Unregistered Municipal Roadway";
-    const authority = road ? road.authority : "Local Municipal Corporation / Public Works Department";
+    const authority = road ? road.authority : routing.routeAuthority;
     const engineer = road ? road.executiveEngineer : "Assigned Regional Executive Engineer";
     const engineerEmail = road ? road.engineerEmail : "egrievance@pwd.gov";
     const contractor = road ? road.contractorName : "Local PWD Maintenance Team";
@@ -155,6 +217,7 @@ const RoadTracker = {
 
     const budgetSanctioned = formatINR(road ? road.sanctionedBudget : null);
     const budgetSpent = formatINR(road ? road.spentBudget : null);
+    const escalationPath = routing.escalationHierarchy.join(" → ");
 
     return `
 ================================================================================
@@ -162,7 +225,9 @@ const RoadTracker = {
 ================================================================================
 REFERENCE ID: ${aiReport.integrityVerificationId}
 DATE OF ISSUE: ${dateStr}
-ROUTED TO: ${authority}
+ROUTED TO: ${routing.routeTo}
+ROUTED VIA: ${authority}
+ESCALATION PATH: ${escalationPath}
 ATTN OF: ${engineer} (${engineerEmail})
 SUBMITTED BY: ${userContact}
 

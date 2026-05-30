@@ -231,14 +231,53 @@ const MapHub = {
   },
 
   locateUser() {
-    if (window.App?.useLiveGpsLocation) {
-      window.App.useLiveGpsLocation(true);
-      return;
-    }
     if (!navigator.geolocation) {
       window.App?.showToast("Geolocation is not supported on this device.");
       return;
     }
+
+    /* Use LocationService for a fresh, high-accuracy satellite fix.
+       requestBestFix({ fresh: true }) clears cached positions, forces
+       maximumAge: 0, and waits up to 30 s for accuracy ≤ 20 m. */
+    if (window.LocationService) {
+      window.App?.showToast("Acquiring precise GPS location…");
+      const locateBtn = document.getElementById("map-btn-locate");
+      if (locateBtn) locateBtn.classList.add("locating");
+
+      window.LocationService.requestBestFix({ fresh: true })
+        .then((pos) => {
+          this.updateLivePosition(pos.lat, pos.lng, {
+            movePicker: true,
+            centerMap: true,
+            accuracy: pos.accuracy,
+          });
+          this.updateGpsDisplay(pos.lat, pos.lng, pos.accuracy);
+          if (this.onCoordinatePick) this.onCoordinatePick(pos.lat, pos.lng);
+
+          /* If accuracy is poor (>1 km), offer manual location search */
+          if (pos.accuracy > 1000) {
+            window.App?.showToast("GPS is approximate on this device. Search for your location below.");
+            this.showLocationSearch();
+          } else if (pos.accuracy <= 30) {
+            window.App?.showToast(`Location locked · ±${pos.accuracy} m accuracy`);
+          } else {
+            window.App?.showToast(`Location found · ±${pos.accuracy} m (move outdoors for better fix)`);
+          }
+
+          /* Restart the continuous watch so the dot keeps updating */
+          if (!window.LocationService.watchId) window.LocationService.start();
+        })
+        .catch(() => {
+          window.App?.showToast("Could not get GPS. Search for your location instead.");
+          this.showLocationSearch();
+        })
+        .finally(() => {
+          if (locateBtn) locateBtn.classList.remove("locating");
+        });
+      return;
+    }
+
+    /* Fallback: raw API with strict options */
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = parseFloat(pos.coords.latitude.toFixed(6));
@@ -247,7 +286,7 @@ const MapHub = {
         if (this.onCoordinatePick) this.onCoordinatePick(lat, lng);
       },
       () => window.App?.showToast("Could not access your location. Check browser permissions."),
-      { enableHighAccuracy: true, timeout: 12000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 }
     );
   },
 
@@ -799,6 +838,158 @@ const MapHub = {
         </div>
       </div>
     `;
+  },
+
+  /* ─── Location Search Overlay (manual override for poor GPS) ─── */
+
+  _searchDebounce: null,
+
+  showLocationSearch() {
+    /* Don't duplicate */
+    if (document.getElementById("map-location-search-overlay")) {
+      document.getElementById("map-location-search-input")?.focus();
+      return;
+    }
+
+    const mapWrapper = document.querySelector("#map-tab .map-wrapper") || document.getElementById("map-container")?.parentElement;
+    if (!mapWrapper) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "map-location-search-overlay";
+    overlay.className = "map-search-overlay";
+    overlay.innerHTML = `
+      <div class="map-search-panel">
+        <div class="map-search-header">
+          <div class="map-search-header-text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <span>Search your location</span>
+          </div>
+          <button type="button" class="map-search-close" id="map-search-close-btn" title="Close">✕</button>
+        </div>
+        <input type="text" id="map-location-search-input"
+               class="map-search-input"
+               placeholder="Type your city or town (e.g. Kothamangalam)"
+               autocomplete="off" spellcheck="false" />
+        <div id="map-location-search-results" class="map-search-results"></div>
+        <p class="map-search-hint">Powered by OpenStreetMap Nominatim</p>
+      </div>
+    `;
+
+    mapWrapper.style.position = "relative";
+    mapWrapper.appendChild(overlay);
+
+    const input = document.getElementById("map-location-search-input");
+    const resultsEl = document.getElementById("map-location-search-results");
+
+    /* Debounced search as you type */
+    input.addEventListener("input", () => {
+      clearTimeout(this._searchDebounce);
+      const q = input.value.trim();
+      if (q.length < 2) {
+        resultsEl.innerHTML = '<div class="map-search-empty">Type at least 2 characters…</div>';
+        return;
+      }
+      resultsEl.innerHTML = '<div class="map-search-loading"><span class="search-spinner"></span> Searching…</div>';
+      this._searchDebounce = setTimeout(() => this._performSearch(q, resultsEl), 400);
+    });
+
+    /* Enter key triggers search immediately */
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(this._searchDebounce);
+        const q = input.value.trim();
+        if (q.length >= 2) {
+          resultsEl.innerHTML = '<div class="map-search-loading"><span class="search-spinner"></span> Searching…</div>';
+          this._performSearch(q, resultsEl);
+        }
+      }
+    });
+
+    /* Close button */
+    document.getElementById("map-search-close-btn").addEventListener("click", () => this.hideLocationSearch());
+
+    /* Focus input */
+    setTimeout(() => input.focus(), 120);
+  },
+
+  hideLocationSearch() {
+    const el = document.getElementById("map-location-search-overlay");
+    if (el) {
+      el.classList.add("closing");
+      setTimeout(() => el.remove(), 250);
+    }
+  },
+
+  async _performSearch(query, resultsEl) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?` +
+        `format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1&countrycodes=in`;
+
+      const resp = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+      });
+
+      if (!resp.ok) throw new Error("Nominatim error");
+      const data = await resp.json();
+
+      if (!data.length) {
+        resultsEl.innerHTML = '<div class="map-search-empty">No results found. Try a different name.</div>';
+        return;
+      }
+
+      resultsEl.innerHTML = "";
+      data.forEach((place) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "map-search-result-item";
+
+        /* Build a clean display name */
+        const addr = place.address || {};
+        const primary = addr.city || addr.town || addr.village || addr.hamlet || addr.county || place.display_name.split(",")[0];
+        const secondary = [addr.state_district, addr.state, addr.country].filter(Boolean).join(", ");
+
+        item.innerHTML = `
+          <div class="search-result-icon">📍</div>
+          <div class="search-result-text">
+            <span class="search-result-primary">${primary}</span>
+            <span class="search-result-secondary">${secondary || place.display_name}</span>
+          </div>
+        `;
+
+        item.addEventListener("click", () => {
+          const lat = parseFloat(parseFloat(place.lat).toFixed(6));
+          const lng = parseFloat(parseFloat(place.lon).toFixed(6));
+
+          this.updateLivePosition(lat, lng, {
+            movePicker: true,
+            centerMap: true,
+            accuracy: 50, /* treat manual pick as reasonably accurate */
+          });
+          this.updateGpsDisplay(lat, lng, null);
+          this.updatePinDisplay(lat, lng);
+          if (this.onCoordinatePick) this.onCoordinatePick(lat, lng);
+
+          /* Update LocationService so other parts of the app use this position */
+          if (window.LocationService) {
+            window.LocationService.lastPosition = {
+              lat, lng, accuracy: 50, heading: null, speed: null,
+              altitude: null, timestamp: Date.now(), manualOverride: true,
+            };
+            window.LocationService._emit(window.LocationService.lastPosition, null);
+          }
+
+          window.App?.showToast(`📍 Location set to ${primary}`);
+          this.hideLocationSearch();
+        });
+
+        resultsEl.appendChild(item);
+      });
+    } catch (err) {
+      console.warn("Location search error:", err);
+      resultsEl.innerHTML = '<div class="map-search-empty">Search failed. Check your internet connection.</div>';
+    }
   },
 
 };
