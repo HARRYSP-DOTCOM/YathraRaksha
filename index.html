@@ -65,17 +65,31 @@
       <h1 class="welcome-title">YatraRaksha</h1>
       <p class="welcome-subtitle">Monitor road quality, audit public spending, and route complaints with AI — built for citizen transparency.</p>
 
-      <div class="welcome-features">
-        <div class="welcome-feature"><span class="welcome-feature-icon">🗺️</span> Live maps & safe routes</div>
-        <div class="welcome-feature"><span class="welcome-feature-icon">🤖</span> AI defect verification</div>
-        <div class="welcome-feature"><span class="welcome-feature-icon">📊</span> Authority budget data</div>
+      <div id="welcome-main">
+        <div class="welcome-features">
+          <div class="welcome-feature"><span class="welcome-feature-icon">🗺️</span> Live maps & safe routes</div>
+          <div class="welcome-feature"><span class="welcome-feature-icon">🤖</span> AI defect verification</div>
+          <div class="welcome-feature"><span class="welcome-feature-icon">📊</span> Open route transparency</div>
+        </div>
+
+        <div class="welcome-loader" aria-hidden="true"><div class="welcome-loader-bar"></div></div>
+
+        <div class="welcome-actions">
+          <button type="button" class="welcome-cta" id="welcome-enter-btn">Enter dashboard</button>
+          <button type="button" class="welcome-skip" id="welcome-skip-btn">Skip intro</button>
+        </div>
       </div>
 
-      <div class="welcome-loader" aria-hidden="true"><div class="welcome-loader-bar"></div></div>
-
-      <div class="welcome-actions">
-        <button type="button" class="welcome-cta" id="welcome-enter-btn">Enter dashboard</button>
-        <button type="button" class="welcome-skip" id="welcome-skip-btn">Skip intro</button>
+      <div id="welcome-captcha" class="welcome-captcha hidden" aria-live="polite">
+        <h3 class="welcome-captcha-title">Human verification</h3>
+        <p class="captcha-info">Please solve the quick captcha to confirm your session and continue to the dashboard.</p>
+        <div class="captcha-card">
+          <div class="captcha-question" id="captcha-question">What is 8 + 3?</div>
+          <input type="text" id="captcha-answer" autocomplete="off" inputmode="numeric" placeholder="Enter answer" aria-label="Captcha answer" />
+          <button type="button" class="welcome-cta" id="captcha-verify-btn">Verify and continue</button>
+          <button type="button" class="welcome-skip welcome-back" id="captcha-back-btn">Back</button>
+          <div class="captcha-feedback" id="captcha-feedback"></div>
+        </div>
       </div>
 
       <p class="welcome-hackathon">RoadWatch · AI in Road Safety</p>

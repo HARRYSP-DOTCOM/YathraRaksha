@@ -66,6 +66,61 @@ const App = {
   /**
    * Animated welcome splash before dashboard (once per browser session).
    */
+  _captchaAnswer: null,
+
+  _createCaptcha() {
+    const a = Math.floor(Math.random() * 7) + 3;
+    const b = Math.floor(Math.random() * 6) + 2;
+    return {
+      question: `What is ${a} + ${b}?`,
+      answer: String(a + b),
+    };
+  },
+
+  showCaptchaStep(onComplete) {
+    const main = document.getElementById("welcome-main");
+    const panel = document.getElementById("welcome-captcha");
+    const questionEl = document.getElementById("captcha-question");
+    const answerInput = document.getElementById("captcha-answer");
+    const feedback = document.getElementById("captcha-feedback");
+    const challenge = this._createCaptcha();
+
+    this._captchaAnswer = challenge.answer;
+
+    main?.classList.add("welcome-hidden");
+    panel?.classList.remove("hidden");
+
+    if (questionEl) questionEl.textContent = challenge.question;
+    if (answerInput) {
+      answerInput.value = "";
+      answerInput.focus();
+    }
+    if (feedback) feedback.textContent = "";
+  },
+
+  verifyCaptcha(onComplete) {
+    const answerInput = document.getElementById("captcha-answer");
+    const feedback = document.getElementById("captcha-feedback");
+    const answer = answerInput?.value.trim() || "";
+
+    if (!answer) {
+      if (feedback) feedback.textContent = "Please enter the captcha answer before continuing.";
+      answerInput?.focus();
+      return;
+    }
+
+    if (answer === this._captchaAnswer) {
+      this.dismissWelcome(onComplete);
+      return;
+    }
+
+    if (feedback) feedback.textContent = "Incorrect answer. Please try again.";
+    if (answerInput) {
+      answerInput.value = "";
+      answerInput.focus();
+    }
+  },
+
   showWelcome(onComplete) {
     const screen = document.getElementById("welcome-screen");
     const done = typeof onComplete === "function" ? onComplete : () => {};
@@ -84,18 +139,37 @@ const App = {
 
     document.body.classList.add("welcome-active");
 
-    const enter = () => this.dismissWelcome(done);
+    const enter = () => this.showCaptchaStep(done);
 
     document.getElementById("welcome-enter-btn")?.addEventListener("click", enter);
-    document.getElementById("welcome-skip-btn")?.addEventListener("click", enter);
-
-    document.addEventListener("keydown", function welcomeKey(e) {
-      if (e.key === "Enter" || e.key === " ") {
+    document.getElementById("welcome-skip-btn")?.addEventListener("click", () => this.dismissWelcome(done));
+    document.getElementById("captcha-verify-btn")?.addEventListener("click", () => this.verifyCaptcha(done));
+    document.getElementById("captcha-back-btn")?.addEventListener("click", () => {
+      document.getElementById("welcome-captcha")?.classList.add("hidden");
+      document.getElementById("welcome-main")?.classList.remove("welcome-hidden");
+    });
+    document.getElementById("captcha-answer")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         e.preventDefault();
-        enter();
-        document.removeEventListener("keydown", welcomeKey);
+        this.verifyCaptcha(done);
       }
     });
+
+    const self = this;
+    function welcomeKey(e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const captchaPanel = document.getElementById("welcome-captcha");
+        if (captchaPanel && !captchaPanel.classList.contains("hidden")) {
+          self.verifyCaptcha(done);
+        } else {
+          enter();
+        }
+        document.removeEventListener("keydown", welcomeKey);
+      }
+    }
+
+    document.addEventListener("keydown", welcomeKey);
   },
 
   dismissWelcome(onComplete) {

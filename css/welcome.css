@@ -42,6 +42,75 @@ body.welcome-active .app-layout {
   pointer-events: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.welcome-hidden {
+  display: none !important;
+}
+
+.welcome-captcha {
+  width: min(460px, 100%);
+  margin: 0 auto 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
+}
+
+.welcome-captcha-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: #f8fafc;
+}
+
+.captcha-info {
+  margin: 0 0 18px;
+  color: rgba(248, 250, 252, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.captcha-card {
+  display: grid;
+  gap: 12px;
+}
+
+.captcha-question {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+#captcha-answer {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  font-size: 0.97rem;
+  outline: none;
+}
+
+#captcha-answer:focus {
+  border-color: #22d3ee;
+}
+
+.captcha-feedback {
+  min-height: 20px;
+  color: #fb7185;
+  font-size: 0.92rem;
+}
+
+.welcome-back {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #f8fafc;
+}
+
 @keyframes welcomeExit {
   to {
     opacity: 0;
