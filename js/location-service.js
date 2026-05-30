@@ -1,16 +1,18 @@
 /**
- * Live geolocation — watchPosition with throttled callbacks for complaint pins.
+ * Live geolocation — high-accuracy watch with smart filtering.
  */
 const LocationService = {
   watchId: null,
   lastPosition: null,
   listeners: [],
-  minMoveMeters: 8,
+  minMoveMeters: 3,
   lastEmitTime: 0,
-  minIntervalMs: 2000,
+  minIntervalMs: 1000,
   tripMode: false,
-  tripMinMoveMeters: 3,
-  tripMinIntervalMs: 800,
+  tripMinMoveMeters: 2,
+  tripMinIntervalMs: 500,
+  /** Reject fixes worse than this unless we have nothing better */
+  maxAcceptableAccuracyM: 150,
 
   setTripMode(enabled) {
     this.tripMode = !!enabled;
@@ -32,6 +34,9 @@ const LocationService = {
         console.warn("Location listener error:", e);
       }
     });
+    if (pos) {
+      window.dispatchEvent(new CustomEvent("yatra_live_location", { detail: pos }));
+    }
   },
 
   _distanceMeters(lat1, lon1, lat2, lon2) {
@@ -45,30 +50,62 @@ const LocationService = {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   },
 
-  _shouldEmit(next) {
-    const now = Date.now();
-    if (!this.lastPosition) return true;
-    const minInterval = this.tripMode ? this.tripMinIntervalMs : this.minIntervalMs;
+  _isBetterFix(next, prev) {
+    if (!prev) return true;
+    const accNext = next.accuracy ?? 9999;
+    const accPrev = prev.accuracy ?? 9999;
+    // Sharper fix while standing still — still sync coords & nearest road
+    if (accNext < accPrev - 3) return true;
+    if (accNext > accPrev + 15) return false;
+    const moved = this._distanceMeters(prev.lat, prev.lng, next.lat, next.lng);
     const minMove = this.tripMode ? this.tripMinMoveMeters : this.minMoveMeters;
-    if (now - this.lastEmitTime < minInterval) return false;
-    const moved = this._distanceMeters(
-      this.lastPosition.lat,
-      this.lastPosition.lng,
-      next.lat,
-      next.lng
-    );
     return moved >= minMove;
   },
 
+  _shouldEmit(next, force = false) {
+    if (force) return true;
+    const now = Date.now();
+    const minInterval = this.tripMode ? this.tripMinIntervalMs : this.minIntervalMs;
+    if (!this.lastPosition) return true;
+    if (!this._isBetterFix(next, this.lastPosition)) return false;
+    if (now - this.lastEmitTime < minInterval) return false;
+    return true;
+  },
+
   _parsePosition(pos) {
+    const acc = pos.coords.accuracy;
     return {
       lat: parseFloat(pos.coords.latitude.toFixed(6)),
       lng: parseFloat(pos.coords.longitude.toFixed(6)),
-      accuracy: Math.round(pos.coords.accuracy),
-      heading: pos.coords.heading,
-      speed: pos.coords.speed,
+      accuracy: Number.isFinite(acc) ? Math.round(acc) : 9999,
+      heading: Number.isFinite(pos.coords.heading) ? pos.coords.heading : null,
+      speed: Number.isFinite(pos.coords.speed) ? pos.coords.speed : null,
+      altitude: Number.isFinite(pos.coords.altitude) ? pos.coords.altitude : null,
       timestamp: pos.timestamp,
     };
+  },
+
+  _geoOptions(fresh = false) {
+    return {
+      enableHighAccuracy: true,
+      maximumAge: fresh ? 0 : 500,
+      timeout: fresh ? 25000 : 20000,
+    };
+  },
+
+  _acceptAccuracy(parsed) {
+    return parsed.accuracy <= this.maxAcceptableAccuracyM;
+  },
+
+  _handlePosition(pos, force = false) {
+    const parsed = this._parsePosition(pos);
+    if (!this._acceptAccuracy(parsed) && this.lastPosition && !force) {
+      if (this.lastPosition.accuracy <= parsed.accuracy) return;
+    }
+    if (!this._shouldEmit(parsed, force) && this.lastPosition) return;
+    this.lastPosition = parsed;
+    this.lastEmitTime = Date.now();
+    this._emit(parsed, null);
   },
 
   start() {
@@ -79,17 +116,9 @@ const LocationService = {
     if (this.watchId !== null) return true;
 
     this.watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const parsed = this._parsePosition(pos);
-        if (!this._shouldEmit(parsed) && this.lastPosition) return;
-        this.lastPosition = parsed;
-        this.lastEmitTime = Date.now();
-        this._emit(parsed, null);
-      },
-      (err) => {
-        this._emit(null, err);
-      },
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 }
+      (pos) => this._handlePosition(pos, false),
+      (err) => this._emit(null, err),
+      this._geoOptions(false)
     );
     return true;
   },
@@ -101,6 +130,7 @@ const LocationService = {
     }
   },
 
+  /** Fresh high-accuracy fix (use when user taps "Use live GPS") */
   requestOnce() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -112,10 +142,57 @@ const LocationService = {
           const parsed = this._parsePosition(pos);
           this.lastPosition = parsed;
           this.lastEmitTime = Date.now();
+          this._emit(parsed, null);
           resolve(parsed);
         },
         (err) => reject(err),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+        this._geoOptions(true)
+      );
+    });
+  },
+
+  /** Try watch briefly then fall back to getCurrentPosition for best fix */
+  async requestBestFix() {
+    if (!navigator.geolocation) {
+      throw { code: "UNSUPPORTED", message: "Geolocation not supported" };
+    }
+
+    try {
+      const pos = await this.requestOnce();
+      if (pos.accuracy <= 50) return pos;
+    } catch {
+      /* continue to watch fallback */
+    }
+
+    return new Promise((resolve, reject) => {
+      let watchId = null;
+      let best = null;
+      const deadline = setTimeout(() => {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        if (best) resolve(best);
+        else reject({ code: "TIMEOUT", message: "Could not get accurate GPS fix" });
+      }, 22000);
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const parsed = this._parsePosition(pos);
+          if (!best || parsed.accuracy < best.accuracy) {
+            best = parsed;
+            this._handlePosition(pos, true);
+          }
+          if (parsed.accuracy <= 25) {
+            clearTimeout(deadline);
+            navigator.geolocation.clearWatch(watchId);
+            resolve(parsed);
+          }
+        },
+        (err) => {
+          clearTimeout(deadline);
+          if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+          if (best) resolve(best);
+          else reject(err);
+        },
+        this._geoOptions(true)
       );
     });
   },

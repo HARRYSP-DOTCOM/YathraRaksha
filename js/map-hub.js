@@ -63,10 +63,11 @@ const MapHub = {
     );
 
     const streetsLayer = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       {
-        attribution: "&copy; OpenStreetMap contributors",
-        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap &copy; CARTO",
+        subdomains: "abcd",
+        maxZoom: 20,
       }
     );
 
@@ -103,9 +104,9 @@ const MapHub = {
     this.layerControl = L.control
       .layers(
         {
-          "Satellite + Labels": hybridGroup,
-          "Street Map": streetsLayer,
-          "Dark Mode": darkLayer,
+          "Satellite Atlas": hybridGroup,
+          "Survey Streets": streetsLayer,
+          "Night Survey": darkLayer,
         },
         null,
         { position: "topright", collapsed: true }
@@ -115,6 +116,7 @@ const MapHub = {
     this.addLegend();
     this.addToolbar();
     this.wireToolbarButtons();
+    this.wireMapChrome();
 
     this.map.on("click", (e) => {
       const lat = parseFloat(e.latlng.lat.toFixed(6));
@@ -137,11 +139,12 @@ const MapHub = {
       onAdd() {
         const div = L.DomUtil.create("div", "map-legend");
         div.innerHTML = `
-          <div class="map-legend-title">Road condition</div>
+          <div class="map-legend-title">Corridor legend</div>
           <div class="map-legend-item"><span class="legend-swatch legend-healthy"></span> Healthy</div>
           <div class="map-legend-item"><span class="legend-swatch legend-warning"></span> Minor defects</div>
           <div class="map-legend-item"><span class="legend-swatch legend-critical"></span> Critical</div>
           <div class="map-legend-item"><span class="legend-swatch legend-issue"></span> Citizen report</div>
+          <p class="map-legend-footnote">Tap a corridor for budget audit data</p>
         `;
         L.DomEvent.disableClickPropagation(div);
         return div;
@@ -158,12 +161,15 @@ const MapHub = {
         div.innerHTML = `
           <button type="button" class="map-tool-btn" id="map-btn-locate" title="My location">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="map-tool-label">GPS</span>
           </button>
           <button type="button" class="map-tool-btn" id="map-btn-fit" title="Show all roads">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span class="map-tool-label">Fit</span>
           </button>
-          <button type="button" class="map-tool-btn" id="map-btn-report" title="Drop pin for complaint">
+          <button type="button" class="map-tool-btn" id="map-btn-report" title="File complaint">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="map-tool-label">Report</span>
           </button>
         `;
         L.DomEvent.disableClickPropagation(div);
@@ -171,6 +177,46 @@ const MapHub = {
       },
     });
     new ToolbarControl().addTo(this.map);
+  },
+
+  wireMapChrome() {
+    if (!this.map) return;
+
+    if (window.LocationService && !window.LocationService.watchId) {
+      window.LocationService.start();
+    }
+
+    window.LocationService?.onUpdate?.((pos) => {
+      if (!pos) return;
+      this.updateGpsDisplay(pos.lat, pos.lng, pos.accuracy);
+      this.updateLivePosition(pos.lat, pos.lng, {
+        movePicker: false,
+        accuracy: pos.accuracy,
+      });
+    });
+
+    if (window.LocationService?.lastPosition) {
+      const p = window.LocationService.lastPosition;
+      this.updateGpsDisplay(p.lat, p.lng, p.accuracy);
+    }
+  },
+
+  updateGpsDisplay(lat, lng, accuracy = null) {
+    const el = document.getElementById("map-gps-coords");
+    const accEl = document.getElementById("map-gps-accuracy");
+    if (el) el.textContent = `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+    if (accEl) {
+      if (accuracy == null) accEl.textContent = "";
+      else if (accuracy <= 20) accEl.textContent = `±${accuracy} m · High accuracy`;
+      else if (accuracy <= 80) accEl.textContent = `±${accuracy} m · Good`;
+      else if (accuracy <= 200) accEl.textContent = `±${accuracy} m · Approximate`;
+      else accEl.textContent = `±${accuracy} m · Low accuracy (Wi‑Fi/IP)`;
+    }
+  },
+
+  updatePinDisplay(lat, lng) {
+    const el = document.getElementById("map-pin-coords");
+    if (el) el.textContent = `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
   },
 
   wireToolbarButtons() {
@@ -243,8 +289,16 @@ const MapHub = {
 
     if (movePicker) {
       this.setUserPicker(lat, lng, { panOnly: true });
-    } else if (centerMap) {
-      this.map.setView([lat, lng], 15, { animate: true });
+    }
+
+    if (centerMap) {
+      const zoom =
+        accuracy != null && accuracy <= 30
+          ? Math.max(17, this.map.getZoom())
+          : accuracy != null && accuracy <= 100
+            ? 16
+            : 15;
+      this.map.flyTo([lat, lng], zoom, { animate: true, duration: 0.8 });
     }
   },
 
@@ -291,6 +345,8 @@ const MapHub = {
       });
     }
 
+    this.updatePinDisplay(lat, lng);
+
     if (panOnly) {
       this.map.panTo([lat, lng], { animate: true });
     } else if (this.map.getZoom() < 12) {
@@ -314,20 +370,31 @@ const MapHub = {
       const lng = road.coordinates[1];
 
       if (road.path?.length > 0) {
-        const polyline = L.polyline(road.path, {
-          color: road.statusColor,
-          weight: 7,
-          opacity: 0.9,
+        const isCritical = road.statusColor === "#ff3b30";
+        const shadowLine = L.polyline(road.path, {
+          color: "rgba(0,0,0,0.65)",
+          weight: 11,
+          opacity: 0.85,
           lineJoin: "round",
           lineCap: "round",
-          dashArray: road.statusColor === "#ff3b30" ? "10, 14" : null,
+          interactive: false,
+        }).addTo(this.map);
+        this.activePolylines.push(shadowLine);
+
+        const polyline = L.polyline(road.path, {
+          color: road.statusColor,
+          weight: 6,
+          opacity: 0.95,
+          lineJoin: "round",
+          lineCap: "round",
+          dashArray: isCritical ? "12, 10" : null,
         }).addTo(this.map);
 
         polyline.on("mouseover", function () {
-          this.setStyle({ weight: 10, opacity: 1 });
+          this.setStyle({ weight: 8, opacity: 1 });
         });
         polyline.on("mouseout", function () {
-          this.setStyle({ weight: 7, opacity: 0.9 });
+          this.setStyle({ weight: 6, opacity: 0.95 });
         });
         polyline.on("click", (e) => {
           L.DomEvent.stopPropagation(e);
@@ -346,9 +413,12 @@ const MapHub = {
 
       const roadDivIcon = L.divIcon({
         className: "road-node-marker",
-        html: `<div class="road-glow-core" style="background:${road.statusColor}; box-shadow:0 0 12px ${road.statusColor}"></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+        html: `<div class="road-marker-pin">
+          <span class="road-marker-dot" style="background:${road.statusColor}"></span>
+          <span class="road-marker-tag">${road.id}</span>
+        </div>`,
+        iconSize: [72, 36],
+        iconAnchor: [36, 14],
       });
 
       const marker = L.marker([lat, lng], { icon: roadDivIcon })
@@ -372,8 +442,8 @@ const MapHub = {
       if (prevRoad) {
         this.polylineByRoadId[this._highlightedRoadId].setStyle({
           color: prevRoad.statusColor,
-          weight: 7,
-          opacity: 0.9,
+          weight: 6,
+          opacity: 0.95,
         });
       }
     }

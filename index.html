@@ -24,6 +24,7 @@
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/welcome.css">
+  <link rel="stylesheet" href="css/map-hub.css">
 </head>
 <body>
 
@@ -506,8 +507,11 @@
 
         <!-- 4. MAP HUB TAB -->
         <section class="tab-content" id="map-tab">
-          <h2 class="section-title">Satellite map hub</h2>
-          <p class="section-desc">Plan a trip with authority-sourced accident data (NHAI, PWD, NYSDOT, Caltrans, RAIB). We compare corridors and highlight the route with the fewest reported accidents.</p>
+          <header class="map-hub-header">
+            <p class="map-hub-header__eyebrow">Geospatial audit</p>
+            <h2 class="section-title">Infrastructure map atlas</h2>
+            <p class="section-desc">Survey registered corridors, plan safer journeys, and inspect authority-sourced accident registries — NHAI, PWD, NYSDOT, Caltrans, and RAIB.</p>
+          </header>
 
           <div class="glass-card route-planner-card">
             <div class="route-planner-head">
@@ -563,21 +567,53 @@
             <div id="route-results" class="route-results" aria-live="polite"></div>
           </div>
           
-          <div class="map-wrapper">
-            <div id="map-container" class="map-canvas"></div>
+          <div class="map-stage">
+            <div class="map-stage__frame">
+              <span class="map-stage__corner map-stage__corner--tl" aria-hidden="true"></span>
+              <span class="map-stage__corner map-stage__corner--tr" aria-hidden="true"></span>
+              <span class="map-stage__corner map-stage__corner--bl" aria-hidden="true"></span>
+              <span class="map-stage__corner map-stage__corner--br" aria-hidden="true"></span>
 
-            <div id="trip-map-hud" class="trip-map-hud" hidden>
-              <span class="trip-map-hud-label">Navigating</span>
-              <strong id="trip-map-hud-pct">0%</strong>
-            </div>
-            
-            <div class="glass-card map-audit-panel" id="map-audit-panel">
-              <div class="map-audit-panel-head">
-                <span class="badge badge-nh" id="map-panel-road-id">ROAD CODE</span>
-                <button type="button" class="map-panel-close" id="map-panel-close" aria-label="Close panel">&times;</button>
+              <div class="map-compass" aria-hidden="true" title="North">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="32" cy="32" r="30" stroke="rgba(196,163,90,0.5)" stroke-width="1"/>
+                  <circle cx="32" cy="32" r="26" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
+                  <path d="M32 8 L36 28 L32 24 L28 28 Z" fill="#c4a35a"/>
+                  <path d="M32 56 L28 36 L32 40 L36 36 Z" fill="rgba(196,163,90,0.35)"/>
+                  <text x="32" y="18" text-anchor="middle" fill="#e8d5a8" font-size="9" font-weight="700">N</text>
+                </svg>
               </div>
-              <div id="map-panel-body"></div>
+
+              <div class="map-wrapper">
+                <div id="map-container" class="map-canvas"></div>
+
+                <div class="map-coords-bar" aria-live="polite">
+                  <div class="map-coords-bar__group">
+                    <span class="map-coords-bar__label">Your GPS</span>
+                    <span class="map-coords-bar__value" id="map-gps-coords">Acquiring…</span>
+                    <span class="map-coords-bar__accuracy" id="map-gps-accuracy"></span>
+                  </div>
+                  <div class="map-coords-bar__group">
+                    <span class="map-coords-bar__label">Report pin</span>
+                    <span class="map-coords-bar__value" id="map-pin-coords">—</span>
+                  </div>
+                </div>
+
+                <div id="trip-map-hud" class="trip-map-hud" hidden>
+                  <span class="trip-map-hud-label">Navigating</span>
+                  <strong id="trip-map-hud-pct">0%</strong>
+                </div>
+
+                <div class="glass-card map-audit-panel" id="map-audit-panel">
+                  <div class="map-audit-panel-head">
+                    <span class="badge badge-nh" id="map-panel-road-id">ROAD CODE</span>
+                    <button type="button" class="map-panel-close" id="map-panel-close" aria-label="Close panel">&times;</button>
+                  </div>
+                  <div id="map-panel-body"></div>
+                </div>
+              </div>
             </div>
+            <p class="map-stage__caption">Authority-verified corridors · Esri · OpenStreetMap · CARTO</p>
           </div>
         </section>
 

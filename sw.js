@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v7";
+const CACHE_VERSION = "yatra-raksha-v10";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./manifest.json",
   "./css/styles.css",
   "./css/welcome.css",
+  "./css/map-hub.css",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

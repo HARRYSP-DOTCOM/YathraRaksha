@@ -388,6 +388,30 @@ const App = {
     container.innerHTML = `<div class="map-fallback">${this.escapeHTML(message)}</div>`;
   },
 
+  handleLiveLocationUpdate(pos) {
+    if (!pos) return;
+
+    this.updateLocationUI("active", pos);
+    window.MapHub?.updateGpsDisplay?.(pos.lat, pos.lng, pos.accuracy);
+
+    if (!this.coordsLockedByUser) {
+      this.applyCoordinates(pos.lat, pos.lng, {
+        silent: true,
+        movePicker: true,
+        accuracy: pos.accuracy,
+        centerMap:
+          this.activeTab === "map" &&
+          window.MapHub?.map &&
+          (window.MapHub.map.getZoom() < 14 || pos.accuracy <= 50),
+      });
+    } else if (window.MapHub?.map) {
+      window.MapHub.updateLivePosition(pos.lat, pos.lng, {
+        movePicker: false,
+        accuracy: pos.accuracy,
+      });
+    }
+  },
+
   startLiveLocation() {
     if (!window.LocationService) return;
 
@@ -417,28 +441,22 @@ const App = {
         return;
       }
 
-      this.updateLocationUI("active", pos);
-
-      if (!this.coordsLockedByUser) {
-        const centerMap = this.activeTab === "map" && !window.MapHub?.map;
-        this.applyCoordinates(pos.lat, pos.lng, {
-          silent: true,
-          movePicker: true,
-          accuracy: pos.accuracy,
-          centerMap: this.activeTab === "map" && window.MapHub?.map && window.MapHub.map.getZoom() < 8,
-        });
-      } else if (window.MapHub?.map) {
-        window.MapHub.updateLivePosition(pos.lat, pos.lng, {
-          movePicker: false,
-          accuracy: pos.accuracy,
-        });
-      }
+      this.handleLiveLocationUpdate(pos);
     });
   },
 
-  useLiveGpsLocation(showToast = false) {
+  async useLiveGpsLocation(showToast = false) {
     this.coordsLockedByUser = false;
     this.updateLocationUI("acquiring");
+
+    if (!window.LocationService) {
+      this.showToast("Location service is not available.");
+      return;
+    }
+
+    if (!window.LocationService.watchId) {
+      window.LocationService.start();
+    }
 
     const applyPos = (pos) => {
       this.applyCoordinates(pos.lat, pos.lng, {
@@ -447,20 +465,29 @@ const App = {
         accuracy: pos.accuracy,
         centerMap: true,
       });
-      if (showToast) this.showToast(`📍 Live GPS: ${pos.lat}, ${pos.lng}`);
+      window.MapHub?.updateGpsDisplay?.(pos.lat, pos.lng, pos.accuracy);
+      if (showToast) {
+        const acc =
+          pos.accuracy <= 30
+            ? `±${pos.accuracy}m`
+            : pos.accuracy <= 100
+              ? `±${pos.accuracy}m (fair)`
+              : `±${pos.accuracy}m (approximate — try outdoors)`;
+        this.showToast(`📍 GPS fix: ${pos.lat}, ${pos.lng} (${acc})`);
+      }
     };
 
-    if (window.LocationService?.lastPosition) {
-      applyPos(window.LocationService.lastPosition);
-      return;
+    try {
+      const pos = await window.LocationService.requestBestFix();
+      applyPos(pos);
+    } catch (err) {
+      this.updateLocationUI(err?.code === 1 ? "denied" : "error");
+      this.showToast(
+        err?.code === 1
+          ? "Allow location access in your browser, then try again."
+          : "Could not get GPS fix. Move near a window or outdoors and retry."
+      );
     }
-
-    window.LocationService?.requestOnce()
-      .then(applyPos)
-      .catch(() => {
-        this.updateLocationUI("denied");
-        this.showToast("Enable location in browser settings to auto-fill coordinates.");
-      });
   },
 
   applyCoordinates(lat, lng, options = {}) {
@@ -486,6 +513,7 @@ const App = {
     }
 
     if (updateMap && window.MapHub?.map) {
+      window.MapHub.updatePinDisplay?.(lat, lng);
       window.MapHub.updateLivePosition(lat, lng, {
         movePicker,
         accuracy,
@@ -510,7 +538,15 @@ const App = {
       badge.classList.add("active");
       badge.textContent = "Live GPS";
       if (detail && pos) {
-        detail.textContent = `±${pos.accuracy}m · Updated ${new Date(pos.timestamp).toLocaleTimeString()}`;
+        const quality =
+          pos.accuracy <= 20
+            ? "High accuracy"
+            : pos.accuracy <= 80
+              ? "Good fix"
+              : pos.accuracy <= 200
+                ? "Approximate"
+                : "Low accuracy — move outdoors for better fix";
+        detail.textContent = `±${pos.accuracy} m · ${quality} · ${new Date(pos.timestamp).toLocaleTimeString()}`;
       }
     } else if (status === "manual") {
       badge.classList.add("manual");
@@ -553,7 +589,7 @@ const App = {
       return;
     }
     try {
-      const pos = await window.LocationService.requestOnce();
+      const pos = await window.LocationService.requestBestFix();
       apply(pos);
     } catch {
       this.showToast("Enable location to use GPS as start point.");
