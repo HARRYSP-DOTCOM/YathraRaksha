@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user, require_user
 from app.database import get_db
 from app.models import Complaint, User
-from app.schemas import ComplaintStatusUpdate
+from app.schemas import ComplaintStatusUpdate, RepairVerificationRequest
 
 router = APIRouter(prefix="/complaints", tags=["complaints"])
 
@@ -231,3 +231,52 @@ def sync_complaint(
     if user and not payload.get("userId"):
         payload["userId"] = user.id
     return create_complaint(payload, db, user)
+
+@router.post("/{complaint_id}/verify-repair")
+def verify_repair(
+    complaint_id: str,
+    body: RepairVerificationRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+):
+    row = db.get(Complaint, complaint_id)
+    if not row:
+        raise HTTPException(404, "Complaint not found")
+    data = json.loads(row.payload_json)
+    data["afterImageUrl"] = body.afterImageUrl
+    data["repairVerified"] = True
+    data["verificationTimestamp"] = datetime.utcnow().isoformat() + "Z"
+    data["verificationNotes"] = body.notes or ""
+    # Rename existing imageUrl → beforeImageUrl for clarity
+    if "imageUrl" in data and "beforeImageUrl" not in data:
+        data["beforeImageUrl"] = data["imageUrl"]
+    logs = data.get("statusLogs", [])
+    logs.append({
+        "status": "Repair Verified",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "message": f"Repair photo uploaded and verified. Notes: {body.notes or 'None'}"
+    })
+    data["statusLogs"] = logs
+    row.status = "Repair Verified"
+    row.payload_json = json.dumps(data)
+    row.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(row)
+    return _serialize_complaint(row)
+
+@router.get("/{complaint_id}/comparison")
+def get_comparison(complaint_id: str, db: Session = Depends(get_db)):
+    row = db.get(Complaint, complaint_id)
+    if not row:
+        raise HTTPException(404, "Not found")
+    data = json.loads(row.payload_json)
+    matched = data.get("matchedRoad") or {}
+    return {
+        "complaintId": complaint_id,
+        "beforeImageUrl": data.get("beforeImageUrl") or data.get("imageUrl"),
+        "afterImageUrl": data.get("afterImageUrl"),
+        "repairVerified": data.get("repairVerified", False),
+        "verificationTimestamp": data.get("verificationTimestamp"),
+        "defectType": data.get("defectType"),
+        "roadName": matched.get("name",""),
+    }

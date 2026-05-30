@@ -1,7 +1,7 @@
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile
 
 from app.seed_data import find_nearest_road
-from app.services.ai_analysis import analyze_media_filename
+from app.services.ai_analysis import analyze_road_image
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -13,8 +13,15 @@ async def analyze_media(
     lng: float = Form(...),
 ):
     nearest = find_nearest_road(lat, lng)
-    try:
-        report = analyze_media_filename(file.filename or "road.jpg", [lat, lng], nearest)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return report
+    image_bytes = await file.read()
+
+    # Two-stage analysis — returns structured response (never raises)
+    result = analyze_road_image(image_bytes, [lat, lng], nearest)
+
+    # If road validation failed, return 422 with structured rejection body
+    if not result.get("success"):
+        from fastapi.responses import JSONResponse
+
+        return JSONResponse(status_code=422, content=result)
+
+    return result

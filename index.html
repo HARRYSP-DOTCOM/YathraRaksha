@@ -390,6 +390,9 @@
                 </div>
               </div>
 
+              <!-- Rejection card (shown when road validation fails) -->
+              <div class="glass-card highlight-orange" id="ai-rejection-card" style="display: none; margin-bottom: 16px;"></div>
+
               <!-- Bounding box telemetry parameters -->
               <div class="glass-card highlight-teal" id="ai-results-card" style="display: none;">
                 <h3 style="margin-bottom: 12px; color: var(--primary);">🤖 AI Vision Diagnostics Report</h3>
@@ -402,6 +405,7 @@
                   <div class="popup-row"><strong>Damage Area:</strong> <span id="ai-dimensions">-</span></div>
                   <div class="popup-row"><strong>Avg Defect Depth:</strong> <span id="ai-depth">-</span></div>
                   <div class="popup-row"><strong>Public Safety Risk:</strong> <span id="ai-risk" style="color:var(--secondary); font-weight:700;">-</span></div>
+                  <div class="popup-row"><strong>Road Validation Confidence:</strong> <span id="ai-road-validation" style="color:var(--primary); font-weight:700;">-</span></div>
                   
                   <hr class="popup-divider">
                   <h4 style="margin: 10px 0 6px 0; font-size:13px; color:var(--tertiary);">🏛️ Geolocated Contract Ownership</h4>

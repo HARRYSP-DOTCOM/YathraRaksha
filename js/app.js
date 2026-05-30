@@ -32,32 +32,32 @@ const App = {
 
   sampleMediaFiles: {
     pothole: {
-      name: "highway_pothole_cracks_nh48.jpg",
+      name: "sample_image_001.jpg",
       coords: [12.9716, 79.1588],
       description: "Severe Class-III structural failure forming in the middle lane of the NH-48 expressway. Creating hazardous swerving for high-speed traffic."
     },
     crack: {
-      name: "alligator_cracking_ca101.png",
+      name: "sample_image_002.png",
       coords: [37.3861, -122.0839],
       description: "Extensive alligator structural cracking near the CA-101 highway offramp. Surface aggregate is completely loose."
     },
     marking: {
-      name: "faded_lane_stripes_mdr12.jpg",
+      name: "sample_image_003.jpg",
       coords: [12.9229, 80.1239],
       description: "Center line and shoulder markings have faded completely on MDR-12, causing dangerous driving lanes during night hours."
     },
     light: {
-      name: "damaged_utility_streetlight.jpg",
+      name: "sample_image_004.jpg",
       coords: [30.2672, -97.7431],
       description: "Streetlight knocked down due to utility accident, leaving the intersection in complete darkness."
     },
     cat: {
-      name: "office_cat_playing.png",
+      name: "sample_image_005.png",
       coords: [48.4682, 8.2439],
       description: "Just a cute office kitten sitting on a keyboard."
     },
     coffee: {
-      name: "coffee_mug_on_desk.jpg",
+      name: "sample_image_006.jpg",
       coords: [40.8501, -73.8407],
       description: "My morning espresso coffee cup."
     }
@@ -1497,10 +1497,12 @@ const App = {
     const scanOverlay = document.getElementById("ai-scan-overlay");
     const boundingBox = document.getElementById("ai-scan-bounding-box");
     const resultsCard = document.getElementById("ai-results-card");
+    const rejectionCard = document.getElementById("ai-rejection-card");
     const fileSubmitBtn = document.getElementById("file-complaint-btn");
 
     logContainer.innerHTML = "";
     resultsCard.style.display = "none";
+    if (rejectionCard) rejectionCard.style.display = "none";
     fileSubmitBtn.disabled = true;
     scanOverlay.style.display = "block";
     boundingBox.style.display = "block";
@@ -1517,20 +1519,36 @@ const App = {
       if (progress.step === "init") addLog(progress.message, "cyan");
       else if (progress.step === "preprocessing") addLog(progress.message);
       else if (progress.step === "detection") addLog(progress.message);
+      else if (progress.step === "validation") addLog(progress.message);
+      else if (progress.step === "validation_result") addLog(progress.message);
+      else if (progress.step === "confirmed") addLog(progress.message, "success");
+      else if (progress.step === "rejected") addLog(progress.message, "failed");
       else if (progress.step === "segmentation") addLog(progress.message);
       else if (progress.step === "profiling") addLog(progress.message);
       else if (progress.step === "geolocating") addLog(progress.message);
       else if (progress.step === "success") addLog(progress.message, "success");
-      else if (progress.step === "failed") addLog(progress.message, "failed");
     })
-    .then((report) => {
+    .then((result) => {
       scanOverlay.style.display = "none";
       boundingBox.style.display = "none";
+
+      if (!result.success) {
+        // ── Road validation REJECTED ──
+        this.activeAIReport = null;
+        fileSubmitBtn.disabled = true;
+        resultsCard.style.display = "none";
+        this.renderRejectionCard(result);
+        this.showToast("❌ Image rejected — not road infrastructure.");
+        return;
+      }
+
+      // ── Road validated + defect analyzed ──
       resultsCard.style.display = "block";
+      if (rejectionCard) rejectionCard.style.display = "none";
       fileSubmitBtn.disabled = false;
-      
-      this.activeAIReport = report;
-      this.renderAIResultsCard(report);
+
+      this.activeAIReport = result;
+      this.renderAIResultsCard(result);
       this.showToast("⚡ YatraRaksha AI verified road issue!");
     })
     .catch((err) => {
@@ -1539,12 +1557,54 @@ const App = {
       this.activeAIReport = null;
 
       alert(err.message);
-      this.showToast("❌ Media validation failed.");
-      
+      this.showToast("❌ Analysis failed.");
+
       document.getElementById("drop-instructions").style.display = "block";
       document.getElementById("preview-media-container").style.display = "none";
       document.getElementById("user-desc").value = "";
     });
+  },
+
+  /**
+   * Render the rejection card when road validation fails.
+   */
+  renderRejectionCard(rejection) {
+    const card = document.getElementById("ai-rejection-card");
+    if (!card) return;
+
+    const objectsList = (rejection.detectedObjects || []).map(
+      obj => `<li style="color:var(--text-muted); font-size:12px; padding:2px 0;">• ${this.escapeHTML(obj)}</li>`
+    ).join('');
+
+    card.innerHTML = `
+      <div style="text-align:center; padding:8px 0 12px;">
+        <div style="font-size:36px; margin-bottom:8px;">🚫</div>
+        <h3 style="color:var(--accent-red); font-size:16px; font-weight:800; margin:0;">Analysis Rejected</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">No road infrastructure detected.</p>
+      </div>
+
+      <div style="background:rgba(248,113,113,0.06); border:1px solid rgba(248,113,113,0.2); border-radius:var(--border-radius-md); padding:12px 14px; margin:8px 0;">
+        <p style="font-size:12px; font-weight:700; color:var(--text-white); margin-bottom:8px;">Detected:</p>
+        <ul style="list-style:none; padding:0; margin:0;">${objectsList}</ul>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03); border-radius:var(--border-radius-md); padding:10px 14px; margin:8px 0;">
+        <div class="popup-row" style="font-size:12px;">
+          <strong>Road Confidence:</strong>
+          <span style="color:var(--accent-red); font-weight:700;">${((rejection.roadConfidence || 0) * 100).toFixed(1)}%</span>
+        </div>
+        <div class="popup-row" style="font-size:12px; margin-top:4px;">
+          <strong>Reason:</strong>
+          <span style="color:var(--text-muted);">${this.escapeHTML(rejection.reason || '')}</span>
+        </div>
+      </div>
+
+      <p style="text-align:center; font-size:12px; color:var(--secondary); margin-top:12px; font-weight:600;">
+        Please upload a valid road image.
+      </p>
+    `;
+
+    card.style.display = "block";
   },
 
   renderAIResultsCard(report) {
@@ -1552,11 +1612,19 @@ const App = {
     document.getElementById("ai-class").textContent = report.defectType;
     document.getElementById("ai-confidence").textContent = report.aiConfidence;
     document.getElementById("ai-severity").textContent = report.severity;
-    document.getElementById("ai-severity").className = `badge ${report.severity === 'Critical' ? 'badge-warn' : 'badge-sh'}`;
+    document.getElementById("ai-severity").className = `badge ${report.severity === 'Critical' ? 'badge-warn' : report.severity === 'None' ? 'badge-good' : 'badge-sh'}`;
     document.getElementById("ai-dimensions").textContent = report.defectArea;
     document.getElementById("ai-depth").textContent = report.estimatedDepth;
     document.getElementById("ai-risk").textContent = `${report.urgencyScore} / 10`;
-    
+
+    // Road Validation Confidence field
+    const roadValEl = document.getElementById("ai-road-validation");
+    if (roadValEl) {
+      const conf = ((report.roadValidationConfidence || 0) * 100).toFixed(1);
+      roadValEl.textContent = `${conf}%`;
+      roadValEl.style.color = report.roadValidationConfidence >= 0.8 ? 'var(--primary)' : 'var(--secondary)';
+    }
+
     if (report.matchedRoad) {
       const routing = window.RoadTracker.determineRoutingDetails(report.matchedRoad);
       document.getElementById("ai-road").textContent = `${report.matchedRoad.name} (${report.distanceToRoadKm} km away)`;
@@ -1706,6 +1774,7 @@ const App = {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="badge ${statusClass}">${report.status}</span>
               ${report.status.startsWith("Escalated") ? `<span class="badge badge-warn" style="font-size:10px;">⚠️ Escalated</span>` : ''}
+              ${report.repairVerified ? `<span class="badge badge-good" style="font-size:10px;">✅ Verified</span>` : ''}
               ${report.priorityCategory ? (() => {
                 const s = window.App.getPriorityStyle(report.priorityCategory);
                 return `<span style="display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; background:${s.bg}; color:${s.color}; border:${s.border}; margin-left:4px;">
@@ -1841,6 +1910,41 @@ const App = {
     return map[category] || map.Low;
   },
 
+  renderRepairComparison(complaint) {
+    const before = complaint.beforeImageUrl || complaint.imageUrl;
+    const after   = complaint.afterImageUrl;
+    const verified = complaint.repairVerified;
+
+    const el = document.getElementById('repair-comparison-panel');
+    if (!el) return;
+
+    if (!before && !after) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+
+    if (before && after) {
+      el.innerHTML = `
+        <p style="font-size:11px; font-weight:700; color:var(--primary); margin-bottom:10px; letter-spacing:0.05em;">✅ BEFORE / AFTER COMPARISON</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <p style="font-size:10px; color:var(--text-muted); text-align:center; margin-bottom:4px;">BEFORE</p>
+            <img src="${before}" alt="Before repair" style="width:100%; border-radius:var(--border-radius-sm); object-fit:cover; max-height:150px;" onerror="this.style.display='none'"/>
+          </div>
+          <div>
+            <p style="font-size:10px; color:var(--primary); text-align:center; margin-bottom:4px;">AFTER ✓</p>
+            <img src="${after}" alt="After repair" style="width:100%; border-radius:var(--border-radius-sm); object-fit:cover; max-height:150px;" onerror="this.style.display='none'"/>
+          </div>
+        </div>
+        ${verified ? `<p style="font-size:10px; color:#10b981; margin-top:8px;">✅ Repair officially verified on ${new Date(complaint.verificationTimestamp).toLocaleDateString()}</p>` : ''}
+      `;
+    } else if (before) {
+      el.innerHTML = `
+        <p style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.05em;">COMPLAINT PHOTO</p>
+        <img src="${before}" alt="Complaint photo" style="width:100%; border-radius:var(--border-radius-sm); object-fit:cover; max-height:180px;" onerror="this.style.display='none'"/>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:8px;">⏳ Awaiting repair verification photo</p>
+      `;
+    }
+  },
+
   viewComplaintDetails(complaintId) {
     const reports = window.RoadTracker.getAllReports();
     const complaint = reports.find(c => c.id === complaintId);
@@ -1856,6 +1960,8 @@ const App = {
     document.getElementById("details-escalation").textContent = complaint.escalationHierarchy ? `Escalation path: ${complaint.escalationHierarchy.join(" → ")}` : "Escalation path: Engineer → Superintending Engineer → Chief Engineer";
 
     document.getElementById("details-notice").textContent = complaint.formalNoticeText;
+
+    this.renderRepairComparison(complaint);
 
     const priorityEl = document.getElementById('details-priority-card');
     if (priorityEl && complaint.priorityScore) {
