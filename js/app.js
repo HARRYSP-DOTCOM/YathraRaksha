@@ -234,6 +234,13 @@ const App = {
   },
 
   registerEventListeners() {
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('public-timeline-modal');
+        if (modal) modal.style.display = 'none';
+      }
+    });
+
     // Navigation Tabs (Supports both Desktop sidebar and Mobile bottom tabs)
     document.querySelectorAll(".nav-link, .mobile-nav-link").forEach((link) => {
       link.addEventListener("click", (e) => {
@@ -1376,10 +1383,91 @@ const App = {
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 4px; justify-content: flex-end;">
               <span>${syncIcon}</span><span>${syncText}</span>
             </div>
+            <button onclick="event.stopPropagation(); window.App.openPublicTimeline('${report.id}')"
+              class="btn btn-secondary btn-sm"
+              style="margin-top:8px; font-size:11px;">📋 Timeline</button>
           </div>
         </div>
       `;
     }).join("");
+  },
+
+  openPublicTimeline(complaintId) {
+    const reports = window.RoadTracker.getAllReports();
+    const c = reports.find(r => r.id === complaintId);
+    if (!c) return;
+
+    const ALL_STEPS = [
+      { key: "Submitted",         icon: "📤", color: "var(--tertiary)" },
+      { key: "Accepted",          icon: "✅", color: "var(--primary)" },
+      { key: "Engineer Assigned", icon: "👷", color: "var(--secondary)" },
+      { key: "Budget Allocated",  icon: "💰", color: "var(--secondary)" },
+      { key: "Work Commenced",    icon: "🚧", color: "var(--primary)" },
+      { key: "Resolved",          icon: "🏁", color: "#10b981" },
+      { key: "Closed",            icon: "🔒", color: "var(--text-muted)" },
+    ];
+
+    const logs = c.statusLogs || [];
+    const logMap = {};
+    logs.forEach(l => { logMap[l.status] = l; });
+
+    // Find current step index
+    const currentIdx = ALL_STEPS.findIndex(s => s.key === c.status);
+
+    const stepsHtml = ALL_STEPS.map((step, idx) => {
+      const done  = idx < currentIdx || c.status === step.key;
+      const active = c.status === step.key;
+      const log   = logMap[step.key];
+      const time  = log ? new Date(log.timestamp).toLocaleString() : null;
+      const msg   = log ? log.message : null;
+      const dotStyle = done
+        ? `background:${step.color}; box-shadow: 0 0 8px ${step.color};`
+        : `background: var(--bg-surface); border:2px solid var(--glass-border);`;
+
+      return `
+        <div style="display:flex; gap:14px; margin-bottom:${idx < ALL_STEPS.length-1 ? '0' : '0'};">
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <div style="width:32px; height:32px; border-radius:50%; ${dotStyle} display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">
+              ${done ? step.icon : ''}
+            </div>
+            ${idx < ALL_STEPS.length - 1 ? `<div style="width:2px; flex:1; min-height:24px; background:${done ? step.color : 'var(--glass-border)'}; margin:4px 0;"></div>` : ''}
+          </div>
+          <div style="padding-bottom:20px; flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-weight:700; font-size:14px; color:${done ? 'var(--text-white)' : 'var(--text-dim)'};">${step.key}</span>
+              ${active ? `<span class="badge badge-good" style="font-size:10px; animation: pulse 2s infinite;">CURRENT</span>` : ''}
+              ${time ? `<span style="font-size:11px; color:var(--text-muted);">${time}</span>` : ''}
+            </div>
+            ${msg ? `<p style="font-size:12px; color:var(--text-muted); margin-top:4px;">${msg}</p>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Escalation entries appended below
+    const escalationLogs = logs.filter(l => l.status === 'Escalated');
+    const escalHtml = escalationLogs.length ? `
+      <div style="margin-top:16px; padding:12px; background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.2); border-radius:var(--border-radius-md);">
+        <p style="font-size:12px; font-weight:700; color:var(--accent-red); margin-bottom:8px;">⚠️ ESCALATION HISTORY</p>
+        ${escalationLogs.map(l => `
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">
+            <strong style="color:var(--text-white);">${l.authority || 'Engineer'}</strong> — ${new Date(l.timestamp).toLocaleString()}<br/>${l.message}
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+
+    document.getElementById('public-timeline-content').innerHTML = `
+      <div style="margin-bottom:16px; padding:12px; background:var(--bg-surface); border-radius:var(--border-radius-md);">
+        <p style="font-size:11px; color:var(--text-muted);">REF: ${c.id}</p>
+        <p style="font-size:15px; font-weight:700; color:var(--text-white); margin-top:2px;">${c.defectType}</p>
+        <p style="font-size:12px; color:var(--text-muted);">📍 ${c.matchedRoad ? c.matchedRoad.name : 'Unregistered Road'}</p>
+      </div>
+      ${stepsHtml}
+      ${escalHtml}
+    `;
+
+    document.getElementById('public-timeline-modal').style.display = 'block';
   },
 
   viewComplaintDetails(complaintId) {

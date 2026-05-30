@@ -2472,3 +2472,8 @@ label {
 .lang-modal-panel .lang-dropdown-footer {
   padding: 10px 16px;
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
