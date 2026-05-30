@@ -425,152 +425,49 @@
 
         <!-- 3. TRANSPARENCY AUDIT BOARD -->
         <section class="tab-content" id="transparency-tab">
-          <h2 class="section-title">Contractor & Project Audit Registry</h2>
-          <p class="section-desc">Consolidated infrastructure directory mapping road relayed dates, contractor performance, sanctioned budgets, spending, and direct government tender sources for each project.</p>
-          <p class="section-desc" style="margin-top:0.45rem; color: #cbd5e1; font-size: 0.95rem;">Budget source links point to official procurement portals so judges can verify each figure against primary government tender listings.</p>
+  <div style="padding:0 4px;">
+    <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">💰 Budget Transparency</h2>
 
-          <div class="glass-card">
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Road Asset Code</th>
-                    <th>Asset Name / Region</th>
-                    <th>Classification</th>
-                    <th>Responsible Contractor</th>
-                    <th>Sanctioned Budget (INR)</th>
-                    <th>Spent Cost (INR)</th>
-                    <th>Guarantee Period</th>
-                    <th>Executive Engineer</th>
-                    <th>Budget Source</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>IN-NH48</strong></td>
-                    <td>NH-48 Golden Quadrilateral (Chennai-Bengaluru)</td>
-                    <td><span class="badge badge-nh">NH</span></td>
-                    <td>Infratech Builders Group Ltd. (★3.4)</td>
-                    <td>₹120.0 Cr</td>
-                    <td><span style="color:var(--accent-red); font-weight:700;">₹135.0 Cr</span></td>
-                    <td>Last Relaid: 2024</td>
-                    <td>Er. Rajesh K. Vardhan<br><small>+91-98402-12345</small></td>
-                    <td><a class="source-link" href="https://etenders.gov.in/eprocure/app" target="_blank" rel="noopener noreferrer">NHAI eTender portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('IN-NH48')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('IN-NH48')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>IN-SH17</strong></td>
-                    <td>SH-17 (Bengaluru-Mysuru Expressway Link)</td>
-                    <td><span class="badge badge-sh">SH</span></td>
-                    <td>KNR Constructions Ltd. (★4.5)</td>
-                    <td>₹85.0 Cr</td>
-                    <td><span style="color:#10b981; font-weight:700;">₹82.5 Cr</span></td>
-                    <td>Last Relaid: 2025</td>
-                    <td>Er. Manjunath Swamy<br><small>+91-94480-56789</small></td>
-                    <td><a class="source-link" href="https://etenders.karnataka.gov.in/nicgep/app" target="_blank" rel="noopener noreferrer">Karnataka eTender portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('IN-SH17')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('IN-SH17')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>IN-MDR12</strong></td>
-                    <td>MDR-12 Tambaram-Velachery Main Road</td>
-                    <td><span class="badge badge-mdr">MDR</span></td>
-                    <td>⚠️ Sri Balaji Roadworks Co. (★2.1)</td>
-                    <td>₹32.0 Cr</td>
-                    <td><span style="color:var(--accent-red); font-weight:700;">₹45.0 Cr</span></td>
-                    <td>Last Relaid: 2023</td>
-                    <td>Er. Selvakumar Arumugam<br><small>+91-94440-98765</small></td>
-                    <td><a class="source-link" href="https://tntenders.gov.in/nicgep/app" target="_blank" rel="noopener noreferrer">Tamil Nadu PWD eTender portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('IN-MDR12')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('IN-MDR12')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>US-I95</strong></td>
-                    <td>Interstate 95 (New York Bronx Corridor)</td>
-                    <td><span class="badge badge-nh">Interstate</span></td>
-                    <td>Tully Construction Co. (★3.9)</td>
-                    <td>₹185.0 Cr</td>
-                    <td><span style="color:var(--accent-red); font-weight:700;">₹198.0 Cr</span></td>
-                    <td>Last Relaid: 2023</td>
-                    <td>Eng. Sarah Jenkins<br><small>+1-518-555-0195</small></td>
-                    <td><a class="source-link" href="https://www.dot.ny.gov/doing-business/contractors" target="_blank" rel="noopener noreferrer">NYSDOT contractor portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('US-I95')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('US-I95')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>US-CA101</strong></td>
-                    <td>US Route 101 (Silicon Valley Expressway)</td>
-                    <td><span class="badge badge-sh">US Highway</span></td>
-                    <td>Granite Construction Co. (★4.8)</td>
-                    <td>₹94.0 Cr</td>
-                    <td><span style="color:#10b981; font-weight:700;">₹91.2 Cr</span></td>
-                    <td>Last Relaid: 2024</td>
-                    <td>Eng. David Vance<br><small>+1-510-555-2345</small></td>
-                    <td><a class="source-link" href="https://dot.ca.gov/programs/procurement-and-contracts" target="_blank" rel="noopener noreferrer">Caltrans procurement portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('US-CA101')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('US-CA101')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>DE-A8</strong></td>
-                    <td>A8 Autobahn (München-Salzburg)</td>
-                    <td><span class="badge badge-nh">Autobahn</span></td>
-                    <td>Hochtief AG (★4.7)</td>
-                    <td>₹220.0 Cr</td>
-                    <td><span style="color:#10b981; font-weight:700;">₹218.5 Cr</span></td>
-                    <td>Last Relaid: 2025</td>
-                    <td>Dipl.-Ing. Hans-D. Weber<br><small>+49-89-5456-7890</small></td>
-                    <td><a class="source-link" href="https://www.bmvi.de/EN/Home/home.html" target="_blank" rel="noopener noreferrer">BMVI infrastructure portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('DE-A8')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('DE-A8')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>DE-L190</strong></td>
-                    <td>L190 Landesstraße (Schwarzwald Link)</td>
-                    <td><span class="badge badge-sh">State Road</span></td>
-                    <td>Strabag AG (★4.1)</td>
-                    <td>₹55.0 Cr</td>
-                    <td><span style="color:var(--accent-red); font-weight:700;">₹62.0 Cr</span></td>
-                    <td>Last Relaid: 2022</td>
-                    <td>Dipl.-Ing. Brigitte Müller<br><small>+49-721-926-0</small></td>
-                    <td><a class="source-link" href="https://www.bmvi.de/EN/Home/home.html" target="_blank" rel="noopener noreferrer">BMVI infrastructure portal</a></td>
-                    <td>
-                      <div style="display:flex; gap:6px;">
-                        <button onclick="window.App.focusRoadOnMap('DE-L190')" class="btn btn-secondary" style="padding:6px 10px; font-size:11px;">Focus Map</button>
-                        <button onclick="window.App.selectRoadForReport('DE-L190')" class="btn btn-primary" style="padding:6px 10px; font-size:11px;">Report</button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+    <!-- Summary KPI Cards -->
+    <div id="budget-kpi-row" style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px;">
+      <div class="glass-card" style="padding:14px; text-align:center;">
+        <p style="font-size:11px; color:var(--text-muted);">TOTAL ALLOCATED</p>
+        <p id="bkpi-allocated" style="font-size:22px; font-weight:800; color:var(--tertiary); font-family:var(--font-heading);">—</p>
+      </div>
+      <div class="glass-card" style="padding:14px; text-align:center;">
+        <p style="font-size:11px; color:var(--text-muted);">TOTAL SPENT</p>
+        <p id="bkpi-spent" style="font-size:22px; font-weight:800; color:var(--secondary); font-family:var(--font-heading);">—</p>
+      </div>
+      <div class="glass-card" style="padding:14px; text-align:center;">
+        <p style="font-size:11px; color:var(--text-muted);">REMAINING</p>
+        <p id="bkpi-remaining" style="font-size:22px; font-weight:800; color:var(--primary); font-family:var(--font-heading);">—</p>
+      </div>
+      <div class="glass-card" style="padding:14px; text-align:center;">
+        <p style="font-size:11px; color:var(--text-muted);">UTILIZATION</p>
+        <p id="bkpi-utilization" style="font-size:22px; font-weight:800; color:var(--text-white); font-family:var(--font-heading);">—</p>
+      </div>
+    </div>
+
+    <!-- Budget Chart -->
+    <div class="glass-card" style="padding:16px; margin-bottom:20px;">
+      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">ALLOCATED vs SPENT PER ROAD (₹ Crores)</h4>
+      <div style="height:220px; position:relative;">
+        <canvas id="chart-budget-detail"></canvas>
+      </div>
+    </div>
+
+    <!-- Roads Table -->
+    <div class="glass-card" style="padding:16px;">
+      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">ROAD-WISE BREAKDOWN</h4>
+      <div id="budget-roads-table" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <h4 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:12px;">🏗️ Contractor Performance</h4>
+      <div id="contractor-dashboard-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+</section>
 
         <!-- 4. MAP HUB TAB -->
         <section class="tab-content" id="map-tab">

@@ -92,6 +92,11 @@ def get_budget_audit(road_id: str | None = None) -> dict:
                 "spentBudget": r["spentBudget"],
                 "overrun": r["spentBudget"] > r["sanctionedBudget"],
                 "fundingSource": r["fundingSource"],
+                "utilizationPercent": round(r["spentBudget"] / r["sanctionedBudget"] * 100, 1) if r["sanctionedBudget"] else 0,
+                "remainingBudget": r["sanctionedBudget"] - r["spentBudget"],
+                "statusLabel": "Over Budget" if r["spentBudget"] > r["sanctionedBudget"] else ("Under-utilized" if r["spentBudget"] < r["sanctionedBudget"] * 0.7 else "On Track"),
+                "contractorName": r["contractorName"],
+                "contractorPerformance": r["contractorPerformance"],
             }
             for r in roads
         ],
@@ -100,5 +105,7 @@ def get_budget_audit(road_id: str | None = None) -> dict:
             "totalSpent": total_spent,
             "overrunCount": len(overruns),
             "efficiencyPercent": round((total_sanctioned / total_spent) * 100, 1) if total_spent else 100,
+            "totalRemaining": total_sanctioned - total_spent,
+            "utilizationPercent": round(total_spent / total_sanctioned * 100, 1) if total_sanctioned else 0,
         },
     }

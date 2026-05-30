@@ -523,6 +523,145 @@ const App = {
   /**
    * Handle dynamic tab switching
    */
+  async loadBudgetDashboard() {
+    const formatCr = v => `₹${(v/10000000).toFixed(2)} Cr`;
+    try {
+      const data = await APIService.request('/audit/budget');
+      const s = data.summary;
+      document.getElementById('bkpi-allocated').textContent = formatCr(s.totalSanctioned);
+      document.getElementById('bkpi-spent').textContent = formatCr(s.totalSpent);
+      document.getElementById('bkpi-remaining').textContent = formatCr(s.totalRemaining || (s.totalSanctioned - s.totalSpent));
+      document.getElementById('bkpi-utilization').textContent = (s.utilizationPercent || 0) + '%';
+
+      // Chart
+      const canvas = document.getElementById('chart-budget-detail');
+      if (canvas && typeof Chart !== 'undefined') {
+        if (this.activeCharts.budgetDetail) this.activeCharts.budgetDetail.destroy();
+        const labels = data.roads.map(r => r.id);
+        const allocated = data.roads.map(r => r.sanctionedBudget / 10000000);
+        const spent = data.roads.map(r => r.spentBudget / 10000000);
+        this.activeCharts.budgetDetail = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Allocated (₹Cr)', data: allocated, backgroundColor: 'rgba(56,189,248,0.35)', borderColor: 'var(--tertiary)', borderWidth: 1.5, borderRadius: 5 },
+              { label: 'Spent (₹Cr)', data: spent,
+                backgroundColor: spent.map((v,i) => v > allocated[i] ? 'rgba(248,113,113,0.5)' : 'rgba(45,212,191,0.4)'),
+                borderColor: spent.map((v,i) => v > allocated[i] ? 'var(--accent-red)' : 'var(--primary)'),
+                borderWidth: 1.5, borderRadius: 5 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans' } } } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#94a3b8' } },
+              y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#94a3b8' } }
+            }
+          }
+        });
+      }
+
+      // Table
+      const tableEl = document.getElementById('budget-roads-table');
+      if (tableEl) {
+        tableEl.innerHTML = data.roads.map(r => {
+          const statusStyle = r.statusLabel === 'Over Budget'
+            ? { badge: 'badge-warn', bar: 'var(--accent-red)' }
+            : r.statusLabel === 'Under-utilized'
+            ? { badge: 'badge-sh', bar: 'var(--secondary)' }
+            : { badge: 'badge-good', bar: 'var(--primary)' };
+          const pct = Math.min(r.utilizationPercent || 0, 130);
+          return `
+            <div class="glass-card" style="padding:12px; cursor:pointer;" onclick="window.App.showRoadBudgetDetail('${r.id}')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:0;">
+                  <p style="font-weight:700; font-size:13px; color:var(--text-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.name}</p>
+                  <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">${r.contractorName || ''}</p>
+                </div>
+                <span class="badge ${statusStyle.badge}" style="flex-shrink:0; font-size:10px;">${r.statusLabel}</span>
+              </div>
+              <div style="display:flex; gap:16px; margin-top:8px; font-size:12px; flex-wrap:wrap;">
+                <span style="color:var(--text-muted);">Allocated: <strong style="color:var(--text-white);">${formatCr(r.sanctionedBudget)}</strong></span>
+                <span style="color:var(--text-muted);">Spent: <strong style="color:var(--text-white);">${formatCr(r.spentBudget)}</strong></span>
+              </div>
+              <!-- Mini progress bar -->
+              <div style="margin-top:8px; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">
+                <div style="height:100%; width:${Math.min(pct,100)}%; background:${statusStyle.bar}; border-radius:2px; transition:width 0.6s;"></div>
+              </div>
+              <p style="font-size:10px; color:var(--text-muted); margin-top:3px;">${r.utilizationPercent}% utilization</p>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Load contractor dashboard alongside budget data
+      this.loadContractorDashboard();
+    } catch(e) {
+      this.showToast('Budget data unavailable — check backend.');
+    }
+  },
+
+  async loadContractorDashboard() {
+    const formatCr = v => `₹${(v/10000000).toFixed(2)} Cr`;
+    const listEl = document.getElementById('contractor-dashboard-list');
+    if (!listEl) return;
+    try {
+      const contractors = await APIService.request('/contractors/dashboard');
+      const highRisk = contractors.filter(c => c.riskLevel === 'High');
+      if (highRisk.length) {
+        listEl.insertAdjacentHTML('beforebegin', `
+          <div style="padding:10px 14px; background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.3); border-radius:var(--border-radius-md); margin-bottom:12px; font-size:12px; color:var(--accent-red);">
+            ⚠️ <strong>${highRisk.length} HIGH-RISK contractor${highRisk.length>1?'s':''}</strong> flagged: ${highRisk.map(c=>c.name).join(', ')}
+          </div>
+        `);
+      }
+      listEl.innerHTML = contractors.map(c => {
+        const riskStyle = c.riskLevel === 'High' ? 'badge-warn' : c.riskLevel === 'Medium' ? 'badge-sh' : 'badge-good';
+        const utilPct = Math.min(c.budgetUtilization, 130);
+        const utilColor = c.budgetUtilization > 100 ? 'var(--accent-red)' : 'var(--primary)';
+        const stars = '★'.repeat(Math.round(c.rating)) + '☆'.repeat(5 - Math.round(c.rating));
+        return `
+          <div class="glass-card" style="padding:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div>
+                <p style="font-weight:700; font-size:13px; color:var(--text-white);">${c.name}</p>
+                <p style="font-size:11px; color:var(--secondary); margin-top:2px;">${stars} ${c.rating}/5</p>
+              </div>
+              <span class="badge ${riskStyle}" style="font-size:10px;">${c.riskLevel} Risk</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; font-size:11px;">
+              <span style="color:var(--text-muted);">Roads: <strong style="color:var(--text-white);">${c.roadsManaged}</strong></span>
+              <span style="color:var(--text-muted);">Complaints: <strong style="color:var(--text-white);">${c.totalComplaints}</strong></span>
+              <span style="color:var(--text-muted);">Allocated: <strong style="color:var(--text-white);">${formatCr(c.totalAllocated)}</strong></span>
+              <span style="color:var(--text-muted);">Resolution: <strong style="color:var(--text-white);">${c.resolutionRate}%</strong></span>
+            </div>
+            <!-- Budget utilisation mini bar -->
+            <div style="margin-top:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:3px;">
+                <span>Budget utilisation</span><span style="color:${utilColor};">${c.budgetUtilization}%</span>
+              </div>
+              <div style="height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">
+                <div style="height:100%; width:${Math.min(utilPct,100)}%; background:${utilColor}; border-radius:2px;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      if (listEl) listEl.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Contractor data unavailable.</p>';
+    }
+  },
+
+  showRoadBudgetDetail(roadId) {
+    const road = window.RoadDatabase?.getRoadById(roadId);
+    if (!road) return;
+    const formatCr = v => `₹${(v/10000000).toFixed(2)} Cr`;
+    const overrun = road.spentBudget > road.sanctionedBudget;
+    alert(`${road.name}\n\nFunding: ${road.fundingSource}\nContractor: ${road.contractorName} (${road.contractorPerformance}/5★)\nAllocated: ${formatCr(road.sanctionedBudget)}\nSpent: ${formatCr(road.spentBudget)}\n${overrun ? '⚠️ BUDGET OVERRUN: ' + formatCr(road.spentBudget - road.sanctionedBudget) + ' over budget' : '✅ Within budget'}\nLast relayed: ${road.lastRelayingDate}\nGuarantee period: ${road.maintenanceGuaranteePeriod} years`);
+  },
+
   switchTab(tabId) {
     this.activeTab = tabId;
     
@@ -574,6 +713,10 @@ const App = {
         const p = window.LocationService.lastPosition;
         this.applyCoordinates(p.lat, p.lng, { silent: true, movePicker: tabId === "map" });
       }
+    }
+
+    if (tabId === "transparency") {
+      this.loadBudgetDashboard();
     }
 
     if (tabId === "overview") {
