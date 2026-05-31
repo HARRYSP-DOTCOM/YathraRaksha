@@ -162,12 +162,14 @@ const App = {
 
     // Panel close
     document.getElementById('panel-close')?.addEventListener('click', () => this.closeRoadPanel());
+
+    setTimeout(() => this.map.invalidateSize(), 100);
   },
 
   setMapMode(mode) {
     if (this.mapTileLayer) this.map.removeLayer(this.mapTileLayer);
     const tiles = {
-      road: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      road: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       night: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     };
