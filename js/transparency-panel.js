@@ -53,6 +53,14 @@ window.TransparencyPanel = {
       const value = t.contract_value_cr ?? t.budget_allocated_cr ?? 0;
       const overrun = t.cost_overrun_cr ?? Math.max(0, (t.amount_spent_cr || 0) - (t.budget_allocated_cr || value));
       const overrunLabel = overrun > 0 ? `₹${overrun} Cr` : "—";
+      const sourceName = (t.source || "NHAI").split(",")[0];
+      let fallbackUrl = "https://eprocure.gov.in/eprocure/app";
+      const sLower = sourceName.toLowerCase();
+      if (sLower.includes("nhai")) fallbackUrl = "https://tender.nhai.gov.in";
+      else if (sLower.includes("pmgsy")) fallbackUrl = "https://omms.nic.in";
+      else if (sLower.includes("morth")) fallbackUrl = "https://morth.nic.in/tenders";
+      else if (sLower.includes("pwd")) fallbackUrl = "https://pwd.kerala.gov.in/tenders";
+
       html += `<tr style="border-top:1px solid var(--glass-border);">
         <td style="padding:10px 8px;"><strong>${esc(t.tender_id)}</strong></td>
         <td>${esc(t.road)}<br><span style="font-size:10px;color:var(--text-muted);">${esc(t.tender_name || t.section || "")}</span></td>
@@ -60,7 +68,11 @@ window.TransparencyPanel = {
         <td>₹${value}</td>
         <td><span class="badge badge-sh">${esc(t.status)}</span></td>
         <td>${overrunLabel}</td>
-        <td><span class="source-badge">📄 ${esc((t.source || "NHAI").split(",")[0])}</span></td>
+        <td>
+          <a href="${esc(t.tender_document_url || t.sourceUrl || fallbackUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+            <span class="source-badge" style="cursor:pointer; display:inline-block; transition:transform 0.2s; hover:transform:scale(1.05);">📄 ${esc(sourceName)} 🔗</span>
+          </a>
+        </td>
       </tr>`;
     });
 
