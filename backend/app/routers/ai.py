@@ -116,11 +116,25 @@ def _analyze_with_gemini(
 ) -> dict:
     import google.generativeai as genai
 
+    # Ensure model name is correct for the SDK
+    model_name = settings.gemini_model
+    if not model_name.startswith("models/"):
+        model_name = f"models/{model_name}"
+
     genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel(
-        model_name=settings.gemini_model,
-        system_instruction=system_prompt
-    )
+    
+    try:
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            system_instruction=system_prompt
+        )
+    except Exception as exc:
+        # Fallback to a guaranteed model name if 2.0-flash is not found
+        print(f"Model {model_name} initialization failed: {exc}. Trying gemini-flash-latest")
+        model = genai.GenerativeModel(
+            model_name="models/gemini-flash-latest",
+            system_instruction=system_prompt
+        )
 
     image_data = base64.b64decode(image_base64)
     
