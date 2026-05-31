@@ -1223,3 +1223,24 @@ Respond in ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : lang === 'ml'
 // Boot
 document.addEventListener('DOMContentLoaded', () => App.init());
 window.App = App;
+
+// Offline Hooks
+window.addEventListener('online', () => {
+  if (window.RoadTracker) {
+    window.RoadTracker.syncOfflineQueue((item) => {
+      if (window.App) window.App.showToast(`Synced complaint ${item.id}`);
+    });
+  }
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SYNC_OFFLINE_QUEUE') {
+      if (window.RoadTracker) {
+        window.RoadTracker.syncOfflineQueue((item) => {
+          if (window.App) window.App.showToast(`Background synced complaint ${item.id}`);
+        });
+      }
+    }
+  });
+}

@@ -16,10 +16,11 @@ const RoadTracker = {
       routingMessage: "Local roads are routed to the regional Municipality grievance channels."
     };
 
-    if (!road || !road.type) return fallback;
-    const type = road.type.toUpperCase();
+    if (!road) return fallback;
+    const type = (road.type || "").toUpperCase();
+    const jur = (road.jurisdiction || road.authority || "").toUpperCase();
 
-    if (type.includes("NH") || type.includes("NATIONAL HIGHWAY")) {
+    if (type.includes("NH") || type.includes("NATIONAL HIGHWAY") || jur.includes("NHAI") || jur.includes("NATIONAL")) {
       return {
         routeTo: "NHAI Regional Officer",
         routeAuthority: "NHAI",
@@ -28,7 +29,7 @@ const RoadTracker = {
       };
     }
 
-    if (type.includes("SH") || type.includes("STATE HIGHWAY") || type.includes("DISTRICT ROAD") || type.includes("MDR")) {
+    if (type.includes("SH") || type.includes("STATE HIGHWAY") || type.includes("DISTRICT ROAD") || type.includes("MDR") || jur.includes("PWD") || jur.includes("STATE")) {
       return {
         routeTo: "State PWD Nodal Officer",
         routeAuthority: "PWD",
@@ -86,6 +87,13 @@ const RoadTracker = {
         message: "Network offline. Issue saved locally in offline outbox. Will auto-sync when online."
       });
       localStorage.setItem(this.STORAGE_REPORTS_KEY, JSON.stringify(reports));
+
+      // Register background sync
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        navigator.serviceWorker.ready.then(swRegistration => {
+          return swRegistration.sync.register('sync-complaints');
+        }).catch(err => console.log('Background sync registration failed:', err));
+      }
     } else {
       this.simulateInitialReview(complaint.id);
     }

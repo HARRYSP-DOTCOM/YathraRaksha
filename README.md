@@ -208,9 +208,9 @@ The backend also exposes uploaded media files under `/uploads`.
 
 ## Features
 
-- PWA install support
-- Offline caching and fallback page
-- Local complaint queueing when the network is unavailable
+- **PWA Implementation**: Full install support, service worker offline caching, and a dedicated offline fallback page.
+- **Outbox Tracker**: Local complaint queueing that saves reports to device storage when the network is unavailable.
+- **Background Sync**: Automatic background synchronization (via Service Worker SyncManager) to push queued complaints when connectivity is restored.
 - Media upload handling
 - Road data and contractor analytics
 - Server-side analysis endpoint for additional processing

@@ -626,11 +626,14 @@ const MapHub = {
           <div class="popup-status-line" style="color:${road.statusColor}">${statusText}</div>
         </div>
         <div class="popup-body">
+          <div class="popup-row"><strong>Road Type</strong> <span>${road.type || "NH"}</span></div>
           ${routeLine}${lengthLine}${builtLine}${accidentLine}
-          <div class="popup-row"><strong>Contractor</strong> <span>${road.contractorName} (${ratingStars})</span></div>
+          <div class="popup-row"><strong>Contractor Name</strong> <span>${road.contractorName} (${ratingStars})</span></div>
+          <div class="popup-row"><strong>Last Relaying Date</strong> <span>${road.lastRelayingDate || "Unrecorded"}</span></div>
           <hr class="popup-divider">
-          <div class="popup-row"><strong>Project cost</strong> <span>${formatINR(road.sanctionedBudget)}</span></div>
-          <div class="popup-row"><strong>Spent (est.)</strong> <span class="${budgetStatusClass}">${formatINR(road.spentBudget)}</span></div>
+          <div class="popup-row"><strong>Budget Sanctioned</strong> <span>${formatINR(road.sanctionedBudget)}</span></div>
+          <div class="popup-row"><strong>Budget Spent</strong> <span class="${budgetStatusClass}">${formatINR(road.spentBudget)}</span></div>
+          <div class="popup-row"><strong>Funding Source</strong> <span>${road.fundingSource || "CRIF"}</span></div>
           ${road.spentBudget > 0 ? `<div class="popup-row"><strong>Efficiency</strong> <span class="badge ${budgetOverrun ? "badge-warn" : "badge-good"}">${financialEfficiency}%</span></div>` : ""}
           ${road.source ? `<p style="margin-top:6px;"><span class="source-badge">📄 ${road.source}</span></p>` : ""}
         </div>
