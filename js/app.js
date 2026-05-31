@@ -12,6 +12,7 @@ const App = {
   userCoords: null,
   userMarker: null,
   aiAnalysisResult: null,
+  aiCameraStream: null,
   chatHistory: [],
   contractorChart: null,
 
@@ -89,6 +90,9 @@ const App = {
   },
 
   switchScreen(screenId) {
+    if (this.currentScreen === 'ai-detect' && screenId !== 'ai-detect') {
+      this.stopAICamera();
+    }
     this.currentScreen = screenId;
     // Update nav active states
     document.querySelectorAll('.nav-item, .mobile-nav-item, .mobile-sheet-item').forEach(btn => {
@@ -453,13 +457,19 @@ const App = {
   initAIDetect() {
     const uploadArea = document.getElementById('ai-upload-area');
     const fileInput = document.getElementById('ai-file-input');
-    const cameraInput = document.getElementById('ai-camera-input');
     const analyzeBtn = document.getElementById('ai-analyze-btn');
 
     // Upload click
-    document.getElementById('ai-upload-btn')?.addEventListener('click', () => fileInput.click());
-    document.getElementById('ai-capture-btn')?.addEventListener('click', () => cameraInput.click());
-    uploadArea?.addEventListener('click', () => fileInput.click());
+    document.getElementById('ai-upload-btn')?.addEventListener('click', () => {
+      this.stopAICamera();
+      fileInput.click();
+    });
+    document.getElementById('ai-capture-btn')?.addEventListener('click', () => this.startAICamera());
+    uploadArea?.addEventListener('click', e => {
+      if (uploadArea.classList.contains('camera-active')) return;
+      if (e.target.closest('button')) return;
+      fileInput.click();
+    });
 
     // Drag & drop
     uploadArea?.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
@@ -471,8 +481,20 @@ const App = {
     });
 
     // File selected
-    fileInput?.addEventListener('change', e => { if (e.target.files[0]) this.handleAIImage(e.target.files[0]); });
-    cameraInput?.addEventListener('change', e => { if (e.target.files[0]) this.handleAIImage(e.target.files[0]); });
+    fileInput?.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        this.stopAICamera();
+        this.handleAIImage(e.target.files[0]);
+      }
+    });
+    document.getElementById('ai-use-camera-photo-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      this.captureAICameraPhoto();
+    });
+    document.getElementById('ai-close-camera-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      this.stopAICamera();
+    });
 
     // Retake
     document.getElementById('ai-retake-btn')?.addEventListener('click', () => this.resetAIDetect());
@@ -511,6 +533,7 @@ const App = {
   },
 
   handleAIImage(file) {
+    this.stopAICamera();
     this._aiFile = file;
     const preview = document.getElementById('ai-preview-img');
     const placeholder = document.getElementById('ai-upload-placeholder');
@@ -530,7 +553,86 @@ const App = {
     reader.readAsDataURL(file);
   },
 
+  async startAICamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.showToast('Camera capture is not supported in this browser.');
+      return;
+    }
+
+    const preview = document.getElementById('ai-preview-img');
+    const placeholder = document.getElementById('ai-upload-placeholder');
+    const cameraPreview = document.getElementById('ai-camera-preview');
+    const video = document.getElementById('ai-camera-video');
+    const area = document.getElementById('ai-upload-area');
+
+    try {
+      this.stopAICamera();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      this.aiCameraStream = stream;
+      video.srcObject = stream;
+      await video.play();
+
+      this._aiFile = null;
+      preview.style.display = 'none';
+      placeholder.style.display = 'none';
+      cameraPreview.style.display = 'block';
+      area.classList.add('camera-active');
+      area.classList.remove('has-image');
+      document.getElementById('ai-retake-btn').style.display = 'block';
+      document.getElementById('ai-analyze-btn').disabled = true;
+    } catch (err) {
+      console.warn('Camera start failed:', err);
+      this.showToast('Could not open camera. Allow camera permission and try again.');
+    }
+  },
+
+  captureAICameraPhoto() {
+    const video = document.getElementById('ai-camera-video');
+    const canvas = document.getElementById('ai-camera-canvas');
+    if (!video?.videoWidth || !video?.videoHeight) {
+      this.showToast('Camera is still starting. Try again in a moment.');
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(blob => {
+      if (!blob) {
+        this.showToast('Could not capture photo. Try again.');
+        return;
+      }
+      const file = new File([blob], `road-capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      this.handleAIImage(file);
+    }, 'image/jpeg', 0.92);
+  },
+
+  stopAICamera() {
+    if (this.aiCameraStream) {
+      this.aiCameraStream.getTracks().forEach(track => track.stop());
+      this.aiCameraStream = null;
+    }
+
+    const video = document.getElementById('ai-camera-video');
+    const cameraPreview = document.getElementById('ai-camera-preview');
+    const area = document.getElementById('ai-upload-area');
+    if (video) video.srcObject = null;
+    if (cameraPreview) cameraPreview.style.display = 'none';
+    if (area) area.classList.remove('camera-active');
+  },
+
   resetAIDetect() {
+    this.stopAICamera();
     this._aiFile = null;
     this.aiAnalysisResult = null;
     document.getElementById('ai-preview-img').style.display = 'none';
@@ -543,7 +645,8 @@ const App = {
     document.getElementById('ai-results').style.display = 'none';
     document.getElementById('ai-action-buttons').style.display = 'none';
     document.getElementById('ai-file-input').value = '';
-    document.getElementById('ai-camera-input').value = '';
+    const cameraInput = document.getElementById('ai-camera-input');
+    if (cameraInput) cameraInput.value = '';
   },
 
   async analyzeImage() {

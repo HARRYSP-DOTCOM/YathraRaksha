@@ -150,6 +150,14 @@
                   <div class="upload-hint" data-i18n="ai_upload_hint">Supports JPEG, PNG — max 10MB</div>
                 </div>
                 <img id="ai-preview-img" style="display:none;" alt="Road damage preview">
+                <div class="camera-preview" id="ai-camera-preview" style="display:none;">
+                  <video id="ai-camera-video" autoplay playsinline muted></video>
+                  <div class="camera-preview-actions">
+                    <button class="btn btn-primary btn-sm" id="ai-use-camera-photo-btn" type="button">Use Photo</button>
+                    <button class="btn btn-secondary btn-sm" id="ai-close-camera-btn" type="button">Cancel</button>
+                  </div>
+                </div>
+                <canvas id="ai-camera-canvas" style="display:none;"></canvas>
               </div>
               <input type="file" id="ai-file-input" accept="image/*" style="display:none;">
               <input type="file" id="ai-camera-input" accept="image/*" capture="environment" style="display:none;">
