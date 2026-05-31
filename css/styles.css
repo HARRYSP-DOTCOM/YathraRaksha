@@ -1824,18 +1824,23 @@ body {
 @media (max-width: 768px) {
   .app-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: var(--header-height) 1fr;
+    grid-template-rows: var(--header-height) 1fr var(--mobile-nav-height);
     grid-template-areas:
       "header"
-      "main";
+      "main"
+      "nav";
   }
 
   .sidebar { display: none; }
-  .mobile-nav { display: flex; }
+  .mobile-nav { 
+    display: flex; 
+    position: relative; /* Change from fixed */
+    grid-area: nav;
+  }
   .hamburger-btn { display: flex; }
 
   .main-content {
-    padding-bottom: var(--mobile-nav-height);
+    padding-bottom: 0; /* Nav is now part of the grid */
   }
 
   .header-brand { display: flex; }
