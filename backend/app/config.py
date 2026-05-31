@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +18,15 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     open_roads_data_url: str = ""
     open_data_refresh_on_startup: bool = False
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        # Vercel-specific overrides for ephemeral/read-only filesystem
+        if os.environ.get("VERCEL"):
+            if self.database_url == "sqlite:///./yatra_raksha.db":
+                self.database_url = "sqlite:////tmp/yatra_raksha.db"
+            if self.media_upload_dir == "uploads":
+                self.media_upload_dir = "/tmp/uploads"
 
 
 settings = Settings()
