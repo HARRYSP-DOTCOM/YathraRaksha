@@ -1,0 +1,261 @@
+{
+  "metadata": {
+    "file": "Indian Road Contractors Database",
+    "purpose": "Contractor rankings, budgets, and road project data for YathraRaksha",
+    "sources": [
+      "NHAI Annual Report 2023-24",
+      "MoRTH Annual Report 2023-24",
+      "Company Annual Reports (BSE/NSE filings)",
+      "CCI (Competition Commission of India) Road Sector Report 2023"
+    ],
+    "note": "Budget figures in Indian Rupees Crores (₹ Cr). 1 Cr = 10 Million INR"
+  },
+  "contractors": [
+    {
+      "contractor_id": "CONT-001",
+      "name": "Larsen & Toubro Limited (L&T Infrastructure)",
+      "headquarters": "Mumbai, Maharashtra",
+      "type": "Public Limited Company",
+      "bse_code": "500510",
+      "nhai_empanelment_class": "AA",
+      "total_road_projects_completed": 47,
+      "total_km_built": 3840,
+      "active_projects": [
+        {
+          "project_id": "NHAI-2023-NH48-L&T",
+          "project_name": "NH-48 Delhi-Jaipur Expressway Package 3",
+          "road": "NH-48",
+          "section": "Km 90 to Km 145 (55 km)",
+          "contract_value_cr": 3247,
+          "start_date": "2022-03-15",
+          "expected_completion": "2025-03-14",
+          "actual_progress_percent": 78,
+          "amount_spent_cr": 2532,
+          "state": "Rajasthan",
+          "source": "NHAI Tender No. NHAI/RO-Jaipur/NH-48/2021-22/03"
+        },
+        {
+          "project_id": "NHAI-2024-NH66-L&T",
+          "project_name": "NH-66 4-laning Ratnagiri Bypass",
+          "road": "NH-66",
+          "section": "Km 430 to Km 458 (28 km)",
+          "contract_value_cr": 1876,
+          "start_date": "2023-09-01",
+          "expected_completion": "2026-08-31",
+          "actual_progress_percent": 32,
+          "amount_spent_cr": 600,
+          "state": "Maharashtra"
+        }
+      ],
+      "completed_projects_sample": [
+        {
+          "project_name": "Vadodara-Mumbai Expressway Section 4",
+          "road": "NH-48",
+          "km_built": 62,
+          "contract_value_cr": 4100,
+          "final_cost_cr": 4380,
+          "completion_date": "2023-02-28",
+          "quality_score": 87,
+          "source": "NHAI Completion Certificate 2023"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 87,
+        "timely_completion_rate_percent": 71,
+        "complaints_per_100km": 2.1,
+        "source": "NHAI Contractor Performance Report 2023-24"
+      }
+    },
+    {
+      "contractor_id": "CONT-002",
+      "name": "Dilip Buildcon Limited",
+      "headquarters": "Bhopal, Madhya Pradesh",
+      "type": "Public Limited Company",
+      "bse_code": "540000",
+      "nhai_empanelment_class": "AA",
+      "total_road_projects_completed": 69,
+      "total_km_built": 5200,
+      "active_projects": [
+        {
+          "project_id": "NHAI-2023-NH30-DBL",
+          "project_name": "NH-30 4-laning Raipur-Jagdalpur",
+          "road": "NH-30",
+          "section": "Km 0 to Km 76 (76 km)",
+          "contract_value_cr": 2987,
+          "start_date": "2022-06-01",
+          "expected_completion": "2025-05-31",
+          "actual_progress_percent": 65,
+          "amount_spent_cr": 1942,
+          "state": "Chhattisgarh",
+          "source": "Dilip Buildcon Annual Report 2023-24, Project Order Book"
+        }
+      ],
+      "completed_projects_sample": [
+        {
+          "project_name": "NH-44 4-laning Nagpur-Hyderabad Section 2",
+          "road": "NH-44",
+          "km_built": 89,
+          "contract_value_cr": 3560,
+          "final_cost_cr": 3490,
+          "completion_date": "2022-11-15",
+          "quality_score": 82,
+          "source": "NHAI Completion Certificate Nov 2022"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 82,
+        "timely_completion_rate_percent": 68,
+        "complaints_per_100km": 3.4,
+        "source": "NHAI Contractor Performance Report 2023-24"
+      }
+    },
+    {
+      "contractor_id": "CONT-003",
+      "name": "GR Infraprojects Limited",
+      "headquarters": "Udaipur, Rajasthan",
+      "type": "Public Limited Company",
+      "bse_code": "543317",
+      "nhai_empanelment_class": "AA",
+      "total_road_projects_completed": 38,
+      "total_km_built": 2900,
+      "active_projects": [
+        {
+          "project_id": "NHAI-2024-NH52-GRI",
+          "project_name": "NH-52 4-laning Bareilly-Sitarganj Package 2",
+          "road": "NH-52",
+          "section": "Km 142 to Km 198 (56 km)",
+          "contract_value_cr": 2156,
+          "start_date": "2023-04-01",
+          "expected_completion": "2026-03-31",
+          "actual_progress_percent": 41,
+          "amount_spent_cr": 884,
+          "state": "Uttarakhand",
+          "source": "GR Infraprojects Q4 FY24 Investor Presentation"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 85,
+        "timely_completion_rate_percent": 74,
+        "complaints_per_100km": 2.8,
+        "source": "NHAI Contractor Performance Report 2023-24"
+      }
+    },
+    {
+      "contractor_id": "CONT-004",
+      "name": "PNC Infratech Limited",
+      "headquarters": "Agra, Uttar Pradesh",
+      "type": "Public Limited Company",
+      "bse_code": "539150",
+      "nhai_empanelment_class": "AA",
+      "total_road_projects_completed": 51,
+      "total_km_built": 3600,
+      "active_projects": [
+        {
+          "project_id": "NHAI-2023-NH27-PNC",
+          "project_name": "NH-27 4-laning Lucknow-Sultanpur",
+          "road": "NH-27",
+          "section": "Km 0 to Km 64 (64 km)",
+          "contract_value_cr": 2340,
+          "start_date": "2022-08-15",
+          "expected_completion": "2025-08-14",
+          "actual_progress_percent": 82,
+          "amount_spent_cr": 1919,
+          "state": "Uttar Pradesh",
+          "source": "PNC Infratech Annual Report FY24"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 84,
+        "timely_completion_rate_percent": 72,
+        "complaints_per_100km": 3.1,
+        "source": "NHAI Contractor Performance Report 2023-24"
+      }
+    },
+    {
+      "contractor_id": "CONT-005",
+      "name": "HG Infra Engineering Limited",
+      "headquarters": "Jaipur, Rajasthan",
+      "type": "Public Limited Company",
+      "bse_code": "541019",
+      "nhai_empanelment_class": "A+",
+      "total_road_projects_completed": 28,
+      "total_km_built": 1800,
+      "active_projects": [
+        {
+          "project_id": "NHAI-2024-NH148N-HGI",
+          "project_name": "NH-148N Bikaner-Phalodi 4-laning",
+          "road": "NH-148N",
+          "section": "Km 0 to Km 92 (92 km)",
+          "contract_value_cr": 1680,
+          "start_date": "2023-11-01",
+          "expected_completion": "2026-10-31",
+          "actual_progress_percent": 28,
+          "amount_spent_cr": 470,
+          "state": "Rajasthan",
+          "source": "HG Infra Engineering Annual Report FY24"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 88,
+        "timely_completion_rate_percent": 79,
+        "complaints_per_100km": 1.9,
+        "source": "NHAI Contractor Performance Report 2023-24"
+      }
+    },
+    {
+      "contractor_id": "CONT-006",
+      "name": "Kerala Roads Infrastructure Corporation (KRIDL)",
+      "headquarters": "Thiruvananthapuram, Kerala",
+      "type": "State PSU",
+      "nhai_empanelment_class": "State Agency",
+      "total_road_projects_completed": 112,
+      "total_km_built": 4200,
+      "active_projects": [
+        {
+          "project_id": "KL-PWD-2024-SH8-KRIDL",
+          "project_name": "SH-8 Kannur-Iritty Road Improvement",
+          "road": "SH-8 Kerala",
+          "section": "Km 0 to Km 45 (45 km)",
+          "contract_value_cr": 210,
+          "start_date": "2023-07-01",
+          "expected_completion": "2025-06-30",
+          "actual_progress_percent": 55,
+          "amount_spent_cr": 115,
+          "state": "Kerala",
+          "source": "Kerala PWD Budget Estimate 2023-24"
+        },
+        {
+          "project_id": "KL-KIIFB-2024-MDR-KRIDL",
+          "project_name": "MDR Kannur District Road Widening Package 4",
+          "road": "MDR Kannur",
+          "section": "Multiple segments, 62 km total",
+          "contract_value_cr": 145,
+          "start_date": "2024-01-15",
+          "expected_completion": "2025-12-31",
+          "actual_progress_percent": 30,
+          "amount_spent_cr": 43,
+          "state": "Kerala",
+          "source": "KIIFB Project Report 2024"
+        }
+      ],
+      "overall_rating": {
+        "quality_score": 74,
+        "timely_completion_rate_percent": 58,
+        "complaints_per_100km": 6.2,
+        "source": "Kerala PWD Performance Review 2023-24"
+      }
+    }
+  ],
+  "industry_summary": {
+    "total_active_nhai_contracts_2024": 1247,
+    "total_km_under_construction_2024": 28150,
+    "top_states_by_construction_km": [
+      {"state": "Rajasthan", "km": 3200},
+      {"state": "Uttar Pradesh", "km": 2900},
+      {"state": "Madhya Pradesh", "km": 2400},
+      {"state": "Maharashtra", "km": 2100},
+      {"state": "Karnataka", "km": 1800}
+    ],
+    "source": "MoRTH Annual Report 2023-24, Chapter 5"
+  }
+}

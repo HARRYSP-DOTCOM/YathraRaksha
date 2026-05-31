@@ -1,0 +1,12 @@
+road_code,road_name,state,classification,accidents_2023,fatalities_2023,injuries_2023,accident_rate_per_100km,primary_cause,source
+NH-44,NH-44 Hyderabad–Bengaluru segment,Telangana/Karnataka,NH,3214,876,3102,18.4,Overspeeding,MoRTH 2023 Table 2.5
+NH-48,NH-48 Chennai–Bengaluru,Tamil Nadu/Karnataka,NH,1842,412,1654,5.5,Overspeeding,MoRTH 2023 Table 2.5
+NH-19,NH-19 Delhi–Kanpur (UP segment),Uttar Pradesh,NH,4312,1243,3987,14.2,Overspeeding + Wrong Side,MoRTH 2023 Table 5.5
+NH-58,NH-58 Delhi–Haridwar,Uttarakhand/UP,NH,987,287,912,12.3,Overspeeding,MoRTH 2023
+NH-27,NH-27 East-West Corridor (GJ segment),Gujarat,NH,1987,512,1876,8.4,Overspeeding,MoRTH 2023
+NH-16,NH-16 Kolkata–Chennai (AP segment),Andhra Pradesh,NH,2187,634,2012,11.2,Overspeeding + Drunk Driving,MoRTH 2023 Table 2.6
+NH-66,NH-66 Mumbai–Panaji (coastal),Maharashtra/Goa,NH,1124,312,1087,9.8,Overspeeding + Road Feature,MoRTH 2023
+NH-8,NH-8 (now NH-48) Jaipur–Ahmedabad,Rajasthan/Gujarat,NH,2341,698,2198,13.1,Overspeeding,MoRTH 2023
+SH-36,SH-36 Chennai Outer Ring Road,Tamil Nadu,SH,542,124,498,8.7,Overspeeding + Junction,MoRTH 2023 Table 2.12
+SH-9,SH-9 Bengaluru–Mysuru,Karnataka,SH,318,87,302,2.7,Overspeeding,MoRTH 2023
+SH-1,SH-1 Mumbai–Nashik,Maharashtra,SH,687,198,654,4.1,Drunk Driving + Overspeeding,MoRTH 2023 Table 2.12

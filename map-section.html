@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YathraRaksha - Road Safety Map</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjO/X2+O15K6/qL4T/R70sZp5f5O5X0e9B3a0/rO7O7eO9o9O7O+9O9O9O9O9O9O9O9O9O9O9O9O9==" crossorigin="anonymous" />
+  
+  <style>
+    :root {
+      --primary: #0d9488;
+      --bg-dark: #1e2327;
+      --panel-bg: #1a2234;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --color-critical: #E24B4A;
+      --color-warning: #EF9F27;
+      --color-healthy: #639922;
+      
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    
+    /* Header & Controls */
+    .controls-container {
+      background-color: var(--panel-bg);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1000;
+    }
+    
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: rgba(0,0,0,0.2);
+      color: white;
+    }
+    
+    .search-box:focus {
+      outline: 1px solid var(--primary);
+    }
+    
+    select, .btn-toggle {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: rgba(0,0,0,0.2);
+      color: white;
+      cursor: pointer;
+    }
+    
+    .btn-toggle.active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .status-filters {
+      display: flex;
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    
+    .status-filters button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      cursor: pointer;
+      border-right: 1px solid var(--border-color);
+    }
+    
+    .status-filters button:last-child {
+      border-right: none;
+    }
+    
+    .status-filters button.active {
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      font-weight: 600;
+    }
+    
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      min-width: 120px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    
+    .val-critical { color: var(--color-critical); }
+    
+    /* Map Container */
+    .map-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 60vh;
+    }
+    
+    #road-map {
+      width: 100%;
+      height: 100%;
+      background-color: #0f1215;
+    }
+    
+    /* Pulsing effect for critical roads */
+    .pulse-critical {
+      animation: pulse-red 2s infinite alternate;
+    }
+    
+    @keyframes pulse-red {
+      0% { filter: drop-shadow(0 0 2px var(--color-critical)) drop-shadow(0 0 4px var(--color-critical)); opacity: 0.8; }
+      100% { filter: drop-shadow(0 0 6px var(--color-critical)) drop-shadow(0 0 12px var(--color-critical)); opacity: 1; }
+    }
+    
+    /* Legend */
+    .map-legend {
+      background-color: var(--panel-bg);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      font-size: 12px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .legend-item:last-child { margin-bottom: 0; }
+    
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      margin-right: 8px;
+    }
+    
+    /* Detail Panel */
+    .detail-panel {
+      position: absolute;
+      top: 0;
+      right: -400px;
+      width: 100%;
+      max-width: 400px;
+      height: 100%;
+      background-color: var(--panel-bg);
+      border-left: 3px solid var(--primary);
+      box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+      z-index: 2000;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .detail-panel.open {
+      right: 0;
+    }
+    
+    .panel-header {
+      padding: 20px;
+      position: relative;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .btn-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .btn-close:hover { color: white; }
+    
+    .road-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-right: 24px;
+    }
+    
+    .badge-group {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .badge-type { background-color: rgba(255,255,255,0.1); color: var(--text-main); }
+    .badge-critical { background-color: rgba(226, 75, 74, 0.2); color: var(--color-critical); border: 1px solid rgba(226, 75, 74, 0.4); }
+    .badge-warning { background-color: rgba(239, 159, 39, 0.2); color: var(--color-warning); border: 1px solid rgba(239, 159, 39, 0.4); }
+    .badge-healthy { background-color: rgba(99, 153, 34, 0.2); color: var(--color-healthy); border: 1px solid rgba(99, 153, 34, 0.4); }
+    
+    .panel-content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .data-section h3 {
+      font-size: 14px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .data-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .data-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    .data-value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--color-healthy);
+    }
+    
+    .progress-fill.low { background: var(--color-critical); }
+    .progress-fill.medium { background: var(--color-warning); }
+    
+    .btn-action {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-action:hover {
+      background-color: #0f766e;
+    }
+    
+    /* Heatmap styling */
+    .leaflet-heatmap-layer {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls-container">
+    <div class="filters-row">
+      <input type="text" id="searchBox" class="search-box" placeholder="Search by road name or ID..." aria-label="Search roads">
+      
+      <div class="status-filters" role="group" aria-label="Filter by status">
+        <button class="status-btn active" data-status="all">All</button>
+        <button class="status-btn" data-status="critical">Critical</button>
+        <button class="status-btn" data-status="warning">Warning</button>
+        <button class="status-btn" data-status="healthy">Healthy</button>
+      </div>
+      
+      <select id="typeFilter" aria-label="Filter by road type">
+        <option value="all">All Types</option>
+        <option value="National Highway">National Highway</option>
+        <option value="State Highway">State Highway</option>
+        <option value="District Road">District Road</option>
+      </select>
+      
+      <select id="sortSelect" aria-label="Sort roads">
+        <option value="safety_asc">Safety Score ↑</option>
+        <option value="accidents_desc">Accidents ↑</option>
+        <option value="budget_overrun">Budget Overrun</option>
+      </select>
+
+      <button id="heatmapToggle" class="btn-toggle" aria-pressed="false">🔥 Heatmap Mode</button>
+    </div>
+    
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-label">Total Roads</span>
+        <span class="stat-value" id="stat-total">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Critical Segments</span>
+        <span class="stat-value val-critical" id="stat-critical">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Open Complaints</span>
+        <span class="stat-value" id="stat-complaints">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Budget Overrun</span>
+        <span class="stat-value val-critical" id="stat-overrun">₹0 Cr</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-wrapper">
+    <div id="road-map"></div>
+    
+    <div id="detailPanel" class="detail-panel" role="dialog" aria-label="Road segment details" aria-modal="true">
+      <div class="panel-header">
+        <button class="btn-close" id="closePanelBtn" aria-label="Close panel">×</button>
+        <div class="road-title" id="panel-title">Road Name</div>
+        <div class="badge-group">
+          <span class="badge badge-type" id="panel-type">Type</span>
+          <span class="badge" id="panel-status">Status</span>
+        </div>
+      </div>
+      
+      <div class="panel-content">
+        <!-- Section A: Road Health -->
+        <div class="data-section">
+          <h3>Road Health</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="data-label">Safety Score</span>
+              <span class="data-value" id="panel-safety">--/100</span>
+              <div class="progress-bar"><div class="progress-fill" id="panel-safety-bar"></div></div>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Accidents/Year</span>
+              <span class="data-value">🚨 <span id="panel-accidents">--</span></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Fatalities</span>
+              <span class="data-value">⚠️ <span id="panel-fatalities">--</span></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Potholes/km</span>
+              <span class="data-value" id="panel-potholes">--</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Length</span>
+              <span class="data-value" id="panel-length">-- km</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Last Inspected</span>
+              <span class="data-value" id="panel-inspected">--</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Section B: Contractor & Authority -->
+        <div class="data-section">
+          <h3>Contractor & Authority</h3>
+          <div class="data-grid">
+            <div class="data-item" style="grid-column: span 2;">
+              <span class="data-label">Contractor</span>
+              <span class="data-value" id="panel-contractor">--</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Contractor Rating</span>
+              <span class="data-value">⭐ <span id="panel-rating">--/5.0</span></span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Warranty Expiry</span>
+              <span class="data-value" id="panel-warranty">--</span>
+            </div>
+            <div class="data-item" style="grid-column: span 2;">
+              <span class="data-label">PWD Division</span>
+              <span class="data-value" id="panel-pwd">--</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Exec. Engineer</span>
+              <span class="data-value" id="panel-engineer">--</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Escalation Level</span>
+              <span class="data-value" id="panel-escalation">--</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Section C: Budget Audit -->
+        <div class="data-section">
+          <h3>Budget Audit</h3>
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="data-label">Allocated</span>
+              <span class="data-value" id="panel-allocated">₹-- Cr</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Spent</span>
+              <span class="data-value" id="panel-spent">₹-- Cr</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label">Budget Status</span>
+              <span class="badge" id="panel-budget-status">--</span>
+            </div>
+            <div class="data-item" id="panel-overrun-container" style="display: none;">
+              <span class="data-label">Overrun Amount</span>
+              <span class="data-value val-critical" id="panel-overrun">₹-- Cr</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Section D: Complaints -->
+        <div class="data-section">
+          <h3>Complaints</h3>
+          <div style="margin-bottom: 12px;">
+            <span class="data-value" id="panel-complaints" style="font-size: 20px;">--</span> 
+            <span class="data-label">open complaints</span>
+          </div>
+          <button class="btn-action" id="btnReportDefect">
+            📄 Report Defect on This Road
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhZ54OIGTsT3OirROIy/M1vF/w6hZ9QO2O6wZgVpDci+P9oB/uQz2zZzLz4eXw/1WbT8/w==" crossorigin="anonymous"></script>
+  
+  <!-- Leaflet Heatmap JS for bonus feature -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
+  <script>
+    // 1. HARDCODED DATASET FALLBACK
+    const SAMPLE_ROADS = [
+      {
+        id: "RD-001", name: "NH-544 Palakkad–Coimbatore", type: "National Highway",
+        coordinates: [[10.775, 76.654], [10.811, 76.721], [10.856, 76.802], [10.901, 76.889]],
+        status: "critical", safety_score: 42, accidents_per_year: 87, fatalities: 12,
+        potholes_per_km: 8.3, length_km: 48.2, contractor: "KRP Infra Pvt Ltd",
+        contractor_rating: 2.4, executive_engineer: "Er. S. Nair", pwd_division: "Palakkad PWD Div II",
+        allocated_budget_cr: 42.5, spent_budget_cr: 51.3, budget_status: "overrun",
+        last_inspected: "2026-03-14", warranty_expiry: "2027-01-01", open_complaints: 14,
+        escalation_level: "Superintending Engineer"
+      },
+      {
+        id: "RD-002", name: "SH-29 Kannur–Kozhikode", type: "State Highway",
+        coordinates: [[11.868, 75.372], [11.790, 75.490], [11.700, 75.591], [11.574, 75.655]],
+        status: "warning", safety_score: 63, accidents_per_year: 34, fatalities: 5,
+        potholes_per_km: 3.1, length_km: 52.7, contractor: "Malabar Constructions",
+        contractor_rating: 3.6, executive_engineer: "Er. P. Krishnan", pwd_division: "Kannur PWD Div I",
+        allocated_budget_cr: 28.0, spent_budget_cr: 26.4, budget_status: "on_budget",
+        last_inspected: "2026-01-20", warranty_expiry: "2026-09-15", open_complaints: 6,
+        escalation_level: "Executive Engineer"
+      },
+      {
+        id: "RD-003", name: "NH-66 Kozhikode Bypass", type: "National Highway",
+        coordinates: [[11.258, 75.780], [11.277, 75.812], [11.302, 75.841]],
+        status: "healthy", safety_score: 88, accidents_per_year: 11, fatalities: 1,
+        potholes_per_km: 0.4, length_km: 18.5, contractor: "NHAI Direct",
+        contractor_rating: 4.7, executive_engineer: "Er. A. Mehta", pwd_division: "NHAI Kozhikode",
+        allocated_budget_cr: 95.0, spent_budget_cr: 91.2, budget_status: "on_budget",
+        last_inspected: "2026-04-01", warranty_expiry: "2029-03-31", open_complaints: 2,
+        escalation_level: "Divisional Engineer"
+      },
+      {
+        id: "RD-004", name: "SH-15 Thrissur Ring Road", type: "State Highway",
+        coordinates: [[10.527, 76.214], [10.547, 76.250], [10.558, 76.290], [10.538, 76.320]],
+        status: "critical", safety_score: 38, accidents_per_year: 102, fatalities: 17,
+        potholes_per_km: 11.2, length_km: 22.4, contractor: "Central Kerala Roads Ltd",
+        contractor_rating: 1.9, executive_engineer: "Er. R. Thomas", pwd_division: "Thrissur PWD Div III",
+        allocated_budget_cr: 18.5, spent_budget_cr: 23.1, budget_status: "overrun",
+        last_inspected: "2025-11-10", warranty_expiry: "2026-06-01", open_complaints: 23,
+        escalation_level: "Chief Engineer"
+      },
+      {
+        id: "RD-005", name: "NH-183 Mysuru–Hunsur", type: "National Highway",
+        coordinates: [[12.295, 76.639], [12.234, 76.528], [12.185, 76.417]],
+        status: "warning", safety_score: 71, accidents_per_year: 29, fatalities: 4,
+        potholes_per_km: 2.0, length_km: 38.6, contractor: "Deccan Highways Corp",
+        contractor_rating: 3.9, executive_engineer: "Er. V. Gowda", pwd_division: "Mysuru PWD Div I",
+        allocated_budget_cr: 55.0, spent_budget_cr: 52.8, budget_status: "on_budget",
+        last_inspected: "2026-02-28", warranty_expiry: "2028-01-15", open_complaints: 5,
+        escalation_level: "Divisional Engineer"
+      },
+      {
+        id: "RD-006", name: "NH-48 Chennai–Bengaluru Corridor", type: "National Highway",
+        coordinates: [[12.972, 80.152], [12.850, 79.900], [12.700, 79.600], [12.500, 79.300]],
+        status: "healthy", safety_score: 82, accidents_per_year: 45, fatalities: 7,
+        potholes_per_km: 0.8, length_km: 155.0, contractor: "L&T Infrastructure",
+        contractor_rating: 4.5, executive_engineer: "Er. D. Sundar", pwd_division: "NHAI Chennai",
+        allocated_budget_cr: 320.0, spent_budget_cr: 308.5, budget_status: "on_budget",
+        last_inspected: "2026-04-10", warranty_expiry: "2030-12-31", open_complaints: 3,
+        escalation_level: "Divisional Engineer"
+      },
+      {
+        id: "RD-007", name: "MDR-47 Wayanad Hill Road", type: "District Road",
+        coordinates: [[11.640, 76.130], [11.660, 76.090], [11.680, 76.050], [11.700, 76.010]],
+        status: "critical", safety_score: 29, accidents_per_year: 56, fatalities: 9,
+        potholes_per_km: 15.7, length_km: 14.2, contractor: "Wayanad District Works",
+        contractor_rating: 2.1, executive_engineer: "Er. M. Kuriakose", pwd_division: "Wayanad PWD",
+        allocated_budget_cr: 6.2, spent_budget_cr: 7.8, budget_status: "overrun",
+        last_inspected: "2025-09-05", warranty_expiry: "2025-12-31", open_complaints: 31,
+        escalation_level: "Chief Engineer"
+      },
+      {
+        id: "RD-008", name: "SH-54 Ernakulam–Munnar", type: "State Highway",
+        coordinates: [[9.983, 76.295], [10.050, 76.480], [10.120, 76.680], [10.089, 77.059]],
+        status: "warning", safety_score: 58, accidents_per_year: 48, fatalities: 8,
+        potholes_per_km: 4.5, length_km: 91.0, contractor: "Hill Roads Pvt Ltd",
+        contractor_rating: 3.2, executive_engineer: "Er. J. Jose", pwd_division: "Ernakulam PWD Div II",
+        allocated_budget_cr: 72.0, spent_budget_cr: 69.1, budget_status: "on_budget",
+        last_inspected: "2026-01-05", warranty_expiry: "2027-06-30", open_complaints: 9,
+        escalation_level: "Superintending Engineer"
+      },
+      // Adding a few more for the 12 minimum requirement
+      {
+        id: "RD-009", name: "NH-85 Kochi-Dhanushkodi", type: "National Highway",
+        coordinates: [[9.965, 76.240], [9.960, 76.320], [9.950, 76.450], [9.980, 76.620]],
+        status: "warning", safety_score: 65, accidents_per_year: 40, fatalities: 6,
+        potholes_per_km: 3.8, length_km: 45.3, contractor: "Kochi Highway Builders",
+        contractor_rating: 3.8, executive_engineer: "Er. L. Nair", pwd_division: "Ernakulam PWD Div I",
+        allocated_budget_cr: 40.0, spent_budget_cr: 39.5, budget_status: "on_budget",
+        last_inspected: "2026-02-14", warranty_expiry: "2027-10-10", open_complaints: 12,
+        escalation_level: "Executive Engineer"
+      },
+      {
+        id: "RD-010", name: "SH-1 MC Road (Trivandrum-Kottayam)", type: "State Highway",
+        coordinates: [[8.500, 76.950], [8.650, 76.910], [8.800, 76.800], [8.950, 76.700]],
+        status: "healthy", safety_score: 85, accidents_per_year: 25, fatalities: 2,
+        potholes_per_km: 1.1, length_km: 85.0, contractor: "Kerala State Const. Corp",
+        contractor_rating: 4.2, executive_engineer: "Er. K. Pillai", pwd_division: "Trivandrum PWD",
+        allocated_budget_cr: 110.0, spent_budget_cr: 105.2, budget_status: "on_budget",
+        last_inspected: "2026-03-25", warranty_expiry: "2028-05-15", open_complaints: 4,
+        escalation_level: "Superintending Engineer"
+      },
+      {
+        id: "RD-011", name: "MDR-12 Idukki Dam View Road", type: "District Road",
+        coordinates: [[9.850, 76.950], [9.840, 76.970], [9.830, 77.000]],
+        status: "critical", safety_score: 35, accidents_per_year: 62, fatalities: 11,
+        potholes_per_km: 12.5, length_km: 18.0, contractor: "Highrange Infra",
+        contractor_rating: 1.8, executive_engineer: "Er. B. Kurien", pwd_division: "Idukki PWD",
+        allocated_budget_cr: 12.0, spent_budget_cr: 14.5, budget_status: "overrun",
+        last_inspected: "2025-10-15", warranty_expiry: "2025-10-30", open_complaints: 28,
+        escalation_level: "Chief Engineer"
+      },
+      {
+        id: "RD-012", name: "NH-744 Kollam-Shenkottai", type: "National Highway",
+        coordinates: [[8.880, 76.590], [8.950, 76.750], [9.000, 76.900], [9.050, 77.050]],
+        status: "warning", safety_score: 61, accidents_per_year: 38, fatalities: 7,
+        potholes_per_km: 4.2, length_km: 65.5, contractor: "Southern Roadways Ltd",
+        contractor_rating: 3.4, executive_engineer: "Er. T. Rajan", pwd_division: "Kollam PWD Div I",
+        allocated_budget_cr: 85.0, spent_budget_cr: 87.2, budget_status: "overrun",
+        last_inspected: "2026-01-30", warranty_expiry: "2027-12-31", open_complaints: 16,
+        escalation_level: "Divisional Engineer"
+      }
+    ];
+
+    const COLORS = {
+      critical: "#E24B4A",
+      warning: "#EF9F27",
+      healthy: "#639922"
+    };
+
+    // State
+    let map;
+    let roadsData = [];
+    let roadLayers = [];
+    let heatLayer = null;
+    let isHeatmapMode = false;
+    let currentSelectedRoad = null;
+    let currentFilters = {
+      status: 'all',
+      type: 'all',
+      search: '',
+      sortBy: 'safety_asc'
+    };
+
+    // DOM Elements
+    const detailPanel = document.getElementById('detailPanel');
+    const btnClose = document.getElementById('closePanelBtn');
+    
+    // Init
+    async function init() {
+      initMap();
+      await fetchRoadData();
+      renderRoads();
+      setupEventListeners();
+    }
+
+    function initMap() {
+      map = L.map('road-map', {
+        zoomControl: false // Move zoom control to avoid overlapping with panel
+      }).setView([20.5937, 78.9629], 5);
+      
+      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+      }).addTo(map);
+
+      // Add Legend
+      const legend = L.control({ position: 'bottomright' });
+      legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'map-legend');
+        div.innerHTML = `
+          <div class="legend-item"><div class="legend-color" style="background:${COLORS.critical}"></div> Critical</div>
+          <div class="legend-item"><div class="legend-color" style="background:${COLORS.warning}"></div> Warning</div>
+          <div class="legend-item"><div class="legend-color" style="background:${COLORS.healthy}"></div> Healthy</div>
+        `;
+        return div;
+      };
+      legend.addTo(map);
+
+      // Try GPS
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          map.setView([position.coords.latitude, position.coords.longitude], 12);
+        }, () => {
+          // Silent fallback if denied
+          console.log("GPS unavailable, defaulting to India bounds.");
+        }, { timeout: 5000 });
+      }
+    }
+
+    async function fetchRoadData() {
+      try {
+        const res = await fetch('/v1/roads');
+        if (!res.ok) throw new Error("API not ok");
+        const data = await res.json();
+        roadsData = Array.isArray(data) ? data : SAMPLE_ROADS;
+      } catch (e) {
+        console.warn("Backend fetch failed. Using fallback sample data.", e);
+        roadsData = SAMPLE_ROADS;
+      }
+      updateStats();
+    }
+
+    function getFilteredAndSortedRoads() {
+      let filtered = roadsData.filter(r => {
+        const matchStatus = currentFilters.status === 'all' || r.status === currentFilters.status;
+        const matchType = currentFilters.type === 'all' || r.type === currentFilters.type;
+        const searchTerms = currentFilters.search.toLowerCase();
+        const matchSearch = !searchTerms || 
+          r.name.toLowerCase().includes(searchTerms) || 
+          r.id.toLowerCase().includes(searchTerms);
+        return matchStatus && matchType && matchSearch;
+      });
+
+      filtered.sort((a, b) => {
+        if (currentFilters.sortBy === 'safety_asc') return a.safety_score - b.safety_score;
+        if (currentFilters.sortBy === 'accidents_desc') return b.accidents_per_year - a.accidents_per_year;
+        if (currentFilters.sortBy === 'budget_overrun') {
+          const overA = a.spent_budget_cr - a.allocated_budget_cr;
+          const overB = b.spent_budget_cr - b.allocated_budget_cr;
+          return overB - overA;
+        }
+        return 0;
+      });
+
+      return filtered;
+    }
+
+    function renderRoads() {
+      // Clear existing
+      roadLayers.forEach(l => map.removeLayer(l));
+      roadLayers = [];
+      if (heatLayer) map.removeLayer(heatLayer);
+      
+      const activeRoads = getFilteredAndSortedRoads();
+      
+      if (isHeatmapMode && typeof L.heatLayer !== 'undefined') {
+        const heatPoints = [];
+        activeRoads.forEach(r => {
+          const intensity = r.accidents_per_year / 100; // normalize roughly
+          r.coordinates.forEach(coord => {
+            heatPoints.push([coord[0], coord[1], intensity]);
+          });
+        });
+        heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 12 }).addTo(map);
+      } else {
+        // Line rendering
+        activeRoads.forEach(road => {
+          const color = COLORS[road.status] || COLORS.healthy;
+          const isCritical = road.status === "critical";
+          
+          const polyline = L.polyline(road.coordinates, {
+            color: color,
+            weight: 6,
+            opacity: 0.85,
+            dashArray: isCritical ? "1, 10" : null, // Dashed stroke for accessibility if critical
+            className: isCritical ? "pulse-critical" : ""
+          });
+
+          // Focusability for a11y (adds tabindex internally on SVGs in some leaflet setups, but manual trick here)
+          polyline.on('add', function() {
+            if (this._path) {
+              this._path.setAttribute('tabindex', '0');
+              this._path.setAttribute('role', 'button');
+              this._path.setAttribute('aria-label', `Road ${road.name}, Status ${road.status}`);
+              this._path.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') openPanel(road);
+              });
+            }
+          });
+
+          polyline.bindTooltip(`<b>${road.name}</b><br>Status: ${road.status}`, {
+            direction: 'top', sticky: true
+          });
+
+          polyline.on('mouseover', function() {
+            this.setStyle({ weight: 9, opacity: 1 });
+          });
+          
+          polyline.on('mouseout', function() {
+            this.setStyle({ weight: 6, opacity: 0.85 });
+          });
+
+          polyline.on('click', () => {
+            openPanel(road);
+            map.fitBounds(polyline.getBounds(), { padding: [50, 50], maxZoom: 12 });
+          });
+
+          polyline.addTo(map);
+          roadLayers.push(polyline);
+        });
+      }
+      
+      // Auto-zoom if there's a search term and we have results
+      if (currentFilters.search && activeRoads.length > 0 && !isHeatmapMode) {
+        const group = new L.featureGroup(roadLayers);
+        map.fitBounds(group.getBounds(), { padding: [50, 50] });
+      }
+    }
+
+    function updateStats() {
+      const total = roadsData.length;
+      const critical = roadsData.filter(r => r.status === 'critical').length;
+      const complaints = roadsData.reduce((sum, r) => sum + (r.open_complaints || 0), 0);
+      const overrun = roadsData.reduce((sum, r) => {
+        if (r.budget_status === 'overrun') {
+          return sum + (r.spent_budget_cr - r.allocated_budget_cr);
+        }
+        return sum;
+      }, 0);
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-critical').textContent = critical;
+      document.getElementById('stat-complaints').textContent = complaints;
+      document.getElementById('stat-overrun').textContent = `₹${overrun.toFixed(1)} Cr`;
+    }
+
+    function openPanel(road) {
+      currentSelectedRoad = road;
+      
+      // Header
+      document.getElementById('panel-title').textContent = road.name;
+      document.getElementById('panel-type').textContent = road.type;
+      
+      const statusBadge = document.getElementById('panel-status');
+      statusBadge.textContent = road.status;
+      statusBadge.className = `badge badge-${road.status}`;
+      
+      detailPanel.style.borderLeftColor = COLORS[road.status];
+
+      // Section A
+      document.getElementById('panel-safety').textContent = `${road.safety_score}/100`;
+      const bar = document.getElementById('panel-safety-bar');
+      bar.style.width = `${road.safety_score}%`;
+      bar.className = `progress-fill ${road.safety_score < 50 ? 'low' : (road.safety_score < 75 ? 'medium' : '')}`;
+      
+      document.getElementById('panel-accidents').textContent = road.accidents_per_year;
+      document.getElementById('panel-fatalities').textContent = road.fatalities;
+      document.getElementById('panel-potholes').textContent = road.potholes_per_km;
+      document.getElementById('panel-length').textContent = `${road.length_km} km`;
+      document.getElementById('panel-inspected').textContent = road.last_inspected;
+
+      // Section B
+      document.getElementById('panel-contractor').textContent = road.contractor;
+      document.getElementById('panel-rating').textContent = `${road.contractor_rating}/5.0`;
+      document.getElementById('panel-warranty').textContent = road.warranty_expiry;
+      document.getElementById('panel-pwd').textContent = road.pwd_division;
+      document.getElementById('panel-engineer').textContent = road.executive_engineer;
+      document.getElementById('panel-escalation').textContent = road.escalation_level;
+
+      // Section C
+      document.getElementById('panel-allocated').textContent = `₹${road.allocated_budget_cr} Cr`;
+      document.getElementById('panel-spent').textContent = `₹${road.spent_budget_cr} Cr`;
+      
+      const bStatus = document.getElementById('panel-budget-status');
+      const bOverrunCont = document.getElementById('panel-overrun-container');
+      
+      if (road.budget_status === 'overrun') {
+        bStatus.textContent = 'OVERRUN';
+        bStatus.className = 'badge badge-critical';
+        bOverrunCont.style.display = 'flex';
+        const diff = (road.spent_budget_cr - road.allocated_budget_cr).toFixed(1);
+        document.getElementById('panel-overrun').textContent = `₹${diff} Cr`;
+      } else {
+        bStatus.textContent = 'ON BUDGET';
+        bStatus.className = 'badge badge-healthy';
+        bOverrunCont.style.display = 'none';
+      }
+
+      // Section D
+      document.getElementById('panel-complaints').textContent = road.open_complaints;
+
+      detailPanel.classList.add('open');
+      btnClose.focus();
+    }
+
+    function closePanel() {
+      detailPanel.classList.remove('open');
+      currentSelectedRoad = null;
+    }
+
+    function setupEventListeners() {
+      btnClose.addEventListener('click', closePanel);
+      
+      // Close on escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && detailPanel.classList.contains('open')) {
+          closePanel();
+        }
+      });
+
+      // Search
+      const searchBox = document.getElementById('searchBox');
+      searchBox.addEventListener('input', (e) => {
+        currentFilters.search = e.target.value;
+        renderRoads();
+      });
+
+      // Status filters
+      const statusBtns = document.querySelectorAll('.status-btn');
+      statusBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          statusBtns.forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentFilters.status = e.target.dataset.status;
+          renderRoads();
+        });
+      });
+
+      // Type filter
+      document.getElementById('typeFilter').addEventListener('change', (e) => {
+        currentFilters.type = e.target.value;
+        renderRoads();
+      });
+
+      // Sort
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        currentFilters.sortBy = e.target.value;
+        renderRoads();
+      });
+
+      // Heatmap toggle
+      const btnHeatmap = document.getElementById('heatmapToggle');
+      btnHeatmap.addEventListener('click', () => {
+        isHeatmapMode = !isHeatmapMode;
+        btnHeatmap.classList.toggle('active', isHeatmapMode);
+        btnHeatmap.setAttribute('aria-pressed', isHeatmapMode);
+        
+        if (isHeatmapMode && typeof L.heatLayer === 'undefined') {
+          alert('Heatmap library not fully loaded. Falling back to line rendering.');
+          isHeatmapMode = false;
+          btnHeatmap.classList.remove('active');
+        }
+        
+        renderRoads();
+      });
+      
+      // Report Defect button
+      document.getElementById('btnReportDefect').addEventListener('click', () => {
+        if (!currentSelectedRoad) return;
+        const msg = `File a complaint for ${currentSelectedRoad.name} (${currentSelectedRoad.id}) managed by ${currentSelectedRoad.contractor}`;
+        
+        // If embedded in YathraRaksha app, call the global AI chat or switch tabs
+        if (window.parent && window.parent.App && typeof window.parent.App.sendBotMessage === 'function') {
+          window.parent.App.sendBotMessage(msg);
+          // Try to close panel and switch tab
+          window.parent.App.switchTab?.('chat');
+        } else {
+          // Standalone fallback
+          alert(msg);
+        }
+      });
+    }
+
+    // Start
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

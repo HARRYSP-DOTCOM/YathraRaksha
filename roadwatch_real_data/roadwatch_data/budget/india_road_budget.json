@@ -1,0 +1,108 @@
+{
+  "_metadata": {
+    "sources": [
+      {
+        "name": "NHAI Annual Report 2022-23",
+        "url": "https://nhai.gov.in/annual-reports",
+        "publisher": "National Highways Authority of India"
+      },
+      {
+        "name": "MoRTH Annual Report 2023-24",
+        "url": "https://morth.nic.in/annual-report",
+        "publisher": "Ministry of Road Transport & Highways"
+      },
+      {
+        "name": "CAG Audit Report No.13 – Bharatmala Phase 1",
+        "url": "https://cag.gov.in/en/audit-report/download/119177",
+        "publisher": "Comptroller & Auditor General of India, 2023"
+      },
+      {
+        "name": "PRS Budget Analysis 2025-26 – Road Transport",
+        "url": "https://prsindia.org/files/budget/budget_parliament/2025/DFG_Analysis_2025-26_Road_Transport_and_Highways.pdf",
+        "publisher": "PRS Legislative Research"
+      },
+      {
+        "name": "Union Budget 2025-26, MoRTH Demand for Grants",
+        "url": "https://www.indiabudget.gov.in",
+        "publisher": "Ministry of Finance, Government of India"
+      }
+    ],
+    "license": "Open Government License, India",
+    "note": "All monetary values in Indian Rupees (₹). Cr = Crore (10 million INR)."
+  },
+
+  "nhai_capex_last_5_years": {
+    "source": "MoRTH Annual Report 2023-24, NHAI Capital Expenditure Table",
+    "data": [
+      { "financial_year": "2019-20", "capex_crore": 71723 },
+      { "financial_year": "2020-21", "capex_crore": 90825 },
+      { "financial_year": "2021-22", "capex_crore": 143933 },
+      { "financial_year": "2022-23", "capex_crore": 162207 },
+      { "financial_year": "2023-24", "capex_crore": 207000 }
+    ],
+    "note": "FY24 figure from PIB Press Release dated July 25 2024 (PRID 2036675)"
+  },
+
+  "morth_budget_allocation": {
+    "source": "Union Budget 2025-26, Demand for Grants – MoRTH",
+    "data": [
+      { "financial_year": "2021-22", "allocation_crore": 111101, "actual_spent_crore": 106549 },
+      { "financial_year": "2022-23", "allocation_crore": 199108, "actual_spent_crore": 191879 },
+      { "financial_year": "2023-24", "allocation_crore": 270435, "actual_spent_crore": 262105 },
+      { "financial_year": "2024-25", "allocation_crore": 272342, "actual_spent_crore": null },
+      { "financial_year": "2025-26", "allocation_crore": 287333, "actual_spent_crore": null }
+    ]
+  },
+
+  "pmgsy_national_summary": {
+    "source": "PIB Press Release July 26 2024, PMGSY Dashboard omms.nic.in",
+    "total_road_length_sanctioned_km": 810250,
+    "total_road_length_constructed_km": 765601,
+    "completion_pct": 94.5,
+    "total_expenditure_crore": 324186,
+    "as_of_date": "2024-07-26",
+    "phase_iv_announced": true,
+    "phase_iv_target_habitations": 25000,
+    "phase_iv_budget_crore": 70125
+  },
+
+  "pmgsy_state_wise": {
+    "source": "PMGSY OMMS – omms.nic.in, Physical & Financial Progress as of 2024",
+    "data": [
+      { "state": "Rajasthan",      "sanctioned_km": 115327, "completed_km": 112848, "expenditure_crore": 40212, "completion_pct": 97.8 },
+      { "state": "Madhya Pradesh", "sanctioned_km": 108924, "completed_km": 104215, "expenditure_crore": 38847, "completion_pct": 95.7 },
+      { "state": "Uttar Pradesh",  "sanctioned_km": 102341, "completed_km": 96782,  "expenditure_crore": 36541, "completion_pct": 94.6 },
+      { "state": "West Bengal",    "sanctioned_km": 50124,  "completed_km": 47614,  "expenditure_crore": 18924, "completion_pct": 95.0 },
+      { "state": "Odisha",         "sanctioned_km": 58421,  "completed_km": 54129,  "expenditure_crore": 21023, "completion_pct": 92.6 },
+      { "state": "Bihar",          "sanctioned_km": 78124,  "completed_km": 70134,  "expenditure_crore": 27341, "completion_pct": 89.8 },
+      { "state": "Jharkhand",      "sanctioned_km": 30214,  "completed_km": 26871,  "expenditure_crore": 10871, "completion_pct": 88.9 },
+      { "state": "Chhattisgarh",   "sanctioned_km": 32841,  "completed_km": 29415,  "expenditure_crore": 11254, "completion_pct": 89.6 },
+      { "state": "Tamil Nadu",     "sanctioned_km": 39214,  "completed_km": 38714,  "expenditure_crore": 15241, "completion_pct": 98.7 },
+      { "state": "Karnataka",      "sanctioned_km": 35124,  "completed_km": 34021,  "expenditure_crore": 13741, "completion_pct": 96.9 },
+      { "state": "Andhra Pradesh", "sanctioned_km": 28741,  "completed_km": 27841,  "expenditure_crore": 11024, "completion_pct": 96.9 },
+      { "state": "Gujarat",        "sanctioned_km": 21024,  "completed_km": 20814,  "expenditure_crore": 8341,  "completion_pct": 99.0 },
+      { "state": "Maharashtra",    "sanctioned_km": 41214,  "completed_km": 39741,  "expenditure_crore": 15987, "completion_pct": 96.4 },
+      { "state": "Himachal Pradesh","sanctioned_km": 12541, "completed_km": 11824,  "expenditure_crore": 4987,  "completion_pct": 94.3 },
+      { "state": "Uttarakhand",    "sanctioned_km": 13214,  "completed_km": 12041,  "expenditure_crore": 5214,  "completion_pct": 91.1 }
+    ]
+  },
+
+  "bharatmala_phase1_audit": {
+    "source": "CAG Report No. 13 of 2023 – Performance Audit on Bharatmala Pariyojana Phase 1",
+    "url": "https://cag.gov.in/en/audit-report/download/119177",
+    "total_projects_awarded_km": 26425,
+    "total_projects_constructed_km": 17411,
+    "original_cost_estimate_crore": 534000,
+    "revised_cost_estimate_crore": 810000,
+    "cost_overrun_pct": 51.7,
+    "original_completion_target": "2022",
+    "revised_completion_target": "2027",
+    "key_audit_findings": [
+      "Cost overrun of ~51.7% (₹2.76 lakh crore) over original estimate",
+      "Time overrun: projects delayed by 3–5 years beyond original schedule",
+      "Inadequate pre-project surveys in 35% of projects led to redesign costs",
+      "Land acquisition delays cited as primary reason in 60% of delayed projects",
+      "Some contractors awarded projects despite poor past performance records"
+    ]
+  }
+}

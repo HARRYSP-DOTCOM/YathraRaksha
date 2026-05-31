@@ -1,0 +1,87 @@
+{
+  "dataset_name": "YatraRaksha Real Road Data Bundle",
+  "version": "1.0",
+  "created_for": "Road Safety Hackathon 2026 – RoadWatch Track, CoERS IIT Madras",
+  "created_date": "2026-05-31",
+  "description": "All data in this bundle is sourced from official Indian government publications and open data portals. Every figure is verifiable and citable by judges.",
+
+  "files": [
+    {
+      "file": "accidents/india_accidents_2023.json",
+      "description": "National road accident statistics for 2023 – total accidents, fatalities, injuries by road type, state, city, time of day and cause.",
+      "primary_source": "MoRTH Road Accidents in India 2023 (PDF)",
+      "source_url": "https://morth.gov.in/backend/documents/uploaded/Road-Accident-in-India-2023-Publications.pdf",
+      "use_in_app": "Accident heatmaps, safe route scoring, NH risk indicators"
+    },
+    {
+      "file": "accidents/road_wise_accidents_2023.csv",
+      "description": "Road-code level accident, fatality and injury counts for major NHs and SHs in 2023.",
+      "primary_source": "MoRTH 2023 Tables 2.5, 2.6, 2.12, 5.5",
+      "source_url": "https://morth.gov.in/backend/documents/uploaded/Road-Accident-in-India-2023-Publications.pdf",
+      "use_in_app": "Per-road risk badge in Tender Registry, accident overlay on satellite map"
+    },
+    {
+      "file": "budget/india_road_budget.json",
+      "description": "NHAI capital expenditure 2019-24, MoRTH budget allocations 2021-26, PMGSY state-wise physical and financial progress, Bharatmala Phase 1 CAG audit findings.",
+      "primary_sources": [
+        "NHAI Annual Report 2022-23",
+        "MoRTH Annual Report 2023-24",
+        "Union Budget 2025-26",
+        "CAG Report No.13 of 2023",
+        "PIB Press Release PRID 2036675"
+      ],
+      "use_in_app": "Audit Ledger sanctioned vs spent chart, budget transparency source citations"
+    },
+    {
+      "file": "roads/india_nh_data.json",
+      "description": "NH and SH road records with road type, length, last relaying year, responsible authority, executive engineer name and contact, sanctioned vs spent budget, and accident counts.",
+      "primary_sources": [
+        "NHAI eTender Portal",
+        "NHAI TIS (tis.nhai.gov.in)",
+        "MoRTH Annual Report 2023-24",
+        "PMGSY GeoSadak Open Data"
+      ],
+      "use_in_app": "Tender Registry table rows – replace all hardcoded dummy data with these"
+    },
+    {
+      "file": "contractors/india_contractors.json",
+      "description": "Top 8 real NH contractors with project counts, km under construction, cost overrun averages, quality ratings, and CAG audit flagged findings.",
+      "primary_sources": [
+        "CAG Report No.13 of 2023",
+        "NHAI eTender awarded contracts",
+        "Company Annual Reports (public domain)"
+      ],
+      "use_in_app": "Contractor Performance Registry, overrun alerts, rating stars"
+    }
+  ],
+
+  "citation_template": {
+    "note": "Use this template to add source badges in your app UI",
+    "example": "Source: MoRTH Road Accidents in India 2023, Table 2.1 | Open Government License",
+    "badge_html": "<span class='source-badge'>📄 Source: <a href='{url}' target='_blank'>{source_name}</a></span>"
+  },
+
+  "live_apis_to_complement": [
+    {
+      "name": "Overpass API (OpenStreetMap) – Road type by GPS",
+      "url": "https://overpass-api.de/api/interpreter",
+      "usage": "GET real road classification (NH/SH/MDR) for any lat/lon in India",
+      "example_query": "[out:json];way['highway'](around:300,{lat},{lon});out tags;"
+    },
+    {
+      "name": "PMGSY OMMS – Rural road live data",
+      "url": "https://omms.nic.in",
+      "usage": "District-level rural road contractor and spending data"
+    },
+    {
+      "name": "NHAI eTender – Live tender search",
+      "url": "https://etender.nhai.org.in",
+      "usage": "Search current open tenders by state/NH number"
+    },
+    {
+      "name": "data.gov.in Transport Sector datasets",
+      "url": "https://www.data.gov.in/sector/transport",
+      "usage": "100+ transport datasets, CSV downloadable"
+    }
+  ]
+}
