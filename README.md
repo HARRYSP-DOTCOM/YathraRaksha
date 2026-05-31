@@ -8,10 +8,12 @@ The frontend is a static PWA built with HTML, CSS, and JavaScript. The backend u
 
 Key capabilities:
 - Complaint submission and offline queueing
+- **Automatic Complaint Routing:** Fully automatic routing to the correct authority (NHAI, PWD, Municipality) based on road type and GPS jurisdiction, with no manual intervention needed.
 - Road and contractor data retrieval
 - Media uploads for supporting evidence
 - AI-assisted analysis endpoint
 - PWA installability and offline fallback handling
+- **Global Scalability:** The platform supports international deployment through a fully configurable authority registry, allowing seamless integration with road authorities worldwide (e.g., DOT/NHTSA in the US, BMVI in Germany, etc.).
 
 ## Government data (`/data`)
 
@@ -212,6 +214,30 @@ The backend also exposes uploaded media files under `/uploads`.
 - Media upload handling
 - Road data and contractor analytics
 - Server-side analysis endpoint for additional processing
+
+## Interactive Map Interface
+
+Users can interact directly with the built-in map to access infrastructure details. Tap or click on any road segment on the map to reveal a details panel showing:
+- **Road Type** (NH/SH/MDR)
+- **Last Relaying Date**
+- **Contractor Name**
+
+## Budget Transparency & Overspending Audit
+
+The application features a dedicated budget transparency view that audits road projects against their sanctioned allocations. Each road project card clearly displays financial metrics to expose overspending.
+
+**Example Road Project Card:**
+```
+-----------------------------------------------------------
+🛣️ NH-66 Expansion Project (XYZ Contractors)
+-----------------------------------------------------------
+Status: ⚠️ Over Budget
+Budget Sanctioned: ₹4.20 Cr
+Budget Spent:      ₹4.75 Cr
+Funding Source:    CRIF (Central Road and Infrastructure Fund)
+-----------------------------------------------------------
+* Note: A 113% budget utilization flags the contractor for review.
+```
 
 ## Development notes
 

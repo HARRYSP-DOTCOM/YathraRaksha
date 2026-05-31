@@ -10,10 +10,10 @@ const RoadTracker = {
 
   determineRoutingDetails(road) {
     const fallback = {
-      routeTo: "Local PWD / Municipal Works Division",
-      routeAuthority: "Local Public Works / Zilla Parishad",
-      escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
-      routingMessage: "Issue routed through regional maintenance grievance channels."
+      routeTo: "Municipal Grievance Officer",
+      routeAuthority: "Municipality",
+      escalationHierarchy: ["Municipal Engineer", "Superintending Engineer", "Municipal Commissioner"],
+      routingMessage: "Local roads are routed to the regional Municipality grievance channels."
     };
 
     if (!road || !road.type) return fallback;
@@ -22,27 +22,18 @@ const RoadTracker = {
     if (type.includes("NH") || type.includes("NATIONAL HIGHWAY")) {
       return {
         routeTo: "NHAI Regional Officer",
-        routeAuthority: "NHAI - National Highways Authority of India",
+        routeAuthority: "NHAI",
         escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
         routingMessage: "National Highway grievances are routed through the NHAI regional grievance cell."
       };
     }
 
-    if (type.includes("SH") || type.includes("STATE HIGHWAY")) {
+    if (type.includes("SH") || type.includes("STATE HIGHWAY") || type.includes("DISTRICT ROAD") || type.includes("MDR")) {
       return {
-        routeTo: "State PWD / State Nodal Officer",
-        routeAuthority: road.authority || "State Public Works Department",
+        routeTo: "State PWD Nodal Officer",
+        routeAuthority: "PWD",
         escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
-        routingMessage: "State Highway complaints are routed via the State PWD divisional grievance desk."
-      };
-    }
-
-    if (type.includes("MDR") || type.includes("MAJOR DISTRICT ROAD")) {
-      return {
-        routeTo: "District Collector / Zilla Parishad",
-        routeAuthority: road.authority || "District Administration / Zilla Parishad",
-        escalationHierarchy: ["Executive Engineer", "Superintending Engineer", "Chief Engineer"],
-        routingMessage: "Major District Road issues are routed to the district collector / ZP grievance cell."
+        routingMessage: "State and District Road complaints are routed via the State PWD divisional grievance desk."
       };
     }
 

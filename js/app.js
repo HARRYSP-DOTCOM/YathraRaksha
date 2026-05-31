@@ -622,8 +622,9 @@ const App = {
                 <span class="badge ${statusStyle.badge}" style="flex-shrink:0; font-size:10px;">${r.statusLabel}</span>
               </div>
               <div style="display:flex; gap:16px; margin-top:8px; font-size:12px; flex-wrap:wrap;">
-                <span style="color:var(--text-muted);">Allocated: <strong style="color:var(--text-white);">${formatCr(r.sanctionedBudget)}</strong></span>
-                <span style="color:var(--text-muted);">Spent: <strong style="color:var(--text-white);">${formatCr(r.spentBudget)}</strong></span>
+                <span style="color:var(--text-muted);">Budget Sanctioned: <strong style="color:var(--text-white);">${formatCr(r.sanctionedBudget)}</strong></span>
+                <span style="color:var(--text-muted);">Budget Spent: <strong style="color:var(--text-white);">${formatCr(r.spentBudget)}</strong></span>
+                <span style="color:var(--text-muted);">Funding Source: <strong style="color:var(--text-white);">${r.fundingSource || 'CRIF'}</strong></span>
               </div>
               <!-- Mini progress bar -->
               <div style="margin-top:8px; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">

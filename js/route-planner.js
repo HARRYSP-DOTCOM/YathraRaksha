@@ -7,20 +7,38 @@ const RoutePlanner = {
     IN: {
       name: "India — MoRTH / NHAI / State PWD",
       agencies: ["NHAI", "PWD", "CMDA", "MoRTH CRRI", "RAIB India"],
+      keywords: ["india"]
     },
     US: {
       name: "United States — DOT / NHTSA",
       agencies: ["NYSDOT", "Caltrans", "FHWA", "NHTSA FARS"],
+      keywords: ["united states", "usa"]
     },
     DE: {
       name: "Germany — BMVI / BASt",
       agencies: ["Autobahn GmbH", "BASt", "Landesstraßen"],
+      keywords: ["germany"]
     },
     DEFAULT: {
       name: "OpenStreetMap + RoadWatch audit registry",
       agencies: ["RoadWatch consolidated audit", "RAIB"],
+      keywords: []
     },
   },
+
+  /**
+   * Dynamically register or update a road authority for international deployment.
+   * @param {string} countryCode - E.g., 'UK'
+   * @param {object} config - { name: "...", agencies: ["..."], keywords: ["united kingdom", "uk"] }
+   */
+  registerAuthority(countryCode, config) {
+    this.authorityRegistry[countryCode] = {
+      name: config.name || `${countryCode} Authority`,
+      agencies: config.agencies || [],
+      keywords: config.keywords || []
+    };
+  },
+
 
   placePresets: [
     { label: "Chennai, Tamil Nadu", lat: 13.0827, lng: 80.2707, country: "IN" },
@@ -84,9 +102,11 @@ const RoutePlanner = {
 
   _countryFromDisplay(name) {
     const n = (name || "").toLowerCase();
-    if (n.includes("india")) return "IN";
-    if (n.includes("united states") || n.includes("usa")) return "US";
-    if (n.includes("germany")) return "DE";
+    for (const [key, config] of Object.entries(this.authorityRegistry)) {
+      if (config.keywords && config.keywords.some(kw => n.includes(kw))) {
+        return key;
+      }
+    }
     return "DEFAULT";
   },
 

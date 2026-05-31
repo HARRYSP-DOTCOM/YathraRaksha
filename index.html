@@ -155,7 +155,7 @@
         <!-- 2. AI CAPTURE & VERIFICATION TAB -->
         <section class="tab-content" id="capture-tab">
           <h2 class="section-title">Visual AI Pavement Analyzer</h2>
-          <p class="section-desc">Drag or drop field photos/videos showing road defects. YOLOv8 convolutional networks analyze structural wear, verify defects, estimate costs in INR (₹), and route complaints.</p>
+          <p class="section-desc">Drag or drop field photos/videos showing road defects. YOLOv8 convolutional networks analyze structural wear, verify defects, and estimate repair costs. The system then <strong>fully automatically routes the complaint without manual intervention</strong>. The routing logic explicitly directs National Highways (NH) to NHAI, State Highways and District Roads (SH/MDR) to the State PWD, and all other unclassified or local roads to the local Municipality.</p>
 
           <div class="capture-layout">
             <!-- Input media capture -->
@@ -388,7 +388,13 @@
             <p class="route-planner-hint">Chennai → Bengaluru uses NHAI/PWD/RAIB corridor audits. Other trips use OSM routing scored against registered accident registries.</p>
             <div id="route-results" class="route-results" aria-live="polite"></div>
           </div>
-          
+          <div class="glass-card highlight-teal" style="margin-bottom: 20px;">
+            <h3 style="margin-bottom: 8px;">🗺️ Interactive Map Instructions</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">
+              Tap or click any road segment on the map below to reveal detailed infrastructure context. The details panel will display the <strong>Road Type (NH/SH/MDR)</strong>, <strong>Last Relaying Date</strong>, and the responsible <strong>Contractor Name</strong>.
+            </p>
+          </div>
+
           <div class="map-stage">
             <div class="map-stage__frame">
               <span class="map-stage__corner map-stage__corner--tl" aria-hidden="true"></span>
