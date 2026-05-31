@@ -179,7 +179,7 @@ Backend in PowerShell:
 cd backend
 .\.venv\Scripts\Activate.ps1
 python run.py
-```
+
 
 Frontend in another terminal:
 
