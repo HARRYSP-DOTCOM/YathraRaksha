@@ -70,15 +70,92 @@ def _models_dir() -> Path:
     return Path(__file__).resolve().parent.parent.parent / "models"
 
 
+def _load_model():
+    global _MODEL, _MODEL_PATH
+    if _MODEL is not None:
+        return _MODEL
+
+    from ultralytics import YOLO
+
+    custom = _models_dir() / "yolov8n-road.pt"
+    if custom.exists():
+        _MODEL_PATH = custom
+        _MODEL = YOLO(str(custom))
+    else:
+        _MODEL_PATH = None
+        _MODEL = YOLO("yolov8n.pt")
+    return _MODEL
+
+
+def _rejected(reason: str) -> dict[str, Any]:
+    return {
+        "rejected": True,
+        "rejection_reason": reason,
+        "detection_id": None,
+        "defect_class": None,
+        "confidence": 0.0,
+        "severity_score": 0,
+        "risk_level": None,
+        "repair_priority": None,
+        "damage_area_m2": 0.0,
+        "avg_depth_cm": 0.0,
+        "bounding_box": None,
+        "model_version": "YOLOv8n-road-v1",
+        "suggestions": [],
+    }
+
+
 def analyze_image_bytes(image_bytes: bytes) -> dict[str, Any]:
-    """Mock YOLOv8 inference; vision is now handled client-side via TensorFlow.js."""
-    import time
-    
-    label = "Pothole"
-    conf = 0.95
+    """Run YOLOv8 inference; return spec JSON for frontend."""
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as exc:
+        return _rejected(f"Invalid image: {exc}")
+
+    try:
+        model = _load_model()
+    except ImportError:
+        return _rejected(
+            "Vision model unavailable on this serverless deployment. Use local backend for YOLOv8."
+        )
+    except Exception as exc:
+        return _rejected(f"Vision model failed to load: {exc}")
+
+    results = model(image, verbose=False)
+    boxes = results[0].boxes
+
+    if boxes is None or len(boxes) == 0:
+        return _rejected("No road defect detected in the image.")
+
+    using_custom = _MODEL_PATH is not None and _MODEL_PATH.exists()
+
+    if using_custom:
+        best = max(boxes, key=lambda b: float(b.conf[0]))
+        cls_id = int(best.cls[0])
+        if cls_id not in DEFECT_LABELS:
+            return _rejected("No road defect detected in the image.")
+        label = DEFECT_LABELS[cls_id]
+    else:
+        # Fallback: pretrained COCO — treat person/vehicle/etc. as rejection
+        road_candidates = []
+        for b in boxes:
+            cid = int(b.cls[0])
+            conf = float(b.conf[0])
+            if cid in COCO_NON_ROAD and conf > 0.35:
+                return _rejected("No road defect detected in the image.")
+            if cid not in COCO_NON_ROAD and conf > 0.25:
+                road_candidates.append(b)
+        if not road_candidates:
+            return _rejected("No road defect detected in the image.")
+        best = max(road_candidates, key=lambda b: float(b.conf[0]))
+        # Map generic detection to closest defect type for demo
+        label = "Pothole"
+
+    conf = float(best.conf[0])
+    box = best.xyxy[0].tolist()
     severity = SEVERITY_MAP.get(label, 5)
     risk = RISK_MAP.get(severity, "Medium")
-    
+
     return {
         "rejected": False,
         "rejection_reason": None,
@@ -88,14 +165,14 @@ def analyze_image_bytes(image_bytes: bytes) -> dict[str, Any]:
         "severity_score": severity,
         "risk_level": risk,
         "repair_priority": PRIORITY_MAP.get(risk, "Schedule repair"),
-        "damage_area_m2": 1.5,
+        "damage_area_m2": round((box[2] - box[0]) * (box[3] - box[1]) / 10000, 2),
         "avg_depth_cm": round(severity * 0.9, 1),
         "bounding_box": {
-            "x": 100,
-            "y": 100,
-            "w": 50,
-            "h": 50,
+            "x": int(box[0]),
+            "y": int(box[1]),
+            "w": int(box[2] - box[0]),
+            "h": int(box[3] - box[1]),
         },
-        "model_version": "client-side-tfjs",
+        "model_version": "YOLOv8n-road-v1",
         "suggestions": REPAIR_SUGGESTIONS.get(label, []),
     }

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -116,12 +117,14 @@ def root():
 def health():
     return {"status": "ok", "backend": "python", "framework": "fastapi"}
 
-if (frontend_dir / "index.html").exists():
+if not os.environ.get("VERCEL") and (frontend_dir / "index.html").exists():
     app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
 
 
 @app.get("/{full_path:path}")
 async def spa_catchall(full_path: str):
+    if os.environ.get("VERCEL"):
+        raise HTTPException(status_code=404, detail="Not found")
     if full_path.startswith(settings.api_prefix.strip("/")) or full_path.startswith("uploads"):
         raise HTTPException(status_code=404, detail="Not found")
     index_file = frontend_dir / "index.html"

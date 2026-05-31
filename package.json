@@ -1,0 +1,9 @@
+{
+  "name": "yathra-raksha",
+  "private": true,
+  "version": "2.0.0",
+  "description": "YathraRaksha / RoadWatch — AI road safety PWA",
+  "scripts": {
+    "build": "node scripts/build-public.js"
+  }
+}

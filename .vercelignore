@@ -1,0 +1,9 @@
+backend/.venv
+backend/venv
+backend/uploads
+backend/**/*.db
+backend/models/*.pt
+node_modules
+.git
+patch.py
+patch2.py
