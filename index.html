@@ -1,726 +1,441 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="YatraRaksha PWA: AI-powered road safety verification, public spending audit, and complaint routing platform.">
-  <title>YatraRaksha - Infrastructure Audit & Transparency</title>
-  
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d9488">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="YatraRaksha">
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  
-  <!-- Leaflet and Chart.js CDNs (cached locally by service worker) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <meta name="description" content="YATHRA RAKSHA — Public road monitoring and transparency platform for India. Track road conditions, report issues, and monitor infrastructure spending.">
+  <title>Yathra Raksha — Road Monitoring & Transparency</title>
 
-  <!-- Noto Sans for Multilingual Support -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231D9E75'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18' font-weight='bold' font-family='Inter,sans-serif'>Y</text></svg>">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/welcome.css">
-  <link rel="stylesheet" href="css/map-hub.css">
 </head>
 <body>
 
   <div class="app-layout">
-    
-    <!-- A. Desktop Sidebar Navigation (Hidden on Mobile) -->
-    <aside class="sidebar">
-      <div>
-        <div class="logo-container">
-          <div class="logo-icon">Y</div>
-          <div class="logo-text">YATRA RAKSHA</div>
+
+    <!-- ═══ SIDEBAR (Desktop) ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>
         </div>
-        
-        <nav class="sidebar-nav">
-          
-          <div class="nav-link" data-tab="capture">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            <span>AI Defect Capture</span>
-          </div>
-          <div class="nav-link" data-tab="transparency">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-            <span>Tender Registry</span>
-          </div>
-          <div class="nav-link" data-tab="contractors">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            <span>Contractor Hub</span>
-          </div>
-          <div class="nav-link active" data-tab="map">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            <span>Satellite Map Hub</span>
-          </div>
-          <div class="nav-link" data-tab="alerts">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-            <span>Alerts</span>
-          </div>
-          <div class="nav-link" data-tab="tracker">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span>Outbox Tracker</span>
-          </div>
-          <div class="nav-link" data-tab="chatbot">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <span>YatraGPT Assistant</span>
-          </div>
-          <div class="nav-link" data-tab="score">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-            <span>Score</span>
-          </div>
-        </nav>
+        <div class="sidebar-brand-text">Yathra<br>Raksha</div>
       </div>
 
-      <!-- Language / Accessibility Switcher -->
-      <div class="lang-switcher-wrap">
-        <button type="button" class="lang-switcher-toggle" id="lang-toggle-sidebar" aria-haspopup="true" aria-expanded="false" title="Change language">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M2 12h20"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/>
-          </svg>
-          <span class="lang-current-label" id="lang-current-label">English</span>
-          <svg class="lang-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="m6 9 6 6 6-6"/></svg>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-screen="map" id="nav-map">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Map</span>
         </button>
-        <div class="lang-dropdown" id="lang-dropdown-sidebar" role="listbox" aria-label="Select language">
-          <div class="lang-dropdown-header">
-            <span>🌐 Interface language</span>
-            <span class="lang-dropdown-badge">Accessibility</span>
-          </div>
-          <button type="button" class="lang-option active" data-lang="en" role="option" aria-selected="true"><span class="lang-flag">🇬🇧</span><span class="lang-native">English</span><span class="lang-check">✓</span></button>
-          <button type="button" class="lang-option" data-lang="hi" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">हिन्दी</span><span class="lang-label">Hindi</span></button>
-          <button type="button" class="lang-option" data-lang="ml" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">മലയാളം</span><span class="lang-label">Malayalam</span></button>
-          <button type="button" class="lang-option" data-lang="ta" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">தமிழ்</span><span class="lang-label">Tamil</span></button>
-          <button type="button" class="lang-option" data-lang="kn" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">ಕನ್ನಡ</span><span class="lang-label">Kannada</span></button>
-          <button type="button" class="lang-option" data-lang="te" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">తెలుగు</span><span class="lang-label">Telugu</span></button>
-          <button type="button" class="lang-option" data-lang="bn" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">বাংলা</span><span class="lang-label">Bengali</span></button>
-          <button type="button" class="lang-option" data-lang="mr" role="option"><span class="lang-flag">🇮🇳</span><span class="lang-native">मराठी</span><span class="lang-label">Marathi</span></button>
-          <div class="lang-dropdown-footer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            Translation support coming soon
-          </div>
-        </div>
-      </div>
-
-      <!-- PWA Install prompt in Sidebar -->
-      <div class="pwa-install-card" id="pwa-install-card">
-        <div class="badge badge-nh">PWA</div>
-        <h4>Install YatraRaksha PWA</h4>
-        <p>Enable native performance, camera streams, and background offline outbox syncing.</p>
-        <button class="btn btn-primary btn-sm" id="btn-pwa-install" style="width: 100%; margin-top: 6px;">Install App</button>
-      </div>
+        <button class="nav-item" data-screen="ai-detect" id="nav-ai-detect">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>AI Detect</span>
+        </button>
+        <button class="nav-item" data-screen="spendings" id="nav-spendings">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span>Spendings</span>
+        </button>
+        <button class="nav-item" data-screen="complaints" id="nav-complaints">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Public Complaints</span>
+        </button>
+        <button class="nav-item" data-screen="chatbot" id="nav-chatbot">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M8 21v-2M16 21v-2"/></svg>
+          <span>AI Chat Bot</span>
+        </button>
+      </nav>
     </aside>
 
-    <!-- B. Main canvas (mobile nav is after this block for correct tap stacking) -->
-    <div class="main-canvas">
-      
-      <!-- Top header strip for status/online -->
-      <header class="mobile-header">
-        <!-- Logo for mobile view toggle -->
-        <div class="logo-container">
-          <div class="logo-icon">Y</div>
-          <div class="logo-text">YATRA RAKSHA</div>
+    <!-- ═══ HEADER ═══ -->
+    <header class="app-header" id="app-header">
+      <div class="header-brand">
+        <div class="header-brand-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
         </div>
-        
-        <div class="header-kicker">
-          RoadWatch · AI in Road Safety · CoERS 2026
-        </div>
+        <span class="header-brand-name">Yathra Raksha</span>
+      </div>
+      <div class="header-actions">
+        <select class="lang-select" id="lang-select" aria-label="Select language">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="ml">മലയാളം</option>
+          <option value="ta">தமிழ்</option>
+          <option value="te">తెలుగు</option>
+        </select>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+          <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
 
-        <div class="header-right-group">
-          <!-- Mobile language toggle -->
-          <button type="button" class="lang-mobile-btn" id="lang-toggle-mobile" title="Change language" aria-label="Change language">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M2 12h20"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/>
-            </svg>
-          </button>
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main-content" id="main-content">
 
-          <div class="network-badge" id="network-badge">
-            Online
+      <!-- ──── SCREEN 1: MAP ──── -->
+      <section class="screen active" id="screen-map">
+        <div class="map-screen">
+          <div class="map-container" id="map-container"></div>
+
+          <!-- Search card -->
+          <div class="map-float-card map-search-card" id="map-search-card">
+            <input type="text" class="map-search-input" id="map-search-input" placeholder="Search road or contractor name...">
+            <button class="btn btn-primary btn-sm" id="map-search-btn">Search</button>
+            <button class="btn btn-secondary btn-sm" id="map-locate-btn" title="My location">📍</button>
+          </div>
+
+          <!-- Mode switcher -->
+          <div class="map-float-card map-mode-card" id="map-mode-card">
+            <button class="map-mode-btn active" data-mode="road">Road</button>
+            <button class="map-mode-btn" data-mode="satellite">Satellite</button>
+            <button class="map-mode-btn" data-mode="night">Night</button>
+          </div>
+
+          <!-- Legend -->
+          <div class="map-float-card map-legend" id="map-legend">
+            <h4>Road Condition</h4>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#639922"></span> Excellent / Good</div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#EF9F27"></span> Fair</div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#E68A00"></span> Poor</div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#E24B4A"></span> Critical</div>
+          </div>
+
+          <!-- Coordinate badge -->
+          <div class="map-float-card" id="map-coords-badge" style="bottom:24px;right:12px;font-size:11px;color:var(--text-muted);display:none;padding:6px 10px;">
+            <span id="map-coords-text">—</span>
+          </div>
+
+          <!-- Road Info Panel (slides in) -->
+          <div class="road-info-panel" id="road-info-panel">
+            <button class="panel-close" id="panel-close">×</button>
+            <div id="road-panel-content"></div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <!-- Main Contents Panels -->
-      <main>
-        
-        <!-- 2. AI CAPTURE & VERIFICATION TAB -->
-        <section class="tab-content" id="capture-tab">
-          <h2 class="section-title">Visual AI Pavement Analyzer</h2>
-          <p class="section-desc">Drag or drop field photos/videos showing road defects. YOLOv8 convolutional networks analyze structural wear, verify defects, and estimate repair costs. The system then <strong>fully automatically routes the complaint without manual intervention</strong>. The routing logic explicitly directs National Highways (NH) to NHAI, State Highways and District Roads (SH/MDR) to the State PWD, and all other unclassified or local roads to the local Municipality.</p>
+      <!-- ──── SCREEN 2: AI DETECT ──── -->
+      <section class="screen" id="screen-ai-detect">
+        <div class="ai-detect-layout">
+          <!-- Left: Image Input -->
+          <div class="ai-detect-left">
+            <h2 style="font-size:20px;font-weight:600;">AI Road Damage Detection</h2>
 
-          <div class="capture-layout">
-            <!-- Input media capture -->
-            <div>
-              <div class="glass-card highlight-teal">
-                <h3 style="margin-bottom: 14px;">📸 Upload Media Stream</h3>
-                
-                <div class="drop-zone" id="drop-zone">
-                  <div id="drop-instructions">
-                    <div class="drop-zone-icon">📤</div>
-                    <h4>Select Road Photo/Video</h4>
-                    <p class="text-muted" style="font-size: 12px; margin-top: 4px;">Camera streams or files (JPEG, PNG, MP4)</p>
-                    <button class="btn btn-secondary" style="margin-top: 12px; padding: 6px 12px; font-size: 12px;">Browse Device</button>
-                  </div>
-                  
-                  <!-- Video Scanner overlay frames -->
-                  <div class="preview-media-container" id="preview-media-container">
-                    <img id="preview-img" src="" alt="Defect Preview">
-                    <div class="ai-scan-overlay" id="ai-scan-overlay">
-                      <div class="ai-scan-bar"></div>
-                      <div class="ai-scan-bounding-box" id="ai-scan-bounding-box"></div>
-                    </div>
-                  </div>
-
-                  <input type="file" id="file-input" class="file-input" accept="image/*,video/*">
-                </div>
-
-                <!-- Sandbox files sandbox -->
-                <div class="sample-media-section">
-                  <span class="sample-headline">Quick Test Sandbox (Try positive vs negative inputs)</span>
-                  <div class="sample-grid">
-                    <button onclick="window.App.triggerSampleUpload('pothole')" class="sample-btn">
-                      <span class="validity-badge valid">Valid Defect</span>
-                      <span class="thumb-label">🕳️ Highway Pothole</span>
-                    </button>
-                    <button onclick="window.App.triggerSampleUpload('crack')" class="sample-btn">
-                      <span class="validity-badge valid">Valid Defect</span>
-                      <span class="thumb-label">🕸️ Alligator Cracks</span>
-                    </button>
-                    <button onclick="window.App.triggerSampleUpload('marking')" class="sample-btn">
-                      <span class="validity-badge valid">Valid Defect</span>
-                      <span class="thumb-label">🛣️ Faded Markings</span>
-                    </button>
-                    <button onclick="window.App.triggerSampleUpload('light')" class="sample-btn">
-                      <span class="validity-badge valid">Valid Defect</span>
-                      <span class="thumb-label">💡 Broken Utility</span>
-                    </button>
-                    <button onclick="window.App.triggerSampleUpload('cat')" class="sample-btn">
-                      <span class="validity-badge invalid">Blocked Class</span>
-                      <span class="thumb-label">🐱 Office Kitten</span>
-                    </button>
-                    <button onclick="window.App.triggerSampleUpload('coffee')" class="sample-btn">
-                      <span class="validity-badge invalid">Blocked Class</span>
-                      <span class="thumb-label">☕ Espresso Mug</span>
-                    </button>
-                  </div>
-                </div>
+            <div class="card">
+              <div class="upload-buttons" style="margin-bottom:12px;">
+                <button class="btn btn-primary btn-sm" id="ai-capture-btn">📷 Capture Photo</button>
+                <button class="btn btn-secondary btn-sm" id="ai-upload-btn">⬆ Upload Photo</button>
               </div>
-
-              <!-- Live AI Logging Terminal -->
-              <div class="glass-card ai-logger-card">
-                <div class="logger-title">📟 YatraRaksha AI Vision Diagnostic Console</div>
-                <div class="logger-logs" id="ai-logger-logs">
-                  <div class="log-entry text-muted">System waiting for media stream upload...</div>
+              <div class="upload-area" id="ai-upload-area">
+                <div id="ai-upload-placeholder">
+                  <div class="upload-icon">📸</div>
+                  <div class="upload-text">Drop or click to upload road image</div>
+                  <div class="upload-hint">Supports JPEG, PNG — max 10MB</div>
                 </div>
+                <img id="ai-preview-img" style="display:none;" alt="Road damage preview">
               </div>
-
-              <div class="glass-card" id="ai-model-benchmarks-card" style="display:none; margin-top:12px;">
-                <h4 style="font-size:13px; color:var(--primary); margin-bottom:8px;">YOLOv8 defect classes (RDD2022 / CRDDC2022)</h4>
-                <ul id="ai-defect-class-list" style="font-size:12px; color:var(--text-muted); margin:0 0 12px 18px;"></ul>
-                <div id="ai-benchmark-scores" style="font-size:12px;"></div>
-              </div>
+              <input type="file" id="ai-file-input" accept="image/*" style="display:none;">
+              <input type="file" id="ai-camera-input" accept="image/*" capture="environment" style="display:none;">
+              <button class="btn btn-secondary btn-sm" id="ai-retake-btn" style="display:none;margin-top:8px;">↩ Retake / Remove</button>
             </div>
 
-            <!-- AI assessment side card -->
-            <div>
-              <div class="glass-card highlight-orange location-card">
-                <div class="location-card-head">
-                  <h3>Live geolocation</h3>
-                  <span class="location-status-badge pending" id="location-status-badge">Acquiring GPS…</span>
-                </div>
-                <p class="location-card-desc">Latitude and longitude auto-fill from your device GPS for accurate complaint routing. Values update as you move.</p>
-                <p class="location-status-detail" id="location-status-detail">Waiting for satellite fix…</p>
-                <div class="location-coords-row">
-                  <div class="form-group">
-                    <label>Latitude</label>
-                    <input type="number" id="report-lat" class="form-control" step="any" readonly>
-                  </div>
-                  <div class="form-group">
-                    <label>Longitude</label>
-                    <input type="number" id="report-lng" class="form-control" step="any" readonly>
-                  </div>
-                </div>
-                <p class="location-nearest"><strong>Nearest corridor:</strong> <span id="location-nearest-road">—</span></p>
-                <div class="location-actions">
-                  <button type="button" class="btn btn-primary btn-sm" id="btn-use-live-gps">Use live GPS</button>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.App.switchTab('map')">Adjust on map</button>
-                </div>
-              </div>
-
-              <!-- Rejection card (shown when road validation fails) -->
-              <div class="glass-card highlight-orange" id="ai-rejection-card" style="display: none; margin-bottom: 16px;"></div>
-
-              <!-- Bounding box telemetry parameters -->
-              <div class="glass-card highlight-teal" id="ai-results-card" style="display: none;">
-                <h3 style="margin-bottom: 12px; color: var(--primary);">🤖 AI Vision Diagnostics Report</h3>
-                
-                <div class="popup-body" style="padding:0; font-size:13px;">
-                  <div class="popup-row"><strong>Verified ID:</strong> <span id="ai-id">-</span></div>
-                  <div class="popup-row"><strong>Defect Class:</strong> <span id="ai-class" style="color:var(--text-white); font-weight:700;">-</span></div>
-                  <div class="popup-row"><strong>Classifier Cert.:</strong> <span id="ai-confidence">-</span></div>
-                  <div class="popup-row"><strong>Grievance Severity:</strong> <span id="ai-severity" class="badge">-</span></div>
-                  <div class="popup-row"><strong>Damage Area:</strong> <span id="ai-dimensions">-</span></div>
-                  <div class="popup-row"><strong>Avg Defect Depth:</strong> <span id="ai-depth">-</span></div>
-                  <div class="popup-row"><strong>Public Safety Risk:</strong> <span id="ai-risk" style="color:var(--secondary); font-weight:700;">-</span></div>
-                  <div class="popup-row"><strong>Repair Priority:</strong> <span id="ai-repair-priority">-</span></div>
-                  <div class="popup-row"><strong>Suggestions:</strong></div>
-                  <ul id="ai-suggestions" class="ai-suggestions-list" style="margin:4px 0 8px 18px; font-size:12px; color:var(--text-muted);"></ul>
-                  <div class="popup-row"><strong>Road Validation Confidence:</strong> <span id="ai-road-validation" style="color:var(--primary); font-weight:700;">-</span></div>
-                  
-                  <hr class="popup-divider">
-                  <h4 style="margin: 10px 0 6px 0; font-size:13px; color:var(--tertiary);">🏛️ Geolocated Contract Ownership</h4>
-                  <div class="popup-row"><strong>Nearest Road Node:</strong> <span id="ai-road">-</span></div>
-                  <div class="popup-row"><strong>Responsible PWD:</strong> <span id="ai-authority">-</span></div>
-                  <div class="popup-row"><strong>Executive Engineer:</strong> <span id="ai-engineer">-</span></div>
-                  <div class="popup-row"><strong>Complaint Routed To:</strong> <span id="ai-route-to">-</span></div>
-                  <div class="popup-row"><strong>Escalation Hierarchy:</strong> <span id="ai-escalation-hierarchy">-</span></div>
-                </div>
-
-                <!-- Citizen submission form -->
-                <form id="complaint-form" style="margin-top: 16px;">
-                  <div class="form-group">
-                    <label for="user-desc">Citizens Notes & Field Remarks</label>
-                    <textarea id="user-desc" class="form-control" rows="3" placeholder="Provide details about the issue location or specific safety concern..." required></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="user-contact">Complainant Contact (Citizen Name / Phone)</label>
-                    <input type="text" id="user-contact" class="form-control" placeholder="Enter name or phone (Can be anonymous)" value="Anonymous Citizen">
-                  </div>
-
-                  <button type="submit" class="btn btn-primary" id="file-complaint-btn" style="width: 100%; margin-top: 8px;" disabled>📄 File Formal Complaint Notice</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- CONTRACTOR HUB TAB -->
-        <section class="tab-content" id="contractors-tab">
-          <h2 class="section-title">Contractor Accountability Hub</h2>
-          <p class="section-desc">Rankings, performance metrics, and budget utilization by registered contractors.</p>
-          <div id="contractor-hub-root"></div>
-        </section>
-
-        <!-- 3. TRANSPARENCY AUDIT BOARD -->
-        <section class="tab-content" id="transparency-tab">
-  <div style="padding:0 4px;">
-    <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">💰 Spending Tender Registry</h2>
-    <div id="tender-registry-root"></div>
-
-    <!-- Budget Dashboard (rendered by JS) -->
-    <div id="overview-budget-dashboard"></div>
-
-    <div style="margin-top:20px;">
-      <h4 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:12px;">🏗️ Contractor Performance</h4>
-      <div id="contractor-dashboard-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-    </div>
-  </div>
-</section>
-
-        <!-- 4. MAP HUB TAB -->
-        <section class="tab-content active" id="map-tab">
-          <header class="map-hub-header">
-            <p class="map-hub-header__eyebrow">Geospatial audit</p>
-            <h2 class="section-title">Infrastructure map atlas</h2>
-            <p class="section-desc">Survey registered corridors, plan safer journeys, and inspect authority-sourced accident registries — NHAI, PWD, NYSDOT, Caltrans, and RAIB.</p>
-          </header>
-
-          <div class="glass-card route-planner-card">
-            <div class="route-planner-head">
-              <h3>Safe route planner</h3>
-              <span class="route-planner-badge">Authority data</span>
-            </div>
-            <div class="route-input-grid">
+            <!-- Location input -->
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom:10px;">📍 Location</h3>
               <div class="form-group">
-                <label for="route-from">From</label>
-                <input type="text" id="route-from" class="form-control" list="route-place-list" placeholder="e.g. Chennai, Tamil Nadu" value="Chennai, Tamil Nadu">
+                <label class="form-label">Location name / address</label>
+                <input type="text" class="form-input" id="ai-location-name" placeholder="e.g. Near Tambaram Railway Crossing">
+              </div>
+              <button class="btn btn-secondary btn-sm" id="ai-use-location-btn" style="margin-bottom:10px;">📍 Use My Location</button>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Latitude</label>
+                  <input type="text" class="form-input" id="ai-lat" readonly placeholder="—">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">Longitude</label>
+                  <input type="text" class="form-input" id="ai-lng" readonly placeholder="—">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: AI Results -->
+          <div class="ai-detect-right">
+            <!-- Empty state -->
+            <div class="card" id="ai-empty-state" style="text-align:center;padding:40px;">
+              <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+              <p style="color:var(--text-muted);font-size:14px;">Upload a road photo and click "Analyze" to detect damage</p>
+            </div>
+
+            <!-- Loading state -->
+            <div class="card" id="ai-loading-state" style="display:none;">
+              <div class="ai-loading">
+                <div class="ai-loading-spinner"></div>
+                <p style="color:var(--text-secondary);font-size:14px;">Analyzing road image with AI...</p>
+              </div>
+            </div>
+
+            <!-- Results -->
+            <div id="ai-results" style="display:none;">
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:12px;">Damage Detection Results</h3>
+                <div class="detection-checklist" id="ai-checklist"></div>
+              </div>
+
+              <div class="card" style="margin-top:12px;">
+                <h3 class="card-title" style="margin-bottom:8px;">Severity Score</h3>
+                <div class="severity-gauge">
+                  <div class="severity-bar"><div class="severity-fill" id="ai-severity-fill" style="width:0%;background:var(--success);"></div></div>
+                  <div class="severity-value" id="ai-severity-value">0</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top:12px;">
+                <h3 class="card-title" style="margin-bottom:8px;">AI-Generated Complaint</h3>
+                <textarea class="form-textarea" id="ai-complaint-text" rows="4" placeholder="AI will generate complaint text..."></textarea>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button class="btn btn-primary btn-lg" id="ai-analyze-btn" style="flex:1;" disabled>🔍 Analyze Image</button>
+            </div>
+            <div id="ai-action-buttons" style="display:none;gap:8px;margin-top:8px;">
+              <button class="btn btn-success btn-lg" id="ai-file-complaint-btn" style="flex:1;">📝 File Complaint</button>
+              <button class="btn btn-secondary btn-lg" id="ai-cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complaint Submission Modal -->
+        <div class="modal-overlay" id="complaint-modal">
+          <div class="modal">
+            <h2 class="modal-title">Submit Complaint</h2>
+            <form id="complaint-submit-form">
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" class="form-input" id="modal-location" readonly>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group"><label class="form-label">Latitude</label><input type="text" class="form-input" id="modal-lat" readonly></div>
+                <div class="form-group"><label class="form-label">Longitude</label><input type="text" class="form-input" id="modal-lng" readonly></div>
               </div>
               <div class="form-group">
-                <label for="route-to">To</label>
-                <input type="text" id="route-to" class="form-control" list="route-place-list" placeholder="e.g. Bengaluru, Karnataka" value="Bengaluru, Karnataka">
+                <label class="form-label">Complaint Description</label>
+                <textarea class="form-textarea" id="modal-description" rows="3"></textarea>
               </div>
-            </div>
-            <datalist id="route-place-list">
-              <option value="Chennai, Tamil Nadu"></option>
-              <option value="Bengaluru, Karnataka"></option>
-              <option value="Vellore, Tamil Nadu"></option>
-              <option value="Mysuru, Karnataka"></option>
-              <option value="Tambaram, Chennai"></option>
-              <option value="New York, NY"></option>
-              <option value="San Jose, CA"></option>
-              <option value="Munich, Germany"></option>
-            </datalist>
-            <div class="route-planner-actions">
-              <button type="button" class="btn btn-primary btn-sm" id="btn-plan-route">Find safest route</button>
-              <button type="button" class="btn btn-success btn-sm" id="btn-start-trip" disabled>Start live trip</button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-route-use-gps">From: my location</button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-route">Clear routes</button>
-            </div>
-            <div id="trip-tracking-panel" class="trip-tracking-panel" hidden>
-              <div class="trip-panel-head">
-                <span class="trip-live-badge"><span class="trip-pulse"></span> Live trip tracking</span>
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-stop-trip">End trip</button>
+              <div class="form-group">
+                <label class="form-label">Your Name</label>
+                <input type="text" class="form-input" id="modal-name" placeholder="Enter your name">
               </div>
-              <div class="trip-progress-track">
-                <div class="trip-progress-fill" id="trip-progress-fill" style="width:0%"></div>
+              <div class="form-group">
+                <label class="form-label">Aadhaar Number (optional)</label>
+                <input type="text" class="form-input" id="modal-aadhaar" placeholder="XXXX-XXXX-XXXX" maxlength="14">
               </div>
-              <p class="trip-progress-label" id="trip-progress-label">0% complete</p>
-              <div class="trip-stats-grid">
-                <div class="trip-stat"><span class="trip-stat-k">Traveled</span><span class="trip-stat-v" id="trip-stat-traveled">0 km</span></div>
-                <div class="trip-stat"><span class="trip-stat-k">Remaining</span><span class="trip-stat-v" id="trip-stat-remaining">—</span></div>
-                <div class="trip-stat"><span class="trip-stat-k">ETA</span><span class="trip-stat-v" id="trip-stat-eta">—</span></div>
-                <div class="trip-stat"><span class="trip-stat-k">Speed</span><span class="trip-stat-v" id="trip-stat-speed">—</span></div>
-                <div class="trip-stat"><span class="trip-stat-k">To destination</span><span class="trip-stat-v" id="trip-stat-dest">—</span></div>
-                <div class="trip-stat"><span class="trip-stat-k">GPS accuracy</span><span class="trip-stat-v" id="trip-stat-accuracy">—</span></div>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">Submit Complaint</button>
+                <button type="button" class="btn btn-secondary btn-lg" id="modal-cancel-btn">Cancel</button>
               </div>
-              <p class="trip-status-msg" id="trip-status-msg">Waiting for GPS…</p>
-            </div>
-            <p class="route-planner-hint">Chennai → Bengaluru uses NHAI/PWD/RAIB corridor audits. Other trips use OSM routing scored against registered accident registries.</p>
-            <div id="route-results" class="route-results" aria-live="polite"></div>
+            </form>
           </div>
-          <div class="glass-card highlight-teal" style="margin-bottom: 20px;">
-            <h3 style="margin-bottom: 8px;">🗺️ Interactive Map Instructions</h3>
-            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-              Tap or click any road segment on the map below to reveal detailed infrastructure context. The details panel will display the <strong>Road Type (NH/SH/MDR)</strong>, <strong>Last Relaying Date</strong>, and the responsible <strong>Contractor Name</strong>.
-            </p>
+        </div>
+      </section>
+
+      <!-- ──── SCREEN 3: SPENDINGS ──── -->
+      <section class="screen" id="screen-spendings">
+        <div class="spendings-layout">
+          <h2 style="font-size:20px;font-weight:600;margin-bottom:4px;">Budget & Spending Transparency</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Track infrastructure spending, tender details, and contractor performance across Indian roads.</p>
+
+          <!-- Filters -->
+          <div class="spendings-filters" id="spendings-filters">
+            <input type="text" class="form-input" id="spendings-search" placeholder="Search by road or contractor..." style="min-width:220px;">
+            <select class="form-select" id="spendings-state"><option value="">All States</option></select>
+            <select class="form-select" id="spendings-district"><option value="">All Districts</option></select>
+            <select class="form-select" id="spendings-year"><option value="">All Years</option><option>2024</option><option>2023</option></select>
+            <select class="form-select" id="spendings-source"><option value="">All Sources</option></select>
           </div>
 
-          <div class="map-stage">
-            <div class="map-stage__frame">
-              <span class="map-stage__corner map-stage__corner--tl" aria-hidden="true"></span>
-              <span class="map-stage__corner map-stage__corner--tr" aria-hidden="true"></span>
-              <span class="map-stage__corner map-stage__corner--bl" aria-hidden="true"></span>
-              <span class="map-stage__corner map-stage__corner--br" aria-hidden="true"></span>
+          <!-- Summary cards -->
+          <div class="summary-cards" id="spendings-summary"></div>
 
-              <div class="map-compass" aria-hidden="true" title="North">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="32" cy="32" r="30" stroke="rgba(196,163,90,0.5)" stroke-width="1"/>
-                  <circle cx="32" cy="32" r="26" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
-                  <path d="M32 8 L36 28 L32 24 L28 28 Z" fill="#c4a35a"/>
-                  <path d="M32 56 L28 36 L32 40 L36 36 Z" fill="rgba(196,163,90,0.35)"/>
-                  <text x="32" y="18" text-anchor="middle" fill="#e8d5a8" font-size="9" font-weight="700">N</text>
-                </svg>
-              </div>
-
-              <div class="map-wrapper">
-                <div id="map-container" class="map-canvas"></div>
-
-                <div class="map-coords-bar" aria-live="polite">
-                  <div class="map-coords-bar__group">
-                    <span class="map-coords-bar__label">Your GPS</span>
-                    <span class="map-coords-bar__value" id="map-gps-coords">Acquiring…</span>
-                    <span class="map-coords-bar__accuracy" id="map-gps-accuracy"></span>
-                  </div>
-                  <div class="map-coords-bar__group">
-                    <span class="map-coords-bar__label">Report pin</span>
-                    <span class="map-coords-bar__value" id="map-pin-coords">—</span>
-                  </div>
-                </div>
-
-                <div id="trip-map-hud" class="trip-map-hud" hidden>
-                  <span class="trip-map-hud-label">Navigating</span>
-                  <strong id="trip-map-hud-pct">0%</strong>
-                </div>
-
-                <div class="glass-card map-audit-panel" id="map-audit-panel">
-                  <div class="map-audit-panel-head">
-                    <span class="badge badge-nh" id="map-panel-road-id">ROAD CODE</span>
-                    <button type="button" class="map-panel-close" id="map-panel-close" aria-label="Close panel">&times;</button>
-                  </div>
-                  <div id="map-panel-body"></div>
-                </div>
-              </div>
-            </div>
-            <p class="map-stage__caption">Authority-verified corridors · Esri · OpenStreetMap · CARTO</p>
-          </div>
-        </section>
-
-        <!-- 5. TRACKER & COMPLAINTS REGISTRY TAB -->
-        <section class="tab-content" id="tracker-tab">
-          <h2 class="section-title">Citizen Grievance & Outbox Tracker</h2>
-          <p class="section-desc">Track status updates of filed complaints in real-time. Offline outbox queues will sync automatically as soon as internet connection is recognized.</p>
-
-          <div class="capture-layout">
-            <!-- Logged complaints outbox list -->
+          <!-- Content grid -->
+          <div class="spendings-content">
+            <!-- Left: Table -->
             <div>
-              <h3 style="margin-bottom:14px;">📁 Filed Complaints Outbox</h3>
-              <div id="complaints-list" style="display: flex; flex-direction: column; gap: 14px;">
-                <!-- Filled dynamically -->
-              </div>
-            </div>
-
-            <!-- Dynamic details tracking -->
-            <div id="tracker-details-panel" style="display: none;">
-              <div class="glass-card highlight-orange" id="active-tracker-container" data-id="">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--glass-border); padding-bottom:12px; margin-bottom:14px;">
-                  <div>
-                    <span class="badge badge-sh" id="details-ref-id">RWAI-000000</span>
-                    <h3 id="details-defect-type" style="margin-top: 6px;">Pothole Defect</h3>
-                    <div id="details-priority-card" style="display:none; margin:8px 0; padding:10px 12px; background:var(--bg-surface); border-radius:var(--border-radius-md); border:1px solid var(--glass-border);"></div>
-                    <p id="details-road" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Tambaram Link</p>
-                    <p id="details-routing" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Routed via grievance escalation stream.</p>
-                    <p id="details-escalation" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Escalation path: Engineer → Superintending Engineer → Chief Engineer</p>
-                  </div>
-                  <button onclick="window.print()" class="btn btn-secondary" style="padding:6px 12px; font-size:12px;">🖨️ Print Audit Sheet</button>
+              <div class="card" style="padding:0;overflow:hidden;">
+                <div style="padding:14px 16px;border-bottom:0.5px solid var(--border);">
+                  <h3 class="card-title">Tender & Budget Transparency</h3>
                 </div>
-
-                <!-- Formal civil grievance notice -->
-                <h4>📄 Formal Civil Grievance Audit Notice</h4>
-                <div class="notice-text-area" id="details-notice"></div>
-
-                <hr class="popup-divider">
-                
-                <!-- Timeline status steps -->
-                <h4>⏳ Grievance Administrative Status Timeline</h4>
-                <div class="timeline-tracker" id="timeline-tracker-box"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 7. ALERTS TAB -->
-        <section class="tab-content" id="alerts-tab">
-          <h2 class="section-title">⚠️ Risk Alerts</h2>
-          <p class="section-desc">Real-time safety alerts generated from registered road accident records, pavement distress indexes, and contractor compliance violations.</p>
-
-          <div class="alert-filters" id="alert-filters">
-            <button type="button" class="alert-filter-pill active" data-filter="all">All</button>
-            <button type="button" class="alert-filter-pill critical" data-filter="critical"><span class="filter-dot dot-critical"></span> Critical</button>
-            <button type="button" class="alert-filter-pill high" data-filter="high"><span class="filter-dot dot-high"></span> High</button>
-            <button type="button" class="alert-filter-pill medium" data-filter="medium"><span class="filter-dot dot-medium"></span> Medium</button>
-          </div>
-
-          <div id="alerts-list" class="alerts-list">
-            <!-- Filled dynamically -->
-          </div>
-
-          <div class="glass-card highlight-teal" style="margin-top: 20px;">
-            <h3 style="margin-bottom: 10px;">📊 Budget Oversight Summary</h3>
-            <div id="alerts-budget-summary">
-              <!-- Filled dynamically -->
-            </div>
-          </div>
-        </section>
-
-        <!-- 6. CHATBOT TAB -->
-        <section class="tab-content" id="chatbot-tab">
-          <h2 class="section-title">YatraGPT - AI Transparency Assistant</h2>
-          <p class="section-desc">Ask natural questions about contract budgets, overruns, contractor integrity standings, or offline-sync operations.</p>
-
-          <div class="glass-card chat-container">
-            <div class="chat-toolbar">
-              <button type="button" class="btn btn-secondary btn-sm" id="chat-clear-btn">Clear chat</button>
-              <span class="chat-char-counter" id="chat-char-counter">0 / 500</span>
-            </div>
-            <div class="chat-history" id="chat-box"></div>
-            
-            <div id="typing-indicator" class="chat-bubble chat-bubble--assistant typing" style="display:none;">
-              <span></span><span></span><span></span>
-            </div>
-
-            <div class="chat-quick-actions">
-              <span class="chat-quick-label">Ask:</span>
-              <button type="button" onclick="window.App.sendBotMessage('What road is nearest to my location?')" class="quick-action-pill">📍 Near me</button>
-              <button type="button" onclick="window.App.sendBotMessage('NH-48 contractor and engineer')" class="quick-action-pill">🛣️ NH-48</button>
-              <button type="button" onclick="window.App.sendBotMessage('Show budget overruns')" class="quick-action-pill">💸 Budget</button>
-              <button type="button" onclick="window.App.sendBotMessage('Worst roads by safety')" class="quick-action-pill">🚨 Risk</button>
-              <button type="button" onclick="window.App.sendBotMessage('How does complaint routing work?')" class="quick-action-pill">📬 Routing</button>
-              <button type="button" onclick="window.App.sendBotMessage('How to report a pothole')" class="quick-action-pill">📝 Report</button>
-              <button type="button" onclick="window.App.sendBotMessage('Help')" class="quick-action-pill">❓ Help</button>
-              <button type="button" onclick="window.App.sendBotMessage('Show all roads with budget overruns')" class="quick-action-pill">💰 Budget overruns</button>
-              <button type="button" onclick="window.App.sendBotMessage('Rank all contractors by performance')" class="quick-action-pill">🏗️ Contractor ranking</button>
-              <button type="button" onclick="window.App.sendBotMessage('Tell me about SH-21 Kannur-Kozhikode road')" class="quick-action-pill">🔍 SH21 Kerala</button>
-              <button type="button" onclick="window.App.sendBotMessage('How do I file a complaint for a road defect?')" class="quick-action-pill">📋 File complaint</button>
-            </div>
-
-            <div class="chat-input-row">
-              <input type="text" id="chat-input" class="form-control" maxlength="500" placeholder="Ask YatraGPT about roads, budgets, or complaints...">
-              <button type="button" onclick="window.App.handleUserChatMessage()" class="btn btn-primary">⚡ Send</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- 8. SCORE TAB -->
-        <section class="tab-content" id="score-tab">
-          <h2 class="section-title">🏆 Safety Scorecard</h2>
-          <p class="section-desc">Comprehensive road safety scoring, contractor leaderboard, and budget health metrics derived from registered infrastructure data.</p>
-
-          <div class="metrics-grid">
-            <div class="glass-card metric-card highlight-teal">
-              <span class="label">Avg Safety Rating</span>
-              <span class="value" id="score-avg-safety">—</span>
-              <span class="trend positive">⭐ Across all corridors</span>
-            </div>
-            <div class="glass-card metric-card">
-              <span class="label">Total Annual Accidents</span>
-              <span class="value" id="score-total-accidents">—</span>
-              <span class="trend warning">🚨 All registered roads</span>
-            </div>
-            <div class="glass-card metric-card highlight-orange">
-              <span class="label">Budget Overruns</span>
-              <span class="value" id="score-overrun-count">—</span>
-              <span class="trend warning">💸 Flagged projects</span>
-            </div>
-            <div class="glass-card metric-card">
-              <span class="label">Best Contractor</span>
-              <span class="value" id="score-best-contractor">—</span>
-              <span class="trend positive">🌟 Highest rated</span>
-            </div>
-          </div>
-
-          <div class="dashboard-grid">
-            <div>
-              <div class="glass-card">
-                <h3 style="margin-bottom: 14px;">🛣️ Road Safety Rankings</h3>
-                <div class="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Rank</th>
-                        <th>Road</th>
-                        <th>Safety Score</th>
-                        <th>Accidents/yr</th>
-                        <th>Fatalities</th>
-                        <th>Potholes/km</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="score-road-rankings">
-                      <!-- Filled dynamically -->
-                    </tbody>
+                <div style="overflow-x:auto;">
+                  <table class="data-table" id="spendings-table">
+                    <thead><tr>
+                      <th data-sort="road_name">Road Name ↕</th>
+                      <th data-sort="date">Tender Date ↕</th>
+                      <th data-sort="allocated">Allocated ↕</th>
+                      <th data-sort="spent">Spent ↕</th>
+                      <th data-sort="balance">Balance ↕</th>
+                      <th>Source</th>
+                      <th data-sort="completion">% Done ↕</th>
+                      <th>Contractor</th>
+                    </tr></thead>
+                    <tbody id="spendings-tbody"></tbody>
                   </table>
                 </div>
               </div>
             </div>
 
+            <!-- Right: Contractor Rankings -->
             <div>
-              <div class="glass-card highlight-orange">
-                <h3 style="margin-bottom: 14px;">🏗️ Contractor Leaderboard</h3>
-                <div id="score-contractor-leaderboard">
-                  <!-- Filled dynamically -->
+              <div class="card">
+                <h3 class="card-title" style="margin-bottom:12px;">Contractor Performance</h3>
+                <div class="contractor-tabs" id="contractor-tabs">
+                  <button class="contractor-tab active" data-tab="best">Best Performing</button>
+                  <button class="contractor-tab" data-tab="worst">Worst Performing</button>
                 </div>
+                <div id="contractor-list"></div>
               </div>
-
-              <div class="glass-card" style="margin-top: 16px;">
-                <h3 style="margin-bottom: 14px;">💰 Budget Health</h3>
-                <div id="score-budget-health">
-                  <!-- Filled dynamically -->
-                </div>
+              <div class="card" style="margin-top:16px;">
+                <h3 class="card-title" style="margin-bottom:12px;">Top 10 by Health Score</h3>
+                <canvas id="contractor-chart" height="220"></canvas>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-      </main>
+      <!-- ──── SCREEN 4: PUBLIC COMPLAINTS ──── -->
+      <section class="screen" id="screen-complaints">
+        <div class="complaints-layout">
+          <!-- Left: List -->
+          <div class="complaints-list-panel">
+            <div style="margin-bottom:12px;">
+              <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;">Public Complaints</h2>
+              <input type="text" class="form-input" id="complaints-search" placeholder="Search by road name...">
+            </div>
+            <div class="complaints-scroll" id="complaints-list"></div>
+          </div>
+
+          <!-- Right: New Complaint Form -->
+          <div class="new-complaint-panel" id="new-complaint-panel">
+            <div class="card complaint-form-card">
+              <h3 class="card-title" style="margin-bottom:14px;">File a New Complaint</h3>
+              <form id="new-complaint-form">
+                <div class="form-group">
+                  <label class="form-label">Road Name</label>
+                  <input type="text" class="form-input" id="nc-road" placeholder="Enter road name" list="road-suggestions">
+                  <datalist id="road-suggestions"></datalist>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-textarea" id="nc-description" rows="3" placeholder="Describe the issue..."></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div class="form-group"><label class="form-label">Latitude</label><input type="text" class="form-input" id="nc-lat" placeholder="—"></div>
+                  <div class="form-group"><label class="form-label">Longitude</label><input type="text" class="form-input" id="nc-lng" placeholder="—"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Location name</label>
+                  <input type="text" class="form-input" id="nc-location" placeholder="e.g. Near Tambaram station">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Photo (optional)</label>
+                  <input type="file" class="form-input" id="nc-photo" accept="image/*">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div class="form-group"><label class="form-label">Your Name</label><input type="text" class="form-input" id="nc-name" placeholder="Name"></div>
+                  <div class="form-group"><label class="form-label">Aadhaar</label><input type="text" class="form-input" id="nc-aadhaar" placeholder="XXXX-XXXX-XXXX"></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:4px;">Submit Complaint</button>
+              </form>
+              <div class="auto-route-notice" style="margin-top:12px;">
+                <span>ℹ️</span>
+                <span>Your complaint will be auto-routed to the responsible Executive Engineer or authority.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="complaint-fab" id="complaint-fab">+</button>
+      </section>
+
+      <!-- ──── SCREEN 5: AI CHAT BOT ──── -->
+      <section class="screen" id="screen-chatbot">
+        <div class="chat-container" id="chat-container">
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
+          <div class="chat-prompt-chips" id="chat-chips">
+            <button class="chat-chip" data-prompt="What is the condition of roads in my district?">🛣️ Road conditions in my district</button>
+            <button class="chat-chip" data-prompt="Which contractor has the most complaints?">🏗️ Most complained contractor</button>
+            <button class="chat-chip" data-prompt="Show me overspent projects">💸 Overspent projects</button>
+            <button class="chat-chip" data-prompt="How do I file a complaint?">📝 How to file complaint</button>
+          </div>
+          <div class="chat-input-bar">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything about roads, budgets, contractors..." maxlength="500">
+            <button class="chat-send-btn" id="chat-send-btn" title="Send">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+            <button class="chat-voice-btn" id="chat-voice-btn" title="Voice input">🎤</button>
+          </div>
+        </div>
+      </section>
+
     </div>
 
-    <nav class="mobile-nav" aria-label="Mobile navigation">
-      
-      <div class="mobile-nav-link" data-tab="capture">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-        <span>AI Vision</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="transparency">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-        <span>Tenders</span>
-      </div>
-      <div class="mobile-nav-link active" data-tab="map">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    <!-- ═══ MOBILE BOTTOM NAV ═══ -->
+    <nav class="mobile-nav" id="mobile-nav">
+      <button class="mobile-nav-item active" data-screen="map">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span>Map</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="alerts">
-        <div style="font-size:18px;">⚠️</div>
-        <span>Alerts</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="tracker">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        <span>Outbox</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="chatbot">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        <span>YatraGPT</span>
-      </div>
-      <div class="mobile-nav-link" data-tab="score">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-        <span>Score</span>
-      </div>
+      </button>
+      <button class="mobile-nav-item" data-screen="ai-detect">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>AI Detect</span>
+      </button>
+      <button class="mobile-nav-item" data-screen="spendings">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <span>Spendings</span>
+      </button>
+      <button class="mobile-nav-item" data-screen="complaints">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Complaints</span>
+      </button>
+      <button class="mobile-nav-item" data-screen="chatbot">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M8 21v-2M16 21v-2"/></svg>
+        <span>AI Chat</span>
+      </button>
     </nav>
 
-    <footer class="data-attribution-footer" style="padding:12px 16px 80px; font-size:10px; color:var(--text-muted); text-align:center; line-height:1.5; border-top:1px solid var(--glass-border);">
-      Data sourced from: NHAI Annual Report 2023-24 · MoRTH Annual Report 2023-24 · Union Budget 2024-25 · CAG Report No.14/2023 · MoRTH Road Accidents in India 2023 · PMGSY OMMS. AI defect model trained on RDD2022/CRDDC2022 (Osaka University / SEKILAB).
-    </footer>
+    <div class="mobile-sheet-backdrop" id="mobile-sheet-backdrop"></div>
+    <nav class="mobile-sheet" id="mobile-sheet" aria-label="Mobile navigation">
+      <div class="mobile-sheet-handle"></div>
+      <button class="mobile-sheet-item active" data-screen="map">Map</button>
+      <button class="mobile-sheet-item" data-screen="ai-detect">AI Detect</button>
+      <button class="mobile-sheet-item" data-screen="spendings">Spendings</button>
+      <button class="mobile-sheet-item" data-screen="complaints">Public Complaints</button>
+      <button class="mobile-sheet-item" data-screen="chatbot">AI Chat Bot</button>
+    </nav>
+
   </div>
 
-  <!-- PWA Service Worker -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("./sw.js", { scope: "./" })
-          .then((reg) => console.log("YatraRaksha PWA registered:", reg.scope))
-          .catch((err) => console.error("Service Worker failed:", err));
-      });
-    }
-  </script>
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
 
-  <!-- Load script modules -->
-  <!-- Core Infrastructure -->
+  <!-- Scripts -->
+  <script src="js/mock-data.js"></script>
   <script src="js/config-env.js"></script>
-  <script src="js/database.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/real-data.js"></script>
-  <script src="js/storage-optimizer.js"></script>
-  
-  <!-- Session & API -->
-  <script src="js/auth-module.js"></script>
-  <script src="js/api-service.js"></script>
-  
-  <!-- Image & Media Processing -->
-  <script src="js/image-compressor.js"></script>
-  
-  <!-- PWA & Notifications -->
-  <script src="js/pwa-install.js"></script>
-  <script src="js/push-notifications.js"></script>
-  
-  <!-- AI & Tracking -->
-  <script src="js/ai-engine.js"></script>
-  <script src="js/location-service.js"></script>
-  <script src="js/chatbot-responses.js"></script>
-  <script src="js/transparency-panel.js"></script>
-  <script src="js/contractor-hub.js"></script>
-  <script src="js/budget-dashboard.js"></script>
-  <script src="js/route-planner.js"></script>
-  <script src="js/trip-tracker.js"></script>
-  <script src="js/map-hub.js"></script>
-  <script src="js/tracker.js"></script>
-
-  <script src="js/vendor/chart.umd.min.js"></script>
-  <!-- Main Application -->
   <script src="js/app.js"></script>
-<div id="public-timeline-modal" style="display:none; position:fixed; inset:0; z-index:9990; background:rgba(6,10,18,0.92); overflow-y:auto; padding:24px 16px;">
-  <div style="max-width:520px; margin:0 auto; background:var(--bg-surface-opaque); border:1px solid var(--glass-border); border-radius:var(--border-radius-lg); padding:24px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <h3 style="font-family:var(--font-heading); color:var(--text-white);">📋 Complaint Timeline</h3>
-      <button onclick="document.getElementById('public-timeline-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">×</button>
-    </div>
-    <div id="public-timeline-content"></div>
-  </div>
-</div>
 
-<!-- Floating AI Chatbot Button -->
-<button id="floating-chatbot-btn" class="floating-chatbot-btn" onclick="window.App.switchTab('chatbot')" aria-label="Open AI Chatbot">
-  🤖 AI Chat
-</button>
 </body>
-
 </html>

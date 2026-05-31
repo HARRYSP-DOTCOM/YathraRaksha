@@ -37,18 +37,22 @@ async def chat_endpoint(body: ChatRequest):
             detail="groq SDK not installed. Run: pip install groq",
         ) from exc
 
-    history = [
-        {"role": m.role, "content": m.content}
-        for m in body.messages[-20:]
-        if m.role in ("user", "assistant") and m.content.strip()
-    ]
+    # Check if client sent a system prompt (first message)
+    client_system = None
+    user_msgs = []
+    for m in body.messages[-20:]:
+        if m.role == "system" and m.content.strip():
+            client_system = m.content.strip()
+        elif m.role in ("user", "assistant") and m.content.strip():
+            user_msgs.append({"role": m.role, "content": m.content})
 
-    all_messages = [{"role": "system", "content": YATRAGPT_SYSTEM_PROMPT.strip()}] + history
+    system_prompt = client_system or YATRAGPT_SYSTEM_PROMPT.strip()
+    all_messages = [{"role": "system", "content": system_prompt}] + user_msgs
 
     try:
         client = Groq(api_key=settings.groq_api_key)
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=settings.groq_model,
             messages=all_messages,
             max_tokens=1024,
             temperature=0.4,

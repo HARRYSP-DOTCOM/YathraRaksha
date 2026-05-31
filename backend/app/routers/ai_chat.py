@@ -21,6 +21,7 @@ FALLBACK_MODEL = "llama-3.3-70b-versatile"
 class ChatRequest(BaseModel):
     messages: list[dict] = Field(default_factory=list)
     context: str = ""
+    language: str = "en"
 
 
 class ChatResponse(BaseModel):
@@ -29,11 +30,12 @@ class ChatResponse(BaseModel):
     usage: dict | None = None
 
 
-def _system_content(context: str) -> str:
+def _system_content(context: str, language: str) -> str:
     base = YATRAGPT_SYSTEM_PROMPT.strip()
+    lang_instruction = f"\n\nIMPORTANT: The user has selected language code '{language}'. You must respond in this language."
     if context:
-        return base.replace("[DYNAMIC_DATA_CONTEXT]", context)
-    return base.replace("[DYNAMIC_DATA_CONTEXT]", "(No live context provided)")
+        return base.replace("[DYNAMIC_DATA_CONTEXT]", context) + lang_instruction
+    return base.replace("[DYNAMIC_DATA_CONTEXT]", "(No live context provided)") + lang_instruction
 
 
 def _prepare_messages(req: ChatRequest) -> list[dict]:
@@ -41,7 +43,40 @@ def _prepare_messages(req: ChatRequest) -> list[dict]:
         m for m in req.messages[-10:]
         if m.get("role") in ("user", "assistant") and m.get("content")
     ]
-    return [{"role": "system", "content": _system_content(req.context)}] + history
+    return [{"role": "system", "content": _system_content(req.context, req.language)}] + history
+
+
+async def _claude_json(messages: list[dict], model: str) -> dict:
+    if not settings.anthropic_api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    
+    system_prompt = ""
+    claude_msgs = []
+    for m in messages:
+        if m["role"] == "system":
+            system_prompt = m["content"]
+        else:
+            claude_msgs.append(m)
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": settings.anthropic_api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": model,
+                "system": system_prompt,
+                "messages": claude_msgs,
+                "max_tokens": 1024,
+                "temperature": 0.7,
+            },
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=resp.text[:500])
+        return resp.json()
 
 
 async def _groq_json(messages: list[dict], model: str) -> dict:
@@ -69,10 +104,23 @@ async def _groq_json(messages: list[dict], model: str) -> dict:
 @router.post("", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     messages = _prepare_messages(req)
+    
+    if settings.anthropic_api_key:
+        try:
+            data = await _claude_json(messages, settings.anthropic_model)
+            reply = data.get("content", [{}])[0].get("text", "")
+            return ChatResponse(
+                reply=reply or "I could not generate a response.",
+                model=settings.anthropic_model,
+                usage=data.get("usage"),
+            )
+        except Exception as exc:
+            print(f"Claude chat failed: {exc}")
+
     try:
         data = await _groq_json(messages, PRIMARY_MODEL)
         model_used = PRIMARY_MODEL
-    except HTTPException:
+    except Exception:
         data = await _groq_json(messages, FALLBACK_MODEL)
         model_used = FALLBACK_MODEL
 

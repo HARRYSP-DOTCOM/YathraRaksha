@@ -164,6 +164,9 @@ frontend_dir = Path(__file__).resolve().parent.parent
 
 @app.get("/")
 def root():
+    index_file = frontend_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
     return {
         "service": settings.app_name,
         "docs": "/docs",
