@@ -99,7 +99,7 @@ const MapHub = {
       hybrid: hybridGroup,
     };
 
-    hybridGroup.addTo(this.map);
+    streetsLayer.addTo(this.map);
 
     this.layerControl = L.control
       .layers(
