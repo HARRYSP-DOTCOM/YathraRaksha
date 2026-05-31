@@ -1,13 +1,12 @@
-import json
 import base64
+import json
 import re
+from typing import Any
 
 from fastapi import APIRouter, File, Form, UploadFile
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.config import settings
-from app.seed_data import find_nearest_road
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -39,152 +38,196 @@ async def analyze_media(
     lat: float | None = Form(None),
     lng: float | None = Form(None),
 ):
-    """Legacy endpoint — accepts multipart file upload."""
+    """Legacy endpoint: accepts multipart file upload."""
     image_bytes = await file.read()
-    # Delegate to the Groq-based analysis
     b64 = base64.b64encode(image_bytes).decode("utf-8")
-    return _analyze_with_claude_or_groq(b64, lat or 20.5937, lng or 78.9629, "Uploaded location")
+    return _analyze_with_vision_ai(
+        b64, lat or 20.5937, lng or 78.9629, "Uploaded location"
+    )
 
 
 @router.post("/analyze-road")
 async def analyze_road(body: RoadAnalysisRequest):
-    """New endpoint — accepts base64 image via JSON body, analyzes with Groq LLM."""
-    return _analyze_with_claude_or_groq(
+    """Accepts a base64 image via JSON body and analyzes it with vision AI."""
+    return _analyze_with_vision_ai(
         body.image_base64, body.lat, body.lng, body.location_name
     )
 
 
-def _analyze_with_claude_or_groq(
+def _analyze_with_vision_ai(
     image_base64: str, lat: float, lng: float, location_name: str
 ) -> dict:
-    """Analyze road image using Claude Vision, fallback to Groq, then fallback to mock."""
+    """Analyze a road image using Gemini Vision (primary) or fallback."""
     image_base64_clean = _strip_data_url(image_base64)
+    media_type = _image_media_type(image_base64)
+    
     system_prompt = (
-        "You are a road damage detection AI. Analyze the provided road image "
+        "You are a road damage detection AI expert. Analyze the provided road image "
         "and return ONLY valid JSON (no markdown, no code fences): "
         '{ "detected_damages": string[], "severity_score": number (0-10), '
         '"ai_complaint_text": string }. '
-        "detected_damages must only include items from: "
+        "detected_damages must only include items from this specific list: "
         "[Pothole, Alligator Cracking, Longitudinal Crack, Transverse Crack, "
         "Rutting, Good Condition]. "
-        "Generate complaint text in formal English addressed to the relevant "
-        "Public Works Department, referencing the location: "
-        f"{location_name} ({lat}, {lng})."
+        "If multiple issues are present, list them all. "
+        "If the image is not a road scene or no defects are found, use detected_damages=['Good Condition'] and severity_score=0. "
+        "Generate a formal complaint text in English addressed to the Public Works Department, "
+        f"referencing the location: {location_name} ({lat}, {lng})."
     )
     user_prompt = (
-        f"Analyze this road image captured at {location_name} "
-        f"({lat}, {lng}). Classify only visible road-surface damage, estimate "
-        "severity, and generate the formal complaint text. Return ONLY valid JSON."
+        f"Analyze this road image from {location_name} ({lat}, {lng}). "
+        "Identify defects: Pothole, Alligator Cracking, Longitudinal Crack, Transverse Crack, Rutting, or Good Condition. "
+        "Return ONLY JSON."
     )
 
-    # 1. Attempt Claude Vision (Anthropic API)
-    if settings.anthropic_api_key:
+    if settings.gemini_api_key:
         try:
-            import anthropic
-            client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-            
-            # Use Sonnet as requested by user
-            message = client.messages.create(
-                model=settings.anthropic_model,
-                max_tokens=1024,
-                system=system_prompt,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": "image/jpeg",
-                                    "data": image_base64_clean,
-                                },
-                            },
-                            {
-                                "type": "text",
-                                "text": user_prompt
-                            }
-                        ],
-                    }
-                ],
+            return _analyze_with_gemini(
+                image_base64_clean,
+                media_type,
+                system_prompt,
+                user_prompt,
+                lat,
+                lng,
+                location_name,
             )
-            
-            reply = message.content[0].text
-            return _parse_llm_json(reply, lat, lng, location_name)
         except Exception as exc:
-            print(f"Claude API failed: {exc}, falling back to Groq...")
+            print(f"Gemini API failed: {exc}")
 
-    # 2. Attempt Groq Fallback
-    if settings.groq_api_key:
-        try:
-            from groq import Groq
-            client = Groq(api_key=settings.groq_api_key)
-            
-            completion = client.chat.completions.create(
-                model=settings.groq_vision_model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": user_prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_base64_clean}",
-                                },
-                            },
-                        ],
-                    },
-                ],
-                max_completion_tokens=512,
-                temperature=0.3,
-                response_format={"type": "json_object"},
-            )
-
-            reply = completion.choices[0].message.content or ""
-            return _parse_llm_json(reply, lat, lng, location_name)
-        except Exception as exc:
-            print(f"Groq API failed: {exc}, falling back to mock...")
-
-    # 3. Fallback mock response
+    # Fallback to Mock if Gemini fails or is not configured
     return {
         "success": True,
         "detected_damages": ["Pothole", "Alligator Cracking"],
+        "selected_road_problems": ["Pothole", "Alligator Cracking"],
+        "problem_options": _problem_options(["Pothole", "Alligator Cracking"]),
         "severity_score": 6,
         "ai_complaint_text": _mock_complaint(location_name),
         "coordinates": [lat, lng],
         "location_name": location_name,
+        "provider": "mock",
     }
 
 
-def _parse_llm_json(reply: str, lat: float, lng: float, location_name: str) -> dict:
+def _analyze_with_gemini(
+    image_base64: str,
+    media_type: str,
+    system_prompt: str,
+    user_prompt: str,
+    lat: float,
+    lng: float,
+    location_name: str,
+) -> dict:
+    import google.generativeai as genai
+
+    genai.configure(api_key=settings.gemini_api_key)
+    model = genai.GenerativeModel(
+        model_name=settings.gemini_model,
+        system_instruction=system_prompt
+    )
+
+    image_data = base64.b64decode(image_base64)
+    
+    response = model.generate_content(
+        contents=[
+            {
+                "role": "user",
+                "parts": [
+                    {"text": user_prompt},
+                    {"mime_type": media_type, "data": image_data}
+                ]
+            }
+        ],
+        generation_config=genai.types.GenerationConfig(
+            temperature=0.1,
+            response_mime_type="application/json",
+        )
+    )
+
+    return _parse_llm_json(response.text, lat, lng, location_name, provider="gemini")
+
+
+def _parse_llm_json(
+    reply: str, lat: float, lng: float, location_name: str, provider: str
+) -> dict:
     cleaned = reply.strip()
     if cleaned.startswith("```"):
         cleaned = cleaned.split("\n", 1)[-1]
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3]
         cleaned = cleaned.strip()
+    if not cleaned.startswith("{"):
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(0)
 
     try:
         result = json.loads(cleaned)
-        return {
-            "success": True,
-            "detected_damages": result.get("detected_damages", []),
-            "severity_score": result.get("severity_score", 5),
-            "ai_complaint_text": result.get("ai_complaint_text", ""),
-            "coordinates": [lat, lng],
-            "location_name": location_name,
-        }
+        damages = _normalize_damages(result.get("detected_damages", []))
+        severity = _normalize_severity(result.get("severity_score", 5))
+        complaint_text = result.get("ai_complaint_text", "")
     except json.JSONDecodeError:
-        return {
-            "success": True,
-            "detected_damages": ["Pothole"],
-            "severity_score": 5,
-            "ai_complaint_text": reply if reply else _mock_complaint(location_name),
-            "coordinates": [lat, lng],
-            "location_name": location_name,
-        }
+        damages = ["Pothole"]
+        severity = 5
+        complaint_text = reply if reply else _mock_complaint(location_name)
+
+    return {
+        "success": True,
+        "detected_damages": damages,
+        "selected_road_problems": damages,
+        "problem_options": _problem_options(damages),
+        "severity_score": severity,
+        "ai_complaint_text": complaint_text,
+        "coordinates": [lat, lng],
+        "location_name": location_name,
+        "provider": provider,
+    }
+
+
+def _normalize_damages(value: Any) -> list[str]:
+    allowed = {
+        "pothole": "Pothole",
+        "alligator cracking": "Alligator Cracking",
+        "fatigue cracking": "Alligator Cracking",
+        "longitudinal crack": "Longitudinal Crack",
+        "transverse crack": "Transverse Crack",
+        "rutting": "Rutting",
+        "good condition": "Good Condition",
+        "no defect": "Good Condition",
+    }
+    if isinstance(value, str):
+        raw_items = [value]
+    elif isinstance(value, list):
+        raw_items = value
+    else:
+        raw_items = []
+
+    normalized: list[str] = []
+    for item in raw_items:
+        key = str(item).strip().lower().replace("_", " ")
+        label = allowed.get(key)
+        if label and label not in normalized:
+            normalized.append(label)
+    return normalized
+
+
+def _normalize_severity(value: Any) -> int:
+    try:
+        return max(0, min(10, round(float(value))))
+    except (TypeError, ValueError):
+        return 5
+
+
+def _problem_options(selected: list[str]) -> list[dict[str, Any]]:
+    labels = [
+        "Pothole",
+        "Alligator Cracking",
+        "Longitudinal Crack",
+        "Transverse Crack",
+        "Rutting",
+        "Good Condition",
+    ]
+    selected_set = set(selected)
+    return [{"label": label, "selected": label in selected_set} for label in labels]
 
 
 def _mock_complaint(location_name: str) -> str:
@@ -202,3 +245,8 @@ def _mock_complaint(location_name: str) -> str:
 
 def _strip_data_url(image_base64: str) -> str:
     return re.sub(r"^data:image/[^;]+;base64,", "", image_base64.strip())
+
+
+def _image_media_type(image_base64: str) -> str:
+    match = re.match(r"^data:(image/[^;]+);base64,", image_base64.strip())
+    return match.group(1) if match else "image/jpeg"

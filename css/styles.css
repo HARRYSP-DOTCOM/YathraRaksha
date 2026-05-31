@@ -75,7 +75,7 @@
 html { height: 100%; -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: var(--font);
+  font-family: var(--font), "Noto Sans Devanagari", "Noto Sans Malayalam", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Kannada", "Noto Sans Bengali", system-ui, sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
@@ -171,11 +171,17 @@ body {
   border-radius: var(--radius-xs);
   background: var(--bg-secondary);
   color: var(--text);
-  font-family: var(--font);
+  font-family: var(--font), "Noto Sans Devanagari", "Noto Sans Malayalam", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Kannada", "Noto Sans Bengali", system-ui, sans-serif;
   font-size: 13px;
   cursor: pointer;
   outline: none;
   transition: var(--transition);
+  z-index: 102;
+  position: relative;
+  min-width: 118px;
+  max-width: 140px;
+  -webkit-appearance: menulist;
+  appearance: menulist;
 }
 
 .lang-select:hover { border-color: var(--primary); }

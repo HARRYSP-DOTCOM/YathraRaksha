@@ -17,6 +17,7 @@ const App = {
 
   // ─── Init ─────────────────────────────────────────────
   init() {
+    window.I18n?.init?.((lang) => this.onLanguageChange(lang));
     this.initNav();
     this.initTheme();
     this.initMap();
@@ -25,6 +26,29 @@ const App = {
     this.initComplaints();
     this.initChatbot();
     console.log('✅ Yathra Raksha v3 ready');
+  },
+
+  onLanguageChange(_lang) {
+    if (this.selectedRoad) this.showRoadInfo(this.selectedRoad);
+    this.renderSpendingsSummary();
+    this.renderSpendingsTable();
+    const activeTab = document.querySelector('.contractor-tab.active')?.dataset.tab || 'best';
+    this.renderContractorRankings(activeTab);
+    this.renderComplaintsList();
+    if (this.aiAnalysisResult) this.renderAIResults(this.aiAnalysisResult);
+    this._refreshFilterLabels();
+    this._setChatWelcome();
+  },
+
+  _refreshFilterLabels() {
+    const district = document.getElementById('spendings-district');
+    if (district?.options[0]) district.options[0].textContent = window.t('filter_all_districts');
+    const state = document.getElementById('spendings-state');
+    if (state?.options[0]) state.options[0].textContent = window.t('filter_all_states');
+    const year = document.getElementById('spendings-year');
+    if (year?.options[0]) year.options[0].textContent = window.t('filter_all_years');
+    const source = document.getElementById('spendings-source');
+    if (source?.options[0]) source.options[0].textContent = window.t('filter_all_sources');
   },
 
   // ─── Toast ────────────────────────────────────────────
@@ -237,15 +261,15 @@ const App = {
     if (found) {
       this.map.setView(found.coordinates[0], 8, { animate: true });
       this.showRoadInfo(found);
-      this.showToast(`📍 Found: ${found.name}`);
+      this.showToast(`${window.t('toast_found')} ${found.name}`);
     } else {
-      this.showToast('No road found matching your search');
+      this.showToast(window.t('toast_no_road'));
     }
   },
 
   locateUser() {
     if (!navigator.geolocation) {
-      this.showToast('Geolocation not supported by your browser');
+      this.showToast(window.t('toast_geo_unsupported'));
       return;
     }
 
@@ -273,10 +297,10 @@ const App = {
           text.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         }
 
-        this.showToast(`📍 Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+        this.showToast(`${window.t('toast_location')} ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
       },
       err => {
-        this.showToast('Could not get your location. Check permissions.');
+        this.showToast(window.t('toast_geo_fail'));
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -290,7 +314,8 @@ const App = {
     const tender = data.getTenderByRoad(road.id);
     const budgetPct = road.budget_allocated > 0 ? Math.round((road.budget_spent / road.budget_allocated) * 100) : 0;
     const condClass = road.condition.toLowerCase();
-    const typeLabel = { NH: 'National Highway', SH: 'State Highway', MDR: 'Major District Road', EXP: 'Expressway' }[road.type] || road.type;
+    const typeLabel = window.I18n.translateRoadType(road.type);
+    const condLabel = window.I18n.translateCondition(road.condition);
 
     // Score ring color
     const scoreColor = road.ai_damage_score > 60 ? '#E24B4A' : road.ai_damage_score > 35 ? '#EF9F27' : '#639922';
@@ -302,42 +327,42 @@ const App = {
         <h2 class="panel-road-name">${road.name}</h2>
         <div class="panel-badges">
           <span class="badge badge-${road.type.toLowerCase()}">${typeLabel}</span>
-          <span class="badge badge-${condClass}">${road.condition}</span>
+          <span class="badge badge-${condClass}">${condLabel}</span>
         </div>
       </div>
 
       <div class="panel-details">
         <div class="detail-grid">
           <div class="detail-item">
-            <span class="detail-item-label">Length</span>
+            <span class="detail-item-label">${window.t('panel_length')}</span>
             <span class="detail-item-value">${road.length_km} km</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Construction Date</span>
+            <span class="detail-item-label">${window.t('panel_construction')}</span>
             <span class="detail-item-value">${road.construction_date}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Last Relaying</span>
+            <span class="detail-item-label">${window.t('panel_relaying')}</span>
             <span class="detail-item-value">${road.last_relay_date}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Road Age</span>
+            <span class="detail-item-label">${window.t('panel_age')}</span>
             <span class="detail-item-value">${data.getRoadAge(road.construction_date)}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Contractor</span>
+            <span class="detail-item-label">${window.t('panel_contractor')}</span>
             <span class="detail-item-value">${contractor?.name || '—'}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Executive Engineer</span>
+            <span class="detail-item-label">${window.t('panel_engineer')}</span>
             <span class="detail-item-value">${road.engineer_name}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Department</span>
+            <span class="detail-item-label">${window.t('panel_department')}</span>
             <span class="detail-item-value">${road.department}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">AI Damage Score</span>
+            <span class="detail-item-label">${window.t('panel_ai_score')}</span>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="score-ring">
                 <svg viewBox="0 0 44 44">
@@ -349,25 +374,25 @@ const App = {
             </div>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Complaints</span>
+            <span class="detail-item-label">${window.t('panel_complaints')}</span>
             <span class="detail-item-value">${road.complaint_count}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Next Maintenance</span>
+            <span class="detail-item-label">${window.t('panel_maintenance')}</span>
             <span class="detail-item-value">${road.next_maintenance}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Budget Allocated</span>
+            <span class="detail-item-label">${window.t('panel_budget_alloc')}</span>
             <span class="detail-item-value">${data.formatINR(road.budget_allocated)}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">Budget Used</span>
+            <span class="detail-item-label">${window.t('panel_budget_used')}</span>
             <span class="detail-item-value" style="color:${budgetPct > 100 ? 'var(--danger)' : 'var(--text)'}">${budgetPct}%</span>
           </div>
         </div>
 
         <!-- Repair History -->
-        <h3 style="font-size:14px;font-weight:600;margin:20px 0 10px;">Repair History</h3>
+        <h3 style="font-size:14px;font-weight:600;margin:20px 0 10px;">${window.t('panel_repair_history')}</h3>
         <div class="repair-timeline">
           ${road.repair_history.map(r => `
             <div class="repair-entry">
@@ -381,15 +406,15 @@ const App = {
 
       <!-- Actions -->
       <div class="panel-actions">
-        <button class="btn btn-primary btn-sm" onclick="App.reportIssueFromMap()">🚨 Report an Issue</button>
-        <button class="btn btn-secondary btn-sm" onclick="App.viewNearbyComplaints()">📋 View Complaints</button>
+        <button class="btn btn-primary btn-sm" onclick="App.reportIssueFromMap()">${window.t('panel_report')}</button>
+        <button class="btn btn-secondary btn-sm" onclick="App.viewNearbyComplaints()">${window.t('panel_view_complaints')}</button>
       </div>
 
       <!-- Budget bar -->
       <div class="panel-budget-bar">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;">
-          <span>Budget: ${data.formatINR(road.budget_allocated)}</span>
-          <span style="color:${budgetPct > 100 ? 'var(--danger)' : 'var(--primary)'}">${budgetPct}% used</span>
+          <span>${window.t('panel_budget')}: ${data.formatINR(road.budget_allocated)}</span>
+          <span style="color:${budgetPct > 100 ? 'var(--danger)' : 'var(--primary)'}">${budgetPct}% ${window.t('panel_used_pct')}</span>
         </div>
         <div class="progress ${budgetPct > 100 ? 'progress-red' : budgetPct > 90 ? 'progress-amber' : 'progress-green'}">
           <div class="progress-fill" style="width:${Math.min(budgetPct, 100)}%"></div>
@@ -463,8 +488,8 @@ const App = {
           this.reverseGeocode(lat, lng).then(place => {
             if (place) document.getElementById('ai-location-name').value = place;
           });
-          this.showToast('📍 Location captured');
-        }, () => this.showToast('Could not get location'));
+          this.showToast(window.t('toast_location_captured'));
+        }, () => this.showToast(window.t('toast_geo_fail')));
       }
     });
 
@@ -588,9 +613,10 @@ const App = {
     const checklist = document.getElementById('ai-checklist');
     checklist.innerHTML = allDamageTypes.map(type => {
       const found = detected.includes(type);
+      const label = window.I18n.translateDamage(type);
       return `<div class="detection-item ${found ? 'detected' : 'not-detected'}">
         <span>${found ? '✅' : '❌'}</span>
-        <span>${type}</span>
+        <span>${label}</span>
       </div>`;
     }).join('');
 
@@ -653,7 +679,7 @@ const App = {
   submitComplaintFromModal() {
     const name = document.getElementById('modal-name').value.trim();
     const aadhaar = document.getElementById('modal-aadhaar').value.trim();
-    if (!name) { this.showToast('Please enter your name'); return; }
+    if (!name) { this.showToast(window.t('toast_enter_name')); return; }
 
     const refId = 'YR-2026-' + String(Math.floor(Math.random() * 99999)).padStart(5, '0');
 
@@ -679,7 +705,7 @@ const App = {
     window.MOCK_DATA.complaints.unshift(newComplaint);
 
     document.getElementById('complaint-modal').classList.remove('open');
-    this.showToast(`✅ Complaint submitted! Reference: ${refId}`);
+    this.showToast(`${window.t('toast_complaint_submitted')} ${refId}`);
     this.resetAIDetect();
     this.renderComplaintsList();
   },
@@ -758,10 +784,10 @@ const App = {
     const fmt = window.MOCK_DATA.formatINR;
 
     document.getElementById('spendings-summary').innerHTML = `
-      <div class="card summary-card"><div class="summary-card-label">Total Allocated</div><div class="summary-card-value primary">${fmt(stats.totalAllocated)}</div></div>
-      <div class="card summary-card"><div class="summary-card-label">Funds Released</div><div class="summary-card-value">${fmt(stats.totalReleased)}</div></div>
-      <div class="card summary-card"><div class="summary-card-label">Amount Spent</div><div class="summary-card-value amber">${fmt(stats.totalSpent)}</div></div>
-      <div class="card summary-card"><div class="summary-card-label">Remaining Balance</div><div class="summary-card-value ${stats.totalBalance < 0 ? 'red' : 'green'}">${fmt(Math.abs(stats.totalBalance))}${stats.totalBalance < 0 ? ' (deficit)' : ''}</div></div>
+      <div class="card summary-card"><div class="summary-card-label">${window.t('summary_allocated')}</div><div class="summary-card-value primary">${fmt(stats.totalAllocated)}</div></div>
+      <div class="card summary-card"><div class="summary-card-label">${window.t('summary_released')}</div><div class="summary-card-value">${fmt(stats.totalReleased)}</div></div>
+      <div class="card summary-card"><div class="summary-card-label">${window.t('summary_spent')}</div><div class="summary-card-value amber">${fmt(stats.totalSpent)}</div></div>
+      <div class="card summary-card"><div class="summary-card-label">${window.t('summary_remaining')}</div><div class="summary-card-value ${stats.totalBalance < 0 ? 'red' : 'green'}">${fmt(Math.abs(stats.totalBalance))}${stats.totalBalance < 0 ? ' (deficit)' : ''}</div></div>
     `;
   },
 
@@ -1060,7 +1086,7 @@ const App = {
       upvote_count: 0,
     });
 
-    this.showToast(`✅ Complaint filed! Reference: ${refId}`);
+    this.showToast(`${window.t('toast_complaint_filed')} ${refId}`);
     document.getElementById('new-complaint-form').reset();
     document.getElementById('new-complaint-panel').classList.remove('mobile-open');
     this.renderComplaintsList();
@@ -1088,7 +1114,16 @@ const App = {
     document.getElementById('chat-voice-btn')?.addEventListener('click', () => this.startVoiceInput());
 
     // Welcome message
-    this.appendChatMessage('assistant', '👋 Hi! I\'m the Yathra Raksha AI Assistant. Ask me about road conditions, contractor performance, budget utilization, tender details, complaint status, or maintenance schedules. I can respond in your selected language.');
+    this._setChatWelcome();
+  },
+
+  _setChatWelcome() {
+    const messages = document.getElementById('chat-messages');
+    if (!messages) return;
+    if (this.chatHistory.length === 0) {
+      messages.innerHTML = '';
+      this.appendChatMessage('assistant', window.t('chat_welcome'));
+    }
   },
 
   appendChatMessage(role, text) {
@@ -1119,7 +1154,7 @@ const App = {
     try {
       // Build context from mock data
       const context = this.buildChatContext();
-      const lang = document.getElementById('lang-select')?.value || 'en';
+      const lang = window.I18n?.getLang?.() || 'en';
 
       const response = await fetch(`${this.apiBase()}/ai/chat`, {
         method: 'POST',
@@ -1154,7 +1189,7 @@ const App = {
     const data = window.MOCK_DATA;
     const roads = data.roads.map(r => `${r.name} (${r.type}): ${r.condition}, ${r.length_km}km, ${r.state}, contractor: ${data.getContractorById(r.contractor_id)?.name}, damage: ${r.ai_damage_score}/100, complaints: ${r.complaint_count}, budget: ${data.formatINR(r.budget_allocated)}, spent: ${data.formatINR(r.budget_spent)}`).join('\n');
     const contractors = data.contractors.map(c => `${c.name}: health ${c.avg_health_score}/100, projects ${c.projects_completed}, complaints ${c.complaints_count}, efficiency ${c.budget_efficiency}%, completion ${c.completion_rate}%`).join('\n');
-    const lang = document.getElementById('lang-select')?.value || 'en';
+    const langName = window.I18n?.getLangName?.() || 'English';
 
     return `You are Yathra Raksha AI — an expert assistant on Indian road infrastructure, budget transparency, and public accountability. You have access to the following data:
 
@@ -1168,7 +1203,7 @@ TOTAL TENDERS: ${data.tenders.length} | TOTAL COMPLAINTS: ${data.complaints.leng
 ANOMALIES: ${data.tenders.filter(t => t.anomaly_flag).length} flagged projects
 OVERSPENT: ${data.tenders.filter(t => t.balance < 0).length} projects over budget
 
-Respond in ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : lang === 'ml' ? 'Malayalam' : lang === 'ta' ? 'Tamil' : 'Telugu'}. Be concise, factual, and helpful. Use specific numbers from the data. Format important points with **bold**.`;
+Respond in ${langName}. Be concise, factual, and helpful. Use specific numbers from the data. Format important points with **bold**.`;
   },
 
   localChatResponse(query) {
@@ -1200,23 +1235,23 @@ Respond in ${lang === 'en' ? 'English' : lang === 'hi' ? 'Hindi' : lang === 'ml'
 
   startVoiceInput() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      this.showToast('Voice input not supported in this browser');
+      this.showToast(window.t('toast_voice_unsupported'));
       return;
     }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = document.getElementById('lang-select')?.value === 'hi' ? 'hi-IN' : 'en-IN';
+    recognition.lang = window.I18n?.getSpeechLang?.() || 'en-IN';
     recognition.interimResults = false;
 
     recognition.onresult = (e) => {
       const text = e.results[0][0].transcript;
       document.getElementById('chat-input').value = text;
-      this.showToast('🎤 Voice captured');
+      this.showToast(window.t('toast_voice_captured'));
     };
 
-    recognition.onerror = () => this.showToast('Voice input error. Try again.');
+    recognition.onerror = () => this.showToast(window.t('toast_voice_error'));
     recognition.start();
-    this.showToast('🎤 Listening...');
+    this.showToast(window.t('toast_listening'));
   },
 };
 

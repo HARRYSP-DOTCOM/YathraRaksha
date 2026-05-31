@@ -15,6 +15,9 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
+  <!-- Indian script fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500&family=Noto+Sans+Malayalam:wght@400;500&family=Noto+Sans+Tamil:wght@400;500&family=Noto+Sans+Telugu:wght@400;500&family=Noto+Sans+Kannada:wght@400;500&family=Noto+Sans+Bengali:wght@400;500&display=swap" rel="stylesheet">
+
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -34,23 +37,23 @@
       <nav class="sidebar-nav">
         <button class="nav-item active" data-screen="map" id="nav-map">
           <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>Map</span>
+          <span data-i18n="nav_map">Map</span>
         </button>
         <button class="nav-item" data-screen="ai-detect" id="nav-ai-detect">
           <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>AI Detect</span>
+          <span data-i18n="nav_ai_detect">AI Detect</span>
         </button>
         <button class="nav-item" data-screen="spendings" id="nav-spendings">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          <span>Spendings</span>
+          <span data-i18n="nav_spendings">Spendings</span>
         </button>
         <button class="nav-item" data-screen="complaints" id="nav-complaints">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>Public Complaints</span>
+          <span data-i18n="nav_complaints">Public Complaints</span>
         </button>
         <button class="nav-item" data-screen="chatbot" id="nav-chatbot">
           <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M8 21v-2M16 21v-2"/></svg>
-          <span>AI Chat Bot</span>
+          <span data-i18n="nav_chatbot">AI Chat Bot</span>
         </button>
       </nav>
     </aside>
@@ -70,6 +73,9 @@
           <option value="ml">മലയാളം</option>
           <option value="ta">தமிழ்</option>
           <option value="te">తెలుగు</option>
+          <option value="kn">ಕನ್ನಡ</option>
+          <option value="bn">বাংলা</option>
+          <option value="mr">मराठी</option>
         </select>
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light mode">
           <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -91,25 +97,25 @@
 
           <!-- Search card -->
           <div class="map-float-card map-search-card" id="map-search-card">
-            <input type="text" class="map-search-input" id="map-search-input" placeholder="Search road or contractor name...">
-            <button class="btn btn-primary btn-sm" id="map-search-btn">Search</button>
+            <input type="text" class="map-search-input" id="map-search-input" data-i18n-placeholder="map_search_placeholder" placeholder="Search road or contractor name...">
+            <button class="btn btn-primary btn-sm" id="map-search-btn" data-i18n="map_search_btn">Search</button>
             <button class="btn btn-secondary btn-sm" id="map-locate-btn" title="My location">📍</button>
           </div>
 
           <!-- Mode switcher -->
           <div class="map-float-card map-mode-card" id="map-mode-card">
-            <button class="map-mode-btn active" data-mode="road">Road</button>
-            <button class="map-mode-btn" data-mode="satellite">Satellite</button>
-            <button class="map-mode-btn" data-mode="night">Night</button>
+            <button class="map-mode-btn active" data-mode="road" data-i18n="map_mode_road">Road</button>
+            <button class="map-mode-btn" data-mode="satellite" data-i18n="map_mode_satellite">Satellite</button>
+            <button class="map-mode-btn" data-mode="night" data-i18n="map_mode_night">Night</button>
           </div>
 
           <!-- Legend -->
           <div class="map-float-card map-legend" id="map-legend">
-            <h4>Road Condition</h4>
-            <div class="map-legend-item"><span class="map-legend-color" style="background:#639922"></span> Excellent / Good</div>
-            <div class="map-legend-item"><span class="map-legend-color" style="background:#EF9F27"></span> Fair</div>
-            <div class="map-legend-item"><span class="map-legend-color" style="background:#E68A00"></span> Poor</div>
-            <div class="map-legend-item"><span class="map-legend-color" style="background:#E24B4A"></span> Critical</div>
+            <h4 data-i18n="map_legend_title">Road Condition</h4>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#639922"></span> <span data-i18n="map_legend_good">Excellent / Good</span></div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#EF9F27"></span> <span data-i18n="map_legend_fair">Fair</span></div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#E68A00"></span> <span data-i18n="map_legend_poor">Poor</span></div>
+            <div class="map-legend-item"><span class="map-legend-color" style="background:#E24B4A"></span> <span data-i18n="map_legend_critical">Critical</span></div>
           </div>
 
           <!-- Coordinate badge -->
@@ -130,41 +136,41 @@
         <div class="ai-detect-layout">
           <!-- Left: Image Input -->
           <div class="ai-detect-left">
-            <h2 style="font-size:20px;font-weight:600;">AI Road Damage Detection</h2>
+            <h2 style="font-size:20px;font-weight:600;" data-i18n="ai_title">AI Road Damage Detection</h2>
 
             <div class="card">
               <div class="upload-buttons" style="margin-bottom:12px;">
-                <button class="btn btn-primary btn-sm" id="ai-capture-btn">📷 Capture Photo</button>
-                <button class="btn btn-secondary btn-sm" id="ai-upload-btn">⬆ Upload Photo</button>
+                <button class="btn btn-primary btn-sm" id="ai-capture-btn" data-i18n="ai_capture">📷 Capture Photo</button>
+                <button class="btn btn-secondary btn-sm" id="ai-upload-btn" data-i18n="ai_upload">⬆ Upload Photo</button>
               </div>
               <div class="upload-area" id="ai-upload-area">
                 <div id="ai-upload-placeholder">
                   <div class="upload-icon">📸</div>
-                  <div class="upload-text">Drop or click to upload road image</div>
-                  <div class="upload-hint">Supports JPEG, PNG — max 10MB</div>
+                  <div class="upload-text" data-i18n="ai_upload_text">Drop or click to upload road image</div>
+                  <div class="upload-hint" data-i18n="ai_upload_hint">Supports JPEG, PNG — max 10MB</div>
                 </div>
                 <img id="ai-preview-img" style="display:none;" alt="Road damage preview">
               </div>
               <input type="file" id="ai-file-input" accept="image/*" style="display:none;">
               <input type="file" id="ai-camera-input" accept="image/*" capture="environment" style="display:none;">
-              <button class="btn btn-secondary btn-sm" id="ai-retake-btn" style="display:none;margin-top:8px;">↩ Retake / Remove</button>
+              <button class="btn btn-secondary btn-sm" id="ai-retake-btn" style="display:none;margin-top:8px;" data-i18n="ai_retake">↩ Retake / Remove</button>
             </div>
 
             <!-- Location input -->
             <div class="card">
-              <h3 class="card-title" style="margin-bottom:10px;">📍 Location</h3>
+              <h3 class="card-title" style="margin-bottom:10px;" data-i18n="ai_location_title">📍 Location</h3>
               <div class="form-group">
-                <label class="form-label">Location name / address</label>
-                <input type="text" class="form-input" id="ai-location-name" placeholder="e.g. Near Tambaram Railway Crossing">
+                <label class="form-label" data-i18n="ai_location_label">Location name / address</label>
+                <input type="text" class="form-input" id="ai-location-name" data-i18n-placeholder="ai_location_placeholder" placeholder="e.g. Near Tambaram Railway Crossing">
               </div>
-              <button class="btn btn-secondary btn-sm" id="ai-use-location-btn" style="margin-bottom:10px;">📍 Use My Location</button>
+              <button class="btn btn-secondary btn-sm" id="ai-use-location-btn" style="margin-bottom:10px;" data-i18n="ai_use_location">📍 Use My Location</button>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <div class="form-group" style="margin:0;">
-                  <label class="form-label">Latitude</label>
+                  <label class="form-label" data-i18n="ai_lat">Latitude</label>
                   <input type="text" class="form-input" id="ai-lat" readonly placeholder="—">
                 </div>
                 <div class="form-group" style="margin:0;">
-                  <label class="form-label">Longitude</label>
+                  <label class="form-label" data-i18n="ai_lng">Longitude</label>
                   <input type="text" class="form-input" id="ai-lng" readonly placeholder="—">
                 </div>
               </div>
@@ -176,26 +182,26 @@
             <!-- Empty state -->
             <div class="card" id="ai-empty-state" style="text-align:center;padding:40px;">
               <div style="font-size:48px;margin-bottom:12px;">🔍</div>
-              <p style="color:var(--text-muted);font-size:14px;">Upload a road photo and click "Analyze" to detect damage</p>
+              <p style="color:var(--text-muted);font-size:14px;" data-i18n="ai_empty">Upload a road photo and click "Analyze" to detect damage</p>
             </div>
 
             <!-- Loading state -->
             <div class="card" id="ai-loading-state" style="display:none;">
               <div class="ai-loading">
                 <div class="ai-loading-spinner"></div>
-                <p style="color:var(--text-secondary);font-size:14px;">Analyzing road image with AI...</p>
+                <p style="color:var(--text-secondary);font-size:14px;" data-i18n="ai_loading">Analyzing road image with AI...</p>
               </div>
             </div>
 
             <!-- Results -->
             <div id="ai-results" style="display:none;">
               <div class="card">
-                <h3 class="card-title" style="margin-bottom:12px;">Damage Detection Results</h3>
+                <h3 class="card-title" style="margin-bottom:12px;" data-i18n="ai_results_title">Damage Detection Results</h3>
                 <div class="detection-checklist" id="ai-checklist"></div>
               </div>
 
               <div class="card" style="margin-top:12px;">
-                <h3 class="card-title" style="margin-bottom:8px;">Severity Score</h3>
+                <h3 class="card-title" style="margin-bottom:8px;" data-i18n="ai_severity">Severity Score</h3>
                 <div class="severity-gauge">
                   <div class="severity-bar"><div class="severity-fill" id="ai-severity-fill" style="width:0%;background:var(--success);"></div></div>
                   <div class="severity-value" id="ai-severity-value">0</div>
@@ -203,18 +209,18 @@
               </div>
 
               <div class="card" style="margin-top:12px;">
-                <h3 class="card-title" style="margin-bottom:8px;">AI-Generated Complaint</h3>
-                <textarea class="form-textarea" id="ai-complaint-text" rows="4" placeholder="AI will generate complaint text..."></textarea>
+                <h3 class="card-title" style="margin-bottom:8px;" data-i18n="ai_complaint_title">AI-Generated Complaint</h3>
+                <textarea class="form-textarea" id="ai-complaint-text" rows="4" data-i18n-placeholder="ai_complaint_placeholder" placeholder="AI will generate complaint text..."></textarea>
               </div>
             </div>
 
             <!-- Action buttons -->
             <div style="display:flex;gap:8px;margin-top:12px;">
-              <button class="btn btn-primary btn-lg" id="ai-analyze-btn" style="flex:1;" disabled>🔍 Analyze Image</button>
+              <button class="btn btn-primary btn-lg" id="ai-analyze-btn" style="flex:1;" disabled data-i18n="ai_analyze">🔍 Analyze Image</button>
             </div>
             <div id="ai-action-buttons" style="display:none;gap:8px;margin-top:8px;">
-              <button class="btn btn-success btn-lg" id="ai-file-complaint-btn" style="flex:1;">📝 File Complaint</button>
-              <button class="btn btn-secondary btn-lg" id="ai-cancel-btn">Cancel</button>
+              <button class="btn btn-success btn-lg" id="ai-file-complaint-btn" style="flex:1;" data-i18n="ai_file_complaint">📝 File Complaint</button>
+              <button class="btn btn-secondary btn-lg" id="ai-cancel-btn" data-i18n="ai_cancel">Cancel</button>
             </div>
           </div>
         </div>
@@ -222,31 +228,31 @@
         <!-- Complaint Submission Modal -->
         <div class="modal-overlay" id="complaint-modal">
           <div class="modal">
-            <h2 class="modal-title">Submit Complaint</h2>
+            <h2 class="modal-title" data-i18n="modal_title">Submit Complaint</h2>
             <form id="complaint-submit-form">
               <div class="form-group">
-                <label class="form-label">Location</label>
+                <label class="form-label" data-i18n="modal_location">Location</label>
                 <input type="text" class="form-input" id="modal-location" readonly>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div class="form-group"><label class="form-label">Latitude</label><input type="text" class="form-input" id="modal-lat" readonly></div>
-                <div class="form-group"><label class="form-label">Longitude</label><input type="text" class="form-input" id="modal-lng" readonly></div>
+                <div class="form-group"><label class="form-label" data-i18n="ai_lat">Latitude</label><input type="text" class="form-input" id="modal-lat" readonly></div>
+                <div class="form-group"><label class="form-label" data-i18n="ai_lng">Longitude</label><input type="text" class="form-input" id="modal-lng" readonly></div>
               </div>
               <div class="form-group">
-                <label class="form-label">Complaint Description</label>
+                <label class="form-label" data-i18n="modal_description">Complaint Description</label>
                 <textarea class="form-textarea" id="modal-description" rows="3"></textarea>
               </div>
               <div class="form-group">
-                <label class="form-label">Your Name</label>
-                <input type="text" class="form-input" id="modal-name" placeholder="Enter your name">
+                <label class="form-label" data-i18n="modal_name">Your Name</label>
+                <input type="text" class="form-input" id="modal-name" data-i18n-placeholder="modal_name_ph" placeholder="Enter your name">
               </div>
               <div class="form-group">
-                <label class="form-label">Aadhaar Number (optional)</label>
-                <input type="text" class="form-input" id="modal-aadhaar" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+                <label class="form-label" data-i18n="modal_aadhaar">Aadhaar Number (optional)</label>
+                <input type="text" class="form-input" id="modal-aadhaar" data-i18n-placeholder="modal_aadhaar_ph" placeholder="XXXX-XXXX-XXXX" maxlength="14">
               </div>
               <div style="display:flex;gap:8px;margin-top:8px;">
-                <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">Submit Complaint</button>
-                <button type="button" class="btn btn-secondary btn-lg" id="modal-cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-lg" style="flex:1;" data-i18n="modal_submit">Submit Complaint</button>
+                <button type="button" class="btn btn-secondary btn-lg" id="modal-cancel-btn" data-i18n="ai_cancel">Cancel</button>
               </div>
             </form>
           </div>
@@ -256,16 +262,16 @@
       <!-- ──── SCREEN 3: SPENDINGS ──── -->
       <section class="screen" id="screen-spendings">
         <div class="spendings-layout">
-          <h2 style="font-size:20px;font-weight:600;margin-bottom:4px;">Budget & Spending Transparency</h2>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Track infrastructure spending, tender details, and contractor performance across Indian roads.</p>
+          <h2 style="font-size:20px;font-weight:600;margin-bottom:4px;" data-i18n="spendings_title">Budget & Spending Transparency</h2>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;" data-i18n="spendings_sub">Track infrastructure spending, tender details, and contractor performance across Indian roads.</p>
 
           <!-- Filters -->
           <div class="spendings-filters" id="spendings-filters">
-            <input type="text" class="form-input" id="spendings-search" placeholder="Search by road or contractor..." style="min-width:220px;">
-            <select class="form-select" id="spendings-state"><option value="">All States</option></select>
-            <select class="form-select" id="spendings-district"><option value="">All Districts</option></select>
-            <select class="form-select" id="spendings-year"><option value="">All Years</option><option>2024</option><option>2023</option></select>
-            <select class="form-select" id="spendings-source"><option value="">All Sources</option></select>
+            <input type="text" class="form-input" id="spendings-search" data-i18n-placeholder="spendings_search_ph" placeholder="Search by road or contractor..." style="min-width:220px;">
+            <select class="form-select" id="spendings-state"><option value="" data-i18n="filter_all_states">All States</option></select>
+            <select class="form-select" id="spendings-district"><option value="" data-i18n="filter_all_districts">All Districts</option></select>
+            <select class="form-select" id="spendings-year"><option value="" data-i18n="filter_all_years">All Years</option><option>2024</option><option>2023</option></select>
+            <select class="form-select" id="spendings-source"><option value="" data-i18n="filter_all_sources">All Sources</option></select>
           </div>
 
           <!-- Summary cards -->
@@ -277,19 +283,19 @@
             <div>
               <div class="card" style="padding:0;overflow:hidden;">
                 <div style="padding:14px 16px;border-bottom:0.5px solid var(--border);">
-                  <h3 class="card-title">Tender & Budget Transparency</h3>
+                  <h3 class="card-title" data-i18n="spendings_table_title">Tender & Budget Transparency</h3>
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="data-table" id="spendings-table">
                     <thead><tr>
-                      <th data-sort="road_name">Road Name ↕</th>
-                      <th data-sort="date">Tender Date ↕</th>
-                      <th data-sort="allocated">Allocated ↕</th>
-                      <th data-sort="spent">Spent ↕</th>
-                      <th data-sort="balance">Balance ↕</th>
-                      <th>Source</th>
-                      <th data-sort="completion">% Done ↕</th>
-                      <th>Contractor</th>
+                      <th data-sort="road_name" data-i18n="th_road">Road Name ↕</th>
+                      <th data-sort="date" data-i18n="th_date">Tender Date ↕</th>
+                      <th data-sort="allocated" data-i18n="th_allocated">Allocated ↕</th>
+                      <th data-sort="spent" data-i18n="th_spent">Spent ↕</th>
+                      <th data-sort="balance" data-i18n="th_balance">Balance ↕</th>
+                      <th data-i18n="th_source">Source</th>
+                      <th data-sort="completion" data-i18n="th_done">% Done ↕</th>
+                      <th data-i18n="th_contractor">Contractor</th>
                     </tr></thead>
                     <tbody id="spendings-tbody"></tbody>
                   </table>
@@ -300,15 +306,15 @@
             <!-- Right: Contractor Rankings -->
             <div>
               <div class="card">
-                <h3 class="card-title" style="margin-bottom:12px;">Contractor Performance</h3>
+                <h3 class="card-title" style="margin-bottom:12px;" data-i18n="contractor_perf">Contractor Performance</h3>
                 <div class="contractor-tabs" id="contractor-tabs">
-                  <button class="contractor-tab active" data-tab="best">Best Performing</button>
-                  <button class="contractor-tab" data-tab="worst">Worst Performing</button>
+                  <button class="contractor-tab active" data-tab="best" data-i18n="contractor_best">Best Performing</button>
+                  <button class="contractor-tab" data-tab="worst" data-i18n="contractor_worst">Worst Performing</button>
                 </div>
                 <div id="contractor-list"></div>
               </div>
               <div class="card" style="margin-top:16px;">
-                <h3 class="card-title" style="margin-bottom:12px;">Top 10 by Health Score</h3>
+                <h3 class="card-title" style="margin-bottom:12px;" data-i18n="contractor_chart">Top 10 by Health Score</h3>
                 <canvas id="contractor-chart" height="220"></canvas>
               </div>
             </div>
@@ -322,8 +328,8 @@
           <!-- Left: List -->
           <div class="complaints-list-panel">
             <div style="margin-bottom:12px;">
-              <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;">Public Complaints</h2>
-              <input type="text" class="form-input" id="complaints-search" placeholder="Search by road name...">
+              <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;" data-i18n="complaints_title">Public Complaints</h2>
+              <input type="text" class="form-input" id="complaints-search" data-i18n-placeholder="complaints_search_ph" placeholder="Search by road name...">
             </div>
             <div class="complaints-scroll" id="complaints-list"></div>
           </div>
@@ -331,38 +337,38 @@
           <!-- Right: New Complaint Form -->
           <div class="new-complaint-panel" id="new-complaint-panel">
             <div class="card complaint-form-card">
-              <h3 class="card-title" style="margin-bottom:14px;">File a New Complaint</h3>
+              <h3 class="card-title" style="margin-bottom:14px;" data-i18n="complaints_new_title">File a New Complaint</h3>
               <form id="new-complaint-form">
                 <div class="form-group">
-                  <label class="form-label">Road Name</label>
-                  <input type="text" class="form-input" id="nc-road" placeholder="Enter road name" list="road-suggestions">
+                  <label class="form-label" data-i18n="nc_road">Road Name</label>
+                  <input type="text" class="form-input" id="nc-road" data-i18n-placeholder="nc_road_ph" placeholder="Enter road name" list="road-suggestions">
                   <datalist id="road-suggestions"></datalist>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea class="form-textarea" id="nc-description" rows="3" placeholder="Describe the issue..."></textarea>
+                  <label class="form-label" data-i18n="nc_desc">Description</label>
+                  <textarea class="form-textarea" id="nc-description" rows="3" data-i18n-placeholder="nc_desc_ph" placeholder="Describe the issue..."></textarea>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                  <div class="form-group"><label class="form-label">Latitude</label><input type="text" class="form-input" id="nc-lat" placeholder="—"></div>
-                  <div class="form-group"><label class="form-label">Longitude</label><input type="text" class="form-input" id="nc-lng" placeholder="—"></div>
+                  <div class="form-group"><label class="form-label" data-i18n="ai_lat">Latitude</label><input type="text" class="form-input" id="nc-lat" placeholder="—"></div>
+                  <div class="form-group"><label class="form-label" data-i18n="ai_lng">Longitude</label><input type="text" class="form-input" id="nc-lng" placeholder="—"></div>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Location name</label>
-                  <input type="text" class="form-input" id="nc-location" placeholder="e.g. Near Tambaram station">
+                  <label class="form-label" data-i18n="nc_location">Location name</label>
+                  <input type="text" class="form-input" id="nc-location" data-i18n-placeholder="nc_location_ph" placeholder="e.g. Near Tambaram station">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Photo (optional)</label>
+                  <label class="form-label" data-i18n="nc_photo">Photo (optional)</label>
                   <input type="file" class="form-input" id="nc-photo" accept="image/*">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                  <div class="form-group"><label class="form-label">Your Name</label><input type="text" class="form-input" id="nc-name" placeholder="Name"></div>
-                  <div class="form-group"><label class="form-label">Aadhaar</label><input type="text" class="form-input" id="nc-aadhaar" placeholder="XXXX-XXXX-XXXX"></div>
+                  <div class="form-group"><label class="form-label" data-i18n="nc_name">Your Name</label><input type="text" class="form-input" id="nc-name" data-i18n-placeholder="nc_name_ph" placeholder="Name"></div>
+                  <div class="form-group"><label class="form-label" data-i18n="nc_aadhaar">Aadhaar</label><input type="text" class="form-input" id="nc-aadhaar" data-i18n-placeholder="nc_aadhaar_ph" placeholder="XXXX-XXXX-XXXX"></div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:4px;">Submit Complaint</button>
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:4px;" data-i18n="nc_submit">Submit Complaint</button>
               </form>
               <div class="auto-route-notice" style="margin-top:12px;">
                 <span>ℹ️</span>
-                <span>Your complaint will be auto-routed to the responsible Executive Engineer or authority.</span>
+                <span data-i18n="auto_route">Your complaint will be auto-routed to the responsible Executive Engineer or authority.</span>
               </div>
             </div>
           </div>
@@ -376,13 +382,13 @@
           <div class="chat-messages" id="chat-messages"></div>
           <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
           <div class="chat-prompt-chips" id="chat-chips">
-            <button class="chat-chip" data-prompt="What is the condition of roads in my district?">🛣️ Road conditions in my district</button>
-            <button class="chat-chip" data-prompt="Which contractor has the most complaints?">🏗️ Most complained contractor</button>
-            <button class="chat-chip" data-prompt="Show me overspent projects">💸 Overspent projects</button>
-            <button class="chat-chip" data-prompt="How do I file a complaint?">📝 How to file complaint</button>
+            <button class="chat-chip" data-i18n-prompt="chip_roads" data-prompt="What is the condition of roads in my district?">🛣️ Road conditions in my district</button>
+            <button class="chat-chip" data-i18n-prompt="chip_contractor" data-prompt="Which contractor has the most complaints?">🏗️ Most complained contractor</button>
+            <button class="chat-chip" data-i18n-prompt="chip_overspent" data-prompt="Show me overspent projects">💸 Overspent projects</button>
+            <button class="chat-chip" data-i18n-prompt="chip_how" data-prompt="How do I file a complaint?">📝 How to file complaint</button>
           </div>
           <div class="chat-input-bar">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything about roads, budgets, contractors..." maxlength="500">
+            <input type="text" class="chat-input" id="chat-input" data-i18n-placeholder="chat_ph" placeholder="Ask anything about roads, budgets, contractors..." maxlength="500">
             <button class="chat-send-btn" id="chat-send-btn" title="Send">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -397,34 +403,34 @@
     <nav class="mobile-nav" id="mobile-nav">
       <button class="mobile-nav-item active" data-screen="map">
         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span>Map</span>
+        <span data-i18n="nav_map">Map</span>
       </button>
       <button class="mobile-nav-item" data-screen="ai-detect">
         <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <span>AI Detect</span>
+        <span data-i18n="nav_ai_detect">AI Detect</span>
       </button>
       <button class="mobile-nav-item" data-screen="spendings">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        <span>Spendings</span>
+        <span data-i18n="nav_spendings">Spendings</span>
       </button>
       <button class="mobile-nav-item" data-screen="complaints">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>Complaints</span>
+        <span data-i18n="nav_complaints_short">Complaints</span>
       </button>
       <button class="mobile-nav-item" data-screen="chatbot">
         <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M8 21v-2M16 21v-2"/></svg>
-        <span>AI Chat</span>
+        <span data-i18n="nav_chat_short">AI Chat</span>
       </button>
     </nav>
 
     <div class="mobile-sheet-backdrop" id="mobile-sheet-backdrop"></div>
     <nav class="mobile-sheet" id="mobile-sheet" aria-label="Mobile navigation">
       <div class="mobile-sheet-handle"></div>
-      <button class="mobile-sheet-item active" data-screen="map">Map</button>
-      <button class="mobile-sheet-item" data-screen="ai-detect">AI Detect</button>
-      <button class="mobile-sheet-item" data-screen="spendings">Spendings</button>
-      <button class="mobile-sheet-item" data-screen="complaints">Public Complaints</button>
-      <button class="mobile-sheet-item" data-screen="chatbot">AI Chat Bot</button>
+      <button class="mobile-sheet-item active" data-screen="map" data-i18n="nav_map">Map</button>
+      <button class="mobile-sheet-item" data-screen="ai-detect" data-i18n="nav_ai_detect">AI Detect</button>
+      <button class="mobile-sheet-item" data-screen="spendings" data-i18n="nav_spendings">Spendings</button>
+      <button class="mobile-sheet-item" data-screen="complaints" data-i18n="nav_complaints">Public Complaints</button>
+      <button class="mobile-sheet-item" data-screen="chatbot" data-i18n="nav_chatbot">AI Chat Bot</button>
     </nav>
 
   </div>
@@ -435,6 +441,7 @@
   <!-- Scripts -->
   <script src="js/mock-data.js"></script>
   <script src="js/config-env.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 
 </body>
