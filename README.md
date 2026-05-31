@@ -175,8 +175,7 @@ This starts the frontend on port `5500` and the backend on port `8000`. Use `Ctr
 If you prefer not to use the shell script, run the backend and frontend separately.
 
 Backend in PowerShell:
-
-```powershell
+``powershell
 cd backend
 .\.venv\Scripts\Activate.ps1
 python run.py
