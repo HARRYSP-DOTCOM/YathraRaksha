@@ -318,12 +318,12 @@ window.RealDataLoader = {
         )
         .join("");
     }
-    if (card && bench.gemini_2_0_flash) {
+    if (card && bench.gemini_3_5_flash) {
       card.style.display = "block";
       const el = document.getElementById("ai-benchmark-scores");
       if (el) {
         el.innerHTML = `
-          <div class="popup-row"><strong>Gemini 2.0 Flash</strong>: Accuracy ${(bench.gemini_2_0_flash.accuracy * 100).toFixed(1)}% · ${bench.gemini_2_0_flash.inference_ms}ms lat</div>
+          <div class="popup-row"><strong>Gemini 3.5 Flash</strong>: Accuracy ${(bench.gemini_3_5_flash.accuracy * 100).toFixed(1)}% · ${bench.gemini_3_5_flash.inference_ms}ms lat</div>
           <div class="popup-row" style="font-size:11px;opacity:0.8;">${bench.note}</div>
         `;
       }

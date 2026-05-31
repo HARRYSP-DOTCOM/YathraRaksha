@@ -1,7 +1,7 @@
 {
   "metadata": {
     "file": "AI Road Defect Detection Dataset",
-    "purpose": "Road defect detection using Gemini 2.0 Flash Vision API",
+    "purpose": "Road defect detection using Gemini 3.5 Flash Vision API",
     "source": "Compiled from: IIT Bombay Road Dataset, Kaggle Road Damage Dataset (CRDDC2022), NHAI inspection reports",
     "license": "CC BY 4.0 for academic/non-commercial use",
     "last_updated": "2026"
@@ -194,6 +194,10 @@
       "records": 10004,
       "url": "https://idd.insaan.iiit.ac.in/",
       "license": "Academic use"
+    }
+  ]
+}
+
     }
   ]
 }

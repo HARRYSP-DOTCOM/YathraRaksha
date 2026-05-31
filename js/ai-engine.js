@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const benchEl = document.getElementById("ai-benchmark-scores");
     if (benchEl && data.model_performance_benchmarks) {
-       benchEl.innerHTML = `<strong>Gemini 2.0 Flash:</strong> Highest accuracy | 
+       benchEl.innerHTML = `<strong>Gemini 3.5 Flash:</strong> Industry-leading speed | 
                             <strong>Dataset:</strong> RDD2022 Integrated`;
     }
   } catch (err) {
