@@ -3,8 +3,16 @@ from fastapi.responses import JSONResponse
 
 from app.seed_data import find_nearest_road
 from app.services.yolo_road_detection import analyze_image_bytes
+from app.services import real_data
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+
+@router.get("/defect-classes")
+def defect_classes():
+    if not real_data.data_available():
+        return {"defect_classes": [], "model_performance_benchmarks": {}}
+    return real_data.get_defect_classes()
 
 
 @router.post("/analyze")

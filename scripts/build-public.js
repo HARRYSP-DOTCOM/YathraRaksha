@@ -15,6 +15,7 @@ const COPY = [
   "css",
   "js",
   "icons",
+  "data",
 ];
 
 function copyRecursive(src, dest) {

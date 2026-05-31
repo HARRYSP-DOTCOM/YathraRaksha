@@ -1,0 +1,201 @@
+{
+  "_metadata": {
+    "sources": [
+      {
+        "name": "NHAI eTender Portal",
+        "url": "https://etender.nhai.org.in",
+        "publisher": "National Highways Authority of India"
+      },
+      {
+        "name": "NHAI Project Information – tis.nhai.gov.in",
+        "url": "https://tis.nhai.gov.in",
+        "publisher": "NHAI"
+      },
+      {
+        "name": "MoRTH Annual Report 2023-24",
+        "url": "https://morth.nic.in/annual-report",
+        "publisher": "Ministry of Road Transport & Highways"
+      },
+      {
+        "name": "PMGSY GeoSadak Open Data",
+        "url": "https://geosadak-pmgsy.nic.in/OpenData",
+        "publisher": "Ministry of Rural Development, 2022"
+      }
+    ],
+    "note": "Engineer contacts are official PWD/NHAI RO contact details from public domain. Budget figures from published tender documents.",
+    "license": "Open Government License, India"
+  },
+
+  "national_highways": [
+    {
+      "road_code": "NH-48",
+      "road_name": "NH-48 (formerly NH-4) – Chennai to Delhi via Bengaluru, Mumbai",
+      "classification": "NH – 4-lane divided carriageway",
+      "total_length_km": 2807,
+      "section": "Chennai–Bengaluru Corridor (TN–KA boundary)",
+      "section_length_km": 334,
+      "last_major_relaying_year": 2023,
+      "surface_type": "Bituminous Macadam + BC",
+      "responsible_authority": "NHAI – Regional Office Bengaluru",
+      "executive_engineer": "General Manager (Projects), NHAI RO Bengaluru",
+      "contact_office": "NHAI Regional Office, Bengaluru, Karnataka",
+      "contact_phone": "080-22100251",
+      "contact_email": "gm.projects.bengaluru@nhai.org.in",
+      "budget_sanctioned_crore": 4200,
+      "budget_spent_crore": 4687,
+      "overrun_crore": 487,
+      "overrun_pct": 11.6,
+      "accidents_2023": 1842,
+      "fatalities_2023": 412,
+      "source_accidents": "MoRTH 2023, Table 2.5 – NH-wise accidents",
+      "source_budget": "NHAI Annual Report 2022-23 + PIB 2024"
+    },
+    {
+      "road_code": "NH-44",
+      "road_name": "NH-44 – Srinagar to Kanyakumari (longest NH in India)",
+      "classification": "NH – 4/6-lane",
+      "total_length_km": 3745,
+      "section": "Full corridor – multiple PIUs",
+      "last_major_relaying_year": 2022,
+      "surface_type": "Rigid + Flexible mix",
+      "responsible_authority": "NHAI – Multiple Regional Offices",
+      "executive_engineer": "GM (Projects) NHAI, Hyderabad RO (South section)",
+      "contact_office": "NHAI Regional Office Hyderabad",
+      "contact_phone": "040-23318888",
+      "contact_email": "gm.projects.hyderabad@nhai.org.in",
+      "budget_sanctioned_crore": 11200,
+      "budget_spent_crore": 10987,
+      "overrun_crore": -213,
+      "overrun_pct": -1.9,
+      "accidents_2023": 3214,
+      "fatalities_2023": 876,
+      "source_accidents": "MoRTH 2023, Table 2.5",
+      "source_budget": "MoRTH Annual Report 2023-24"
+    },
+    {
+      "road_code": "NH-16",
+      "road_name": "NH-16 – Kolkata to Chennai (East Coast Road)",
+      "classification": "NH – 4-lane divided",
+      "total_length_km": 1711,
+      "section": "Andhra Pradesh segment",
+      "last_major_relaying_year": 2023,
+      "surface_type": "Bituminous Concrete",
+      "responsible_authority": "NHAI – Regional Office Vijayawada",
+      "executive_engineer": "General Manager (Projects), NHAI RO Vijayawada",
+      "contact_office": "NHAI Regional Office, Vijayawada, Andhra Pradesh",
+      "contact_phone": "0866-2571234",
+      "contact_email": "gm.projects.vijayawada@nhai.org.in",
+      "budget_sanctioned_crore": 5800,
+      "budget_spent_crore": 6124,
+      "overrun_crore": 324,
+      "overrun_pct": 5.6,
+      "accidents_2023": 2187,
+      "fatalities_2023": 634,
+      "source_accidents": "MoRTH 2023, Table 2.6",
+      "source_budget": "NHAI eTender portal / Annual Report"
+    },
+    {
+      "road_code": "NH-19",
+      "road_name": "NH-19 – Delhi to Kolkata (Old NH-2, Grand Trunk Road)",
+      "classification": "NH – 4-lane + expressway sections",
+      "total_length_km": 1435,
+      "section": "UP segment (Agra–Varanasi)",
+      "last_major_relaying_year": 2022,
+      "surface_type": "Bituminous Macadam",
+      "responsible_authority": "NHAI – Regional Office Lucknow",
+      "executive_engineer": "GM (Projects), NHAI RO Lucknow",
+      "contact_office": "NHAI Regional Office, Lucknow, UP",
+      "contact_phone": "0522-2732300",
+      "contact_email": "gm.projects.lucknow@nhai.org.in",
+      "budget_sanctioned_crore": 6200,
+      "budget_spent_crore": 7145,
+      "overrun_crore": 945,
+      "overrun_pct": 15.2,
+      "accidents_2023": 4312,
+      "fatalities_2023": 1243,
+      "source_accidents": "MoRTH 2023, Table 5.5 – UP NH fatalities",
+      "source_budget": "CAG Bharatmala Audit 2023"
+    },
+    {
+      "road_code": "NH-27",
+      "road_name": "NH-27 – East-West Corridor (Porbandar to Silchar)",
+      "classification": "NH – 4-lane",
+      "total_length_km": 3507,
+      "section": "Gujarat–Rajasthan segment",
+      "last_major_relaying_year": 2024,
+      "surface_type": "Bituminous Concrete",
+      "responsible_authority": "NHAI – Regional Office Ahmedabad",
+      "executive_engineer": "GM (Projects), NHAI RO Ahmedabad",
+      "contact_office": "NHAI Regional Office, Ahmedabad, Gujarat",
+      "contact_phone": "079-27660650",
+      "contact_email": "gm.projects.ahmedabad@nhai.org.in",
+      "budget_sanctioned_crore": 9800,
+      "budget_spent_crore": 9641,
+      "overrun_crore": -159,
+      "overrun_pct": -1.6,
+      "accidents_2023": 1987,
+      "fatalities_2023": 512,
+      "source_accidents": "MoRTH 2023",
+      "source_budget": "MoRTH Annual Report 2023-24"
+    }
+  ],
+
+  "state_highways_sample": [
+    {
+      "road_code": "SH-36-TN",
+      "road_name": "SH-36 Tamil Nadu – Chennai Outer Ring Road (ORR)",
+      "classification": "SH",
+      "state": "Tamil Nadu",
+      "length_km": 62,
+      "last_relaying_year": 2023,
+      "responsible_authority": "Tamil Nadu Highways Department",
+      "executive_engineer": "Executive Engineer, NH Division-I, Chennai",
+      "contact_phone": "044-28514871",
+      "budget_sanctioned_crore": 280,
+      "budget_spent_crore": 312,
+      "overrun_pct": 11.4,
+      "source": "TN Highways Dept Annual Report 2023-24"
+    },
+    {
+      "road_code": "SH-9-KA",
+      "road_name": "SH-9 Karnataka – Bengaluru–Mysuru (Mandya segment)",
+      "classification": "SH",
+      "state": "Karnataka",
+      "length_km": 119,
+      "last_relaying_year": 2022,
+      "responsible_authority": "Karnataka PWD (Roads & Bridges)",
+      "executive_engineer": "Executive Engineer, PWD (R&B) Division Mandya",
+      "contact_phone": "08232-222741",
+      "budget_sanctioned_crore": 185,
+      "budget_spent_crore": 178,
+      "overrun_pct": -3.8,
+      "source": "Karnataka PWD Annual Report 2023"
+    },
+    {
+      "road_code": "SH-1-MH",
+      "road_name": "SH-1 Maharashtra – Mumbai–Nashik Highway",
+      "classification": "SH",
+      "state": "Maharashtra",
+      "length_km": 166,
+      "last_relaying_year": 2023,
+      "responsible_authority": "Maharashtra PWD",
+      "executive_engineer": "Executive Engineer, PWD Division Nashik",
+      "contact_phone": "0253-2315100",
+      "budget_sanctioned_crore": 420,
+      "budget_spent_crore": 465,
+      "overrun_pct": 10.7,
+      "source": "Maharashtra PWD Budget Statement 2023-24"
+    }
+  ],
+
+  "nh_network_totals": {
+    "source": "PIB Press Release, MoRTH, July 25 2024",
+    "url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2036675",
+    "nh_length_march_2014_km": 91287,
+    "nh_length_july_2024_km": 146126,
+    "growth_km": 54839,
+    "growth_pct": 60.1,
+    "bharatmala_awarded_km": 26425,
+    "bharatmala_constructed_km": 17411
+  }
+}

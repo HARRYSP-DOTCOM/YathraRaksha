@@ -4,12 +4,16 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Road
 from app.seed_data import get_contractors
+from app.services import real_data
 
 router = APIRouter(prefix="/contractors", tags=["contractors"])
 
 
 @router.get("")
 def list_contractors(sortBy: str = Query("rating"), db: Session = Depends(get_db)):
+    if real_data.data_available():
+        return real_data.get_contractors()
+
     roads = db.query(Road).all()
     if not roads:
         return get_contractors(sortBy)

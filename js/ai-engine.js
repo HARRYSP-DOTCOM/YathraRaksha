@@ -146,3 +146,27 @@ const AIEngine = {
 };
 
 window.AIEngine = AIEngine;
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const base = (window.AppConfig && window.AppConfig.API_BASE_URL) || "/v1";
+    const data = await fetch(`${base}/ai/defect-classes`).then(r => r.json());
+    
+    const classListEl = document.getElementById("ai-defect-class-list");
+    if (classListEl && data.defect_classes) {
+       classListEl.innerHTML = data.defect_classes
+         .map(c => `<li><strong>${c.class_name}:</strong> ${c.description}</li>`).join("");
+       const card = document.getElementById("ai-model-benchmarks-card");
+       if (card) card.style.display = "block";
+    }
+
+    const benchEl = document.getElementById("ai-benchmark-scores");
+    if (benchEl && data.model_performance_benchmarks) {
+       benchEl.innerHTML = `<strong>yolov8s mAP50:</strong> ${data.model_performance_benchmarks.yolov8s_recommended.mAP50} | 
+                            <strong>Dataset:</strong> ${data.model_performance_benchmarks.dataset}`;
+    }
+  } catch (err) {
+    console.error("Failed to load AI classes", err);
+  }
+});

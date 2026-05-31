@@ -12,7 +12,23 @@ from sqlalchemy import inspect, text
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import Road
-from app.routers import accountability, ai, ai_chat, alerts, audit, auth, chatbot, complaints, contractors, data, media, roads, sla
+from app.routers import (
+    accountability,
+    accidents,
+    ai,
+    ai_chat,
+    alerts,
+    audit,
+    auth,
+    chatbot,
+    complaints,
+    contractors,
+    data,
+    media,
+    roads,
+    sla,
+    tenders,
+)
 from app.services.data_ingestion import refresh_road_data
 from app.services.escalation_service import run_escalation_sweep
 
@@ -82,6 +98,47 @@ app.add_middleware(
 
 prefix = settings.api_prefix
 
+import json, csv as csv_module, os
+DATA = os.path.join(os.path.dirname(__file__), "..", "data")
+
+@app.get("/v1/contractors")
+def get_contractors():
+    d2 = json.load(open(f"{DATA}/02_contractors_data.json"))
+    d1 = json.load(open(f"{DATA}/india_contractors_cag.json"))
+    return {"contractors": d2["contractors"], "industry_summary": d2["industry_summary"], "cag_flagged": d1["flagged_contractors_cag"]}
+
+@app.get("/v1/roads")
+def get_roads():
+    d2 = json.load(open(f"{DATA}/04_roads_map_data.json"))
+    d1 = json.load(open(f"{DATA}/india_nh_data.json"))
+    return {**d2, "nh_extended": d1["national_highways"], "nh_network_totals": d1["nh_network_totals"]}
+
+@app.get("/v1/tenders")
+def get_tenders():
+    return json.load(open(f"{DATA}/03_tenders_data.json"))
+
+@app.get("/v1/audit/budget")
+def get_budget():
+    d2 = json.load(open(f"{DATA}/05_budget_audit_data.json"))
+    d1 = json.load(open(f"{DATA}/india_road_budget.json"))
+    return {**d2, "nhai_capex": d1["nhai_capex_last_5_years"], "morth_allocation": d1["morth_budget_allocation"]}
+
+@app.get("/v1/accidents")
+def get_accidents():
+    stats = json.load(open(f"{DATA}/india_accidents_2023.json"))
+    with open(f"{DATA}/road_wise_accidents_2023.csv") as f:
+        road_wise = list(csv_module.DictReader(f))
+    return {**stats, "road_wise_2023": road_wise}
+
+@app.get("/v1/ai/defect-classes")
+def get_defects():
+    return json.load(open(f"{DATA}/01_ai_road_defect_data.json"))
+
+@app.get("/v1/complaints/seed")
+def get_seeded_complaints():
+    return json.load(open(f"{DATA}/06_complaints_sample_data.json"))
+
+
 app.include_router(auth.router, prefix=prefix)
 app.include_router(complaints.router, prefix=prefix)
 app.include_router(roads.router, prefix=prefix)
@@ -95,6 +152,8 @@ app.include_router(ai_chat.router, prefix=prefix)
 app.include_router(sla.router, prefix=prefix)
 app.include_router(alerts.router, prefix=prefix)
 app.include_router(accountability.router, prefix=prefix)
+app.include_router(tenders.router, prefix=prefix)
+app.include_router(accidents.router, prefix=prefix)
 
 upload_dir = Path(__file__).parent / settings.media_upload_dir
 upload_dir.mkdir(parents=True, exist_ok=True)

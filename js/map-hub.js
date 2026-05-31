@@ -129,8 +129,20 @@ const MapHub = {
       }
     });
 
-    this.plotDatabaseRoads();
-    this.fitAllRoads();
+
+    const base = (window.AppConfig && window.AppConfig.API_BASE_URL) || "/v1";
+    
+    Promise.all([
+      fetch(`${base}/roads`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/accidents`).then(r => r.json()).catch(() => null)
+    ]).then(([roadData, accData]) => {
+      this.plotDatabaseRoads(roadData, accData);
+      this.fitAllRoads();
+    });
+
+    fetch(`${base}/complaints/seed`).then(r => r.json()).then(data => {
+      this.plotSeededComplaints(data.complaints || data);
+    }).catch(e => console.error(e));
   },
 
   addLegend() {
@@ -546,35 +558,81 @@ const MapHub = {
     panel.style.display = "flex";
   },
 
+  plotSeededComplaints(complaints) {
+    if (!this.map || !complaints?.length) return;
+    const severityColor = (s) => {
+      const v = (s || "").toLowerCase();
+      if (v === "high" || v === "critical") return "#ef4444";
+      if (v === "medium") return "#f97316";
+      return "#22c55e";
+    };
+
+    complaints.forEach((c) => {
+      const loc = c.location;
+      if (!loc?.gps_lat || !loc?.gps_lon) return;
+      const color = severityColor(c.severity);
+      const marker = L.circleMarker([loc.gps_lat, loc.gps_lon], {
+        radius: 9,
+        fillColor: color,
+        color: "#fff",
+        weight: 2,
+        fillOpacity: 0.9,
+      })
+        .bindPopup(
+          `<div class="map-popup-card"><h4>${c.title || c.complaint_id}</h4>
+          <p style="font-size:11px;">${loc.address || ""}</p>
+          <p><strong>Severity:</strong> ${c.severity}</p>
+          <p><strong>Status:</strong> ${c.status}</p>
+          <span class="source-badge">${c.source_reference || "CPGRAMS/Kerala"}</span></div>`
+        )
+        .addTo(this.map);
+      this.markers.push(marker);
+    });
+  },
+
   createPopupHtml(road) {
     const ratingStars =
       "★".repeat(Math.round(road.contractorPerformance)) +
       "☆".repeat(5 - Math.round(road.contractorPerformance));
     const budgetOverrun = road.spentBudget > road.sanctionedBudget;
     const budgetStatusClass = budgetOverrun ? "text-danger" : "text-success";
-    const financialEfficiency = ((road.sanctionedBudget / road.spentBudget) * 100).toFixed(0);
+    const financialEfficiency =
+      road.spentBudget > 0 ? ((road.sanctionedBudget / road.spentBudget) * 100).toFixed(0) : "—";
     const formatINR = (val) => `₹${(val / 10000000).toFixed(1)} Cr`;
 
     let statusText = "Safe / Healthy";
     if (road.statusColor === "#ff9f1c") statusText = "Minor defect warnings";
-    if (road.statusColor === "#ff3b30") statusText = "Critical defects registered";
+    if (road.statusColor === "#ff3b30") statusText = "High accident corridor";
+
+    const routeLine = road.route
+      ? `<div class="popup-row"><strong>Route</strong> <span style="font-size:11px;">${road.route}</span></div>`
+      : "";
+    const lengthLine = road.lengthKm
+      ? `<div class="popup-row"><strong>Length</strong> <span>${road.lengthKm} km</span></div>`
+      : "";
+    const builtLine = road.builtBy
+      ? `<div class="popup-row"><strong>Built by</strong> <span style="font-size:11px;">${road.builtBy}</span></div>`
+      : "";
+    const accidentLine =
+      road.accidents2023 != null
+        ? `<div class="popup-row"><strong>Accidents (2023)</strong> <span>${road.accidents2023.toLocaleString()} <span class="source-badge">MoRTH 2023</span></span></div>`
+        : "";
 
     return `
       <div class="map-popup-card">
         <div class="popup-header" style="border-top: 3px solid ${road.statusColor}">
-          <span class="popup-badge" style="background:${road.statusColor}22; color:${road.statusColor}; border-color:${road.statusColor}55">${road.type}</span>
+          <span class="popup-badge" style="background:${road.statusColor}22; color:${road.statusColor}; border-color:${road.statusColor}55">${road.type || "NH"}</span>
           <h3 style="margin-top:4px;">${road.name}</h3>
           <div class="popup-status-line" style="color:${road.statusColor}">${statusText}</div>
         </div>
         <div class="popup-body">
-          <div class="popup-row"><strong>Jurisdiction</strong> <span>${road.jurisdiction}</span></div>
+          ${routeLine}${lengthLine}${builtLine}${accidentLine}
           <div class="popup-row"><strong>Contractor</strong> <span>${road.contractorName} (${ratingStars})</span></div>
           <hr class="popup-divider">
-          <div class="popup-row"><strong>Sanctioned</strong> <span>${formatINR(road.sanctionedBudget)}</span></div>
-          <div class="popup-row"><strong>Spent</strong> <span class="${budgetStatusClass}">${formatINR(road.spentBudget)}</span></div>
-          <div class="popup-row"><strong>Efficiency</strong> <span class="badge ${budgetOverrun ? "badge-warn" : "badge-good"}">${financialEfficiency}%</span></div>
-          <div class="popup-row"><strong>Last relayed</strong> <span>${road.lastRelayingDate}</span></div>
-          <div class="popup-row"><strong>Engineer</strong> <span>${road.executiveEngineer}</span></div>
+          <div class="popup-row"><strong>Project cost</strong> <span>${formatINR(road.sanctionedBudget)}</span></div>
+          <div class="popup-row"><strong>Spent (est.)</strong> <span class="${budgetStatusClass}">${formatINR(road.spentBudget)}</span></div>
+          ${road.spentBudget > 0 ? `<div class="popup-row"><strong>Efficiency</strong> <span class="badge ${budgetOverrun ? "badge-warn" : "badge-good"}">${financialEfficiency}%</span></div>` : ""}
+          ${road.source ? `<p style="margin-top:6px;"><span class="source-badge">📄 ${road.source}</span></p>` : ""}
         </div>
         <div class="popup-footer">
           <button type="button" onclick="window.MapHub.showAuditPanel(window.RoadDatabase.getRoadById('${road.id}'))" class="btn-popup-action btn-popup-secondary">View audit card</button>

@@ -1,131 +1,90 @@
 /**
- * Budget Transparency Dashboard (Overview tab)
+ * Budget Transparency Dashboard — MoRTH allocated vs spent (CAG audit data)
  */
 window.BudgetDashboard = {
-  _donut: null,
-  _velocity: null,
+  _barChart: null,
 
-  render() {
+  async render() {
     const root = document.getElementById("overview-budget-dashboard");
-    if (!root || !window.ROADS_DATA) return;
-    const roads = window.ROADS_DATA;
-    if (!roads.length) return;
+    if (!root) return;
 
-    const sum = (fn) => roads.reduce((a, r) => a + fn(r), 0);
-    const totalSanctioned = sum((r) => r.sanctionedCr);
-    const totalReleased = sum((r) => r.releasedCr);
-    const totalSpent = sum((r) => r.spentCr);
-    const totalRemaining = totalReleased - totalSpent;
-    const breaches = roads.filter((r) => r.anomalyClass === "anomaly-breach" || r.anomalyClass === "anomaly-overspent").length;
-    const avgCompletion = Math.round(sum((r) => r.completion) / roads.length);
+    let budget = window._BUDGET_AUDIT;
+    if (!budget) {
+      try {
+        const base = (window.AppConfig && window.AppConfig.API_BASE_URL) || "/v1";
+        budget = await fetch(`${base}/audit/budget`).then((r) => r.json());
+        window._BUDGET_AUDIT = budget;
+      } catch {
+        root.innerHTML = "<p style='color:var(--text-muted);'>Budget data unavailable.</p>";
+        return;
+      }
+    }
 
-    const anomalies = roads.filter(
-      (r) => r.anomalyClass === "anomaly-breach" || r.anomalyClass === "anomaly-at-risk" || r.anomalyClass === "anomaly-overspent"
-    );
+    const years = (budget.national_budget_road_sector || []).filter((y) => y.actual_spent_cr != null);
+    const latest = years[years.length - 1];
+    const findings = budget.cag_audit_findings?.key_findings || budget.cag_audit_findings?.findings || [];
 
     root.innerHTML = `
-      <h3 style="color:var(--primary); margin:16px 0 12px;">💰 Budget Transparency Dashboard</h3>
+      <h3 style="color:var(--primary); margin:16px 0 12px;">💰 MoRTH Road Sector Budget (Union Budget / CAG)</h3>
       <div class="metrics-grid" style="margin-bottom:16px;">
-        <div class="glass-card metric-card"><span class="label">Total Sanctioned</span><span class="value">₹${totalSanctioned.toFixed(1)} Cr</span></div>
-        <div class="glass-card metric-card"><span class="label">Total Released</span><span class="value">₹${totalReleased.toFixed(1)} Cr</span></div>
-        <div class="glass-card metric-card"><span class="label">Total Spent</span><span class="value">₹${totalSpent.toFixed(1)} Cr</span></div>
-        <div class="glass-card metric-card"><span class="label">Remaining</span><span class="value" style="color:${totalRemaining < 0 ? "#ef4444" : "#10b981"}">₹${totalRemaining.toFixed(1)} Cr</span></div>
-        <div class="glass-card metric-card"><span class="label">Budget breaches</span><span class="value">${breaches}</span></div>
-        <div class="glass-card metric-card"><span class="label">Avg completion</span><span class="value">${avgCompletion}%</span></div>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-        <div class="glass-card" style="padding:12px;">
-          <h4 style="font-size:13px; color:var(--text-muted);">Funding source breakdown</h4>
-          <div style="height:220px; position:relative;"><canvas id="chart-funding-donut" width="300" height="220"></canvas></div>
-        </div>
-        <div class="glass-card" style="padding:12px;">
-          <h4 style="font-size:13px; color:var(--text-muted);">Spending velocity (₹ Cr)</h4>
-          <div style="height:220px; position:relative;"><canvas id="chart-spending-velocity" width="300" height="220"></canvas></div>
-        </div>
+        <div class="glass-card metric-card"><span class="label">FY ${latest?.fiscal_year || "—"} Allocated</span><span class="value">₹${latest?.budget_allocated_cr?.toLocaleString() || "—"} Cr</span></div>
+        <div class="glass-card metric-card"><span class="label">Actual Spent</span><span class="value">₹${latest?.actual_spent_cr?.toLocaleString() || "—"} Cr</span></div>
+        <div class="glass-card metric-card"><span class="label">Utilization</span><span class="value">${latest?.utilization_percent ?? "—"}%</span></div>
+        <div class="glass-card metric-card"><span class="label">NHAI km constructed</span><span class="value">${latest?.km_constructed?.toLocaleString() || "—"}</span></div>
       </div>
       <div class="glass-card" style="padding:14px; margin-bottom:16px;">
-        <h4>⚠️ Anomaly alerts</h4>
-        <div id="anomaly-alert-list">
-          ${anomalies.length ? anomalies.map((r) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--glass-border);">
-              <span><strong>${r.id}</strong> ${r.contractor} — overrun ₹${Math.abs(r.remainingCr).toFixed(1)} Cr</span>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="window.App.highlightTenderRow('${r.id}')">View</button>
-            </div>`).join("") : "<p style='color:var(--text-muted);'>No anomalies detected.</p>"}
-        </div>
+        <h4 style="font-size:13px; color:var(--text-muted);">Allocated vs spent by fiscal year (₹ Cr)</h4>
+        <div style="height:260px; position:relative;"><canvas id="chart-morth-budget-bar" width="400" height="260"></canvas></div>
       </div>
       <div class="glass-card" style="padding:14px;">
-        <h4>Contractor fund utilization</h4>
-        <table style="width:100%; font-size:12px;">
-          <thead><tr style="color:var(--text-muted);"><th>Contractor</th><th>Roads</th><th>Sanctioned</th><th>Spent</th><th>Util %</th><th>Anomalies</th></tr></thead>
-          <tbody id="contractor-util-tbody"></tbody>
-        </table>
+        <h4>CAG audit findings (${budget.cag_audit_findings?.report || "CAG 2023"})</h4>
+        <ul style="font-size:12px; color:var(--text-muted); margin:8px 0 0 18px;">
+          ${findings.length ? findings.map((f) => `<li><strong>${f.finding_id || ""}</strong> ${f.issue || f.finding || ""} — ${f.detail || ""} <span class="source-badge">${f.source || "CAG"}</span></li>`).join("") : "<li>No findings loaded.</li>"}
+        </ul>
+        ${budget.cag_audit_findings?.url ? `<p style="margin-top:8px;font-size:11px;"><a href="${budget.cag_audit_findings.url}" target="_blank" rel="noopener" class="source-link">View CAG report</a></p>` : ""}
       </div>`;
 
-    this.renderCharts(roads);
-    this.renderContractorUtil();
+    this.renderBarChart(years);
   },
 
-  renderContractorUtil() {
-    const tbody = document.getElementById("contractor-util-tbody");
-    if (!tbody || !window.CONTRACTORS) return;
-    const roads = window.ROADS_DATA;
-    tbody.innerHTML = window.CONTRACTORS.map((c) => {
-      const cRoads = roads.filter((r) => c.roads.includes(r.id));
-      const sanc = cRoads.reduce((a, r) => a + r.sanctionedCr, 0);
-      const spent = cRoads.reduce((a, r) => a + r.spentCr, 0);
-      const anom = cRoads.filter((r) => r.anomalyClass !== "anomaly-on-track").length;
-      return `<tr style="border-top:1px solid var(--glass-border);">
-        <td style="padding:8px;">${c.name}</td><td>${c.roads.length}</td>
-        <td>₹${sanc.toFixed(1)} Cr</td><td>₹${spent.toFixed(1)} Cr</td>
-        <td>${c.budgetUtil}%</td><td>${anom}</td></tr>`;
-    }).join("");
-  },
-
-  renderCharts(roads) {
+  renderBarChart(years) {
     if (typeof Chart === "undefined") return;
-    const fundingMap = {};
-    roads.forEach((r) => {
-      const key = (r.fundingSource || "Other").split("(")[0].trim();
-      fundingMap[key] = (fundingMap[key] || 0) + r.spentCr;
+    const canvas = document.getElementById("chart-morth-budget-bar");
+    if (!canvas) return;
+    if (this._barChart) this._barChart.destroy();
+
+    this._barChart = new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: years.map((y) => y.fiscal_year),
+        datasets: [
+          {
+            label: "Budget allocated (₹ Cr)",
+            data: years.map((y) => y.budget_allocated_cr),
+            backgroundColor: "rgba(56,189,248,0.35)",
+            borderColor: "#38bdf8",
+            borderWidth: 1,
+          },
+          {
+            label: "Actual spent (₹ Cr)",
+            data: years.map((y) => y.actual_spent_cr),
+            backgroundColor: "rgba(45,212,191,0.4)",
+            borderColor: "#0d9488",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#94a3b8" } } },
+        scales: {
+          x: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.04)" } },
+          y: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.04)" } },
+        },
+      },
     });
-
-    const donutEl = document.getElementById("chart-funding-donut");
-    if (donutEl) {
-      if (this._donut) this._donut.destroy();
-      this._donut = new Chart(donutEl.getContext("2d"), {
-        type: "doughnut",
-        data: {
-          labels: Object.keys(fundingMap),
-          datasets: [{ data: Object.values(fundingMap), backgroundColor: ["#0d9488", "#38bdf8", "#f97316", "#a78bfa", "#94a3b8"] }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: "#94a3b8" } } } },
-      });
-    }
-
-    const velEl = document.getElementById("chart-spending-velocity");
-    if (velEl) {
-      if (this._velocity) this._velocity.destroy();
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const total = roads.reduce((a, r) => a + r.spentCr, 0);
-      const pace = months.map((_, i) => (total / 12) * (i + 1));
-      const spent = months.map((_, i) => (total / 12) * (i + 0.85));
-      this._velocity = new Chart(velEl.getContext("2d"), {
-        type: "line",
-        data: {
-          labels: months,
-          datasets: [
-            { label: "Sanctioned pace", data: pace, borderColor: "#38bdf8", tension: 0.3 },
-            { label: "Released pace", data: pace.map((v) => v * 0.92), borderColor: "#f59e0b", tension: 0.3 },
-            { label: "Actual spend", data: spent, borderColor: "#ef4444", tension: 0.3 },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: "#94a3b8" } } },
-          scales: { x: { ticks: { color: "#94a3b8" } }, y: { ticks: { color: "#94a3b8" } } },
-        },
-      });
-    }
+    window._charts = window._charts || {};
+    window._charts.morthBudget = this._barChart;
   },
 };

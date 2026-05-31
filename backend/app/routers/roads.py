@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Road
 from app.seed_data import find_nearest_road, get_alternative_routes, get_roads, _haversine_km
+from app.services import real_data
 
 router = APIRouter(prefix="/roads", tags=["roads"])
 
@@ -55,8 +56,12 @@ def _filter_roads(roads: list[Road], query: str | None, country: str | None) -> 
 def list_roads(
     q: str | None = Query(None, alias="q"),
     country: str | None = Query(None),
+    format: str | None = Query(None, description="Use format=list for legacy road array"),
     db: Session = Depends(get_db),
 ):
+    if real_data.data_available() and format != "list" and not q and not country:
+        return real_data.get_roads()
+
     rows = _get_db_roads(db)
     if not rows:
         return get_roads()

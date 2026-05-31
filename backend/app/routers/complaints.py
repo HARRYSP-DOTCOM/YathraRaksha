@@ -9,8 +9,16 @@ from app.auth import get_current_user, require_user
 from app.database import get_db
 from app.models import Complaint, User
 from app.schemas import ComplaintStatusUpdate, RepairVerificationRequest
+from app.services import real_data
 
 router = APIRouter(prefix="/complaints", tags=["complaints"])
+
+
+@router.get("/seed")
+def seeded_complaints():
+    if not real_data.data_available():
+        raise HTTPException(status_code=503, detail="Complaint seed data not found under /data")
+    return real_data.get_seeded_complaints()
 
 
 def _serialize_complaint(row: Complaint) -> dict[str, Any]:

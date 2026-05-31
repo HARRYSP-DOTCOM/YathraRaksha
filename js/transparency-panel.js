@@ -1,66 +1,72 @@
 /**
- * Enhanced Tender Registry / Spending panel
+ * Tender Registry — MoRTH / NHAI / PMGSY / State PWD tenders (real data)
  */
 window.TransparencyPanel = {
   _filter: "",
+  _rows: [],
 
-  render() {
+  async render() {
     const container = document.getElementById("tender-registry-root");
-    if (!container || !window.ROADS_DATA) return;
+    if (!container) return;
 
-    const roads = window.ROADS_DATA.getRoadsData();
+    if (!this._rows.length) {
+      try {
+        const base = (window.AppConfig && window.AppConfig.API_BASE_URL) || "/v1";
+        const data = await fetch(`${base}/tenders`).then((r) => r.json());
+        this._rows = window.RealDataLoader?._flattenTenders?.(data) || [];
+        if (!this._rows.length) {
+          const keys = ["national_highway_tenders", "pmgsy_tenders", "state_pwd_tenders"];
+          keys.forEach((k) => (data[k] || []).forEach((t) => this._rows.push(t)));
+        }
+      } catch {
+        this._rows = window._TENDERS_LIST || window.ROADS_DATA?.getRoadsData?.() || [];
+      }
+    }
+
     const q = this._filter.toLowerCase();
     const filtered = q
-      ? roads.filter(
-          (r) =>
-            r.id.toLowerCase().includes(q) ||
-            r.name.toLowerCase().includes(q) ||
-            r.contractor.toLowerCase().includes(q)
+      ? this._rows.filter(
+          (t) =>
+            (t.tender_id || "").toLowerCase().includes(q) ||
+            (t.road || "").toLowerCase().includes(q) ||
+            (t.awarded_to || "").toLowerCase().includes(q)
         )
-      : roads;
+      : this._rows;
+
+    const esc = (s) => window.App?.escapeHTML?.(String(s ?? "")) || String(s ?? "");
 
     let html = `
       <div class="tender-search-row" style="margin-bottom:16px;">
-        <input type="search" id="tender-search-input" class="form-control" placeholder="Search roads, contractors, regions..." value="${window.App?.escapeHTML?.(this._filter) || ""}">
+        <input type="search" id="tender-search-input" class="form-control" placeholder="Search tender ID, road, contractor..." value="${esc(this._filter)}">
       </div>
       <div class="tender-table-wrap" style="overflow-x:auto;">
       <table class="tender-table" style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead>
           <tr style="color:var(--text-muted); text-align:left;">
-            <th>Asset</th><th>Contractor</th><th>Funding</th>
-            <th>Sanctioned</th><th>Released</th><th>Spent</th>
-            <th>Remaining</th><th>Complete</th><th>Anomaly</th><th>Source</th><th></th>
+            <th>Tender ID</th><th>Road</th><th>Awarded To</th><th>Value (₹Cr)</th>
+            <th>Status</th><th>Cost Overrun</th><th>Source</th>
           </tr>
         </thead>
         <tbody>`;
 
-    filtered.forEach((r) => {
-      const remClass = r.remainingCr < 0 ? "color:#ef4444;font-weight:700" : "color:#10b981";
-      html += `<tr class="tender-row" data-road-id="${r.id}" style="border-top:1px solid var(--glass-border);">
-        <td style="padding:10px 8px;"><strong>${r.id}</strong><br><span style="color:var(--text-muted);font-size:11px;">${r.name}</span></td>
-        <td>${r.contractor}<br><span style="font-size:10px;color:var(--text-muted);">${r.contractorRegNo || ""}</span></td>
-        <td><span class="badge badge-sh">${r.fundingSource}</span></td>
-        <td>${r.sanctioned}</td><td>${r.released}</td><td>${r.spent}</td>
-        <td style="${remClass}">${r.remaining}</td>
-        <td>
-          <div class="completion-bar"><div class="completion-bar-fill ${r.completion < 80 ? "critical" : ""}" style="width:${r.completion}%"></div></div>
-          <span style="font-size:10px;">${r.completion}%</span>
-        </td>
-        <td><span class="anomaly-badge ${r.anomalyClass}">${r.anomaly}</span></td>
-        <td><a class="source-link" href="${r.sourceUrl}" target="_blank" rel="noopener">Source</a></td>
-        <td>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="window.App.focusRoadOnMap('${r.id}')">Map</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="window.App.selectRoadForReport('${r.id}')">Report</button>
-        </td>
-      </tr>
-      <tr class="tender-detail-row" id="detail-${r.id}" style="display:none;">
-        <td colspan="11" style="padding:12px; background:rgba(255,255,255,0.02);">
-          <div class="popup-row"><strong>Engineer:</strong> ${r.engineer}</div>
-          <div class="popup-row"><strong>Guarantee until:</strong> ${r.guaranteeUntil}</div>
-          <div class="popup-row"><strong>Last audit:</strong> ${r.lastAuditDate}</div>
-        </td>
+    filtered.forEach((t) => {
+      const value = t.contract_value_cr ?? t.budget_allocated_cr ?? 0;
+      const overrun = t.cost_overrun_cr ?? Math.max(0, (t.amount_spent_cr || 0) - (t.budget_allocated_cr || value));
+      const overrunLabel = overrun > 0 ? `₹${overrun} Cr` : "—";
+      html += `<tr style="border-top:1px solid var(--glass-border);">
+        <td style="padding:10px 8px;"><strong>${esc(t.tender_id)}</strong></td>
+        <td>${esc(t.road)}<br><span style="font-size:10px;color:var(--text-muted);">${esc(t.tender_name || t.section || "")}</span></td>
+        <td>${esc(t.awarded_to)}</td>
+        <td>₹${value}</td>
+        <td><span class="badge badge-sh">${esc(t.status)}</span></td>
+        <td>${overrunLabel}</td>
+        <td><span class="source-badge">📄 ${esc((t.source || "NHAI").split(",")[0])}</span></td>
       </tr>`;
     });
+
+    if (!filtered.length) {
+      html += `<tr><td colspan="7" style="padding:16px;color:var(--text-muted);">Loading tender registry…</td></tr>`;
+    }
 
     html += `</tbody></table></div>`;
     container.innerHTML = html;

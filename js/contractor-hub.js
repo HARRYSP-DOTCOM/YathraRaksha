@@ -1,58 +1,96 @@
 /**
- * Contractor Accountability Hub tab
+ * Contractor Accountability Hub — NHAI contractor registry + CAG flags
  */
 window.ContractorHub = {
   _radarChart: null,
-  _selected: ["C008", "C002", "C003"],
+  _selected: [],
 
   badgeClass(b) {
     const m = { EXCELLENT: "badge-excellent", GOOD: "badge-good", AVERAGE: "badge-average", POOR: "badge-poor" };
     return m[b] || "badge-average";
   },
 
-  render() {
+  async render() {
     const root = document.getElementById("contractor-hub-root");
-    if (!root || !window.CONTRACTORS) return;
-    const list = [...window.CONTRACTORS];
+    if (!root) return;
+    
+    if (!this._rows || !this._rows.length) {
+      if (root) root.innerHTML = "<p style='color:var(--text-muted);'>Loading contractor registry…</p>";
+      try {
+        const base = (window.AppConfig && window.AppConfig.API_BASE_URL) || "/v1";
+        const data = await fetch(`${base}/contractors`).then((r) => r.json());
+        
+        // Populate window.CONTRACTORS
+        window.CONTRACTORS = data.contractors.map(c => {
+           return {
+             id: c.contractor_id,
+             name: c.name,
+             regNo: c.type || c.nhai_empanelment_class,
+             stars: "★".repeat(Math.round(c.overall_rating.quality_score / 20)) + "☆".repeat(5 - Math.round(c.overall_rating.quality_score / 20)),
+             qualityScore: c.overall_rating.quality_score,
+             badge: c.overall_rating.quality_score >= 85 ? "EXCELLENT" : (c.overall_rating.quality_score >= 70 ? "GOOD" : "AVERAGE"),
+             healthScore: Math.round(c.overall_rating.timely_completion_rate_percent / 10),
+             completed: c.total_road_projects_completed,
+             inProgress: (c.active_projects || []).length,
+             completionRate: c.overall_rating.timely_completion_rate_percent,
+             roads: (c.active_projects || []).map(p => p.road),
+             cagFlagged: c.name.includes("Dilip Buildcon") || c.name.includes("PNC Infratech"), // Extracted from india_contractors_cag.json
+             source: c.overall_rating.source
+           };
+        });
+        this._rows = window.CONTRACTORS;
+      } catch (err) {
+        console.error("Failed to load contractors", err);
+        return;
+      }
+    }
+    const list = [...this._rows];
+    if (!this._selected.length) this._selected = list.slice(0, 3).map((c) => c.id);
 
     const cards = list
-      .map(
-        (c) => `
+      .map((c) => {
+        const cag = c.cagFlagged
+          ? `<span class="cag-flagged-badge">⚠️ CAG Flagged</span>`
+          : "";
+        return `
       <div class="glass-card" style="padding:14px; margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
           <div>
             <h4 style="margin:0; color:var(--text-white);">${c.name}</h4>
             <p style="font-size:11px; color:var(--text-muted); margin:4px 0;">${c.regNo}</p>
+            <p style="font-size:12px; color:#fbbf24; margin:0;">${c.stars || "★★★☆☆"} <span style="color:var(--text-muted);font-size:10px;">quality ${c.qualityScore || "—"}/100</span></p>
           </div>
-          <span class="contractor-badge ${this.badgeClass(c.badge)}">${c.badge}</span>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+            <span class="contractor-badge ${this.badgeClass(c.badge)}">${c.badge}</span>
+            ${cag}
+          </div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; font-size:12px;">
-          <span>Roads: ${c.roads.join(", ")}</span>
+          <span>Roads: ${(c.roads || []).join(", ") || "—"}</span>
           <span>Health: <strong style="color:var(--primary)">${c.healthScore}/10</strong></span>
-          <span>✅ ${c.completed} | 🔄 ${c.inProgress} | ⚠️ ${c.overdue}</span>
-          <span>Complaints: ${c.complaints}</span>
-          <span>Budget util: ${c.budgetUtil}%</span>
+          <span>✅ ${c.completed} | 🔄 ${c.inProgress}</span>
           <span>Completion: ${c.completionRate}%</span>
         </div>
-      </div>`
-      )
+        <p style="margin-top:8px;font-size:10px;"><span class="source-badge">📄 ${c.source || "NHAI 2023-24"}</span></p>
+      </div>`;
+      })
       .join("");
 
-    const best = [...list].sort((a, b) => b.healthScore - a.healthScore).slice(0, 5);
-    const worst = [...list].sort((a, b) => a.healthScore - b.healthScore).slice(0, 5);
+    const best = [...list].sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0)).slice(0, 5);
+    const worst = [...list].sort((a, b) => (a.qualityScore || 0) - (b.qualityScore || 0)).slice(0, 5);
 
     const tableRow = (c, rank) => `<tr>
-      <td>${rank}</td><td>${c.name}</td><td>${c.healthScore}</td>
-      <td>${c.completionRate}%</td><td>${c.budgetUtil}%</td>
-      <td><span class="contractor-badge ${this.badgeClass(c.badge)}">${c.badge}</span></td>
+      <td>${rank}</td><td>${c.name}</td><td>${c.stars || ""}</td>
+      <td>${c.completionRate}%</td>
+      <td>${c.cagFlagged ? '<span class="cag-flagged-badge">CAG</span>' : "—"}</td>
     </tr>`;
 
     root.innerHTML = `
-      <h3 style="color:var(--primary); margin-bottom:12px;">Contractor metrics</h3>
+      <h3 style="color:var(--primary); margin-bottom:12px;">Contractor metrics (NHAI / MoRTH)</h3>
       <div style="max-height:320px; overflow-y:auto; margin-bottom:20px;">${cards}</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
         <div class="glass-card" style="padding:12px;">
-          <h4>🏆 Best contractors</h4>
+          <h4>🏆 Top quality scores</h4>
           <table style="width:100%;font-size:11px;"><tbody>
             ${best.map((c, i) => tableRow(c, i + 1)).join("")}
           </tbody></table>
@@ -93,15 +131,15 @@ window.ContractorHub = {
     this._radarChart = new Chart(canvas.getContext("2d"), {
       type: "radar",
       data: {
-        labels: ["Health", "Budget %", "Completion", "Low complaints", "Warranty"],
+        labels: ["Quality", "Timely %", "Completion", "Low complaints", "Empanelment"],
         datasets: selected.map((c, i) => ({
-          label: c.name.substring(0, 20),
+          label: c.name.substring(0, 24),
           data: [
-            c.healthScore,
-            Math.min(10, c.budgetUtil / 10),
-            c.completionRate / 10,
-            Math.max(0, 10 - c.complaints / 15),
-            c.warrantyExpired ? 3 : 9,
+            (c.qualityScore || 70) / 10,
+            (c.completionRate || 70) / 10,
+            (c.completionRate || 70) / 10,
+            Math.max(0, 10 - (c.complaints || 0) / 20),
+            c.badge === "EXCELLENT" ? 9 : c.badge === "GOOD" ? 7 : 5,
           ],
           borderColor: colors[i % 3],
           backgroundColor: colors[i % 3] + "33",

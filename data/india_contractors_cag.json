@@ -1,0 +1,173 @@
+{
+  "_metadata": {
+    "sources": [
+      {
+        "name": "CAG Report No. 13 of 2023 – Bharatmala Phase 1 Performance Audit",
+        "url": "https://cag.gov.in/en/audit-report/download/119177",
+        "publisher": "Comptroller & Auditor General of India"
+      },
+      {
+        "name": "NHAI eTender Portal – awarded contracts",
+        "url": "https://etender.nhai.org.in",
+        "publisher": "NHAI"
+      },
+      {
+        "name": "MoRTH Annual Report 2023-24",
+        "url": "https://morth.nic.in/annual-report"
+      }
+    ],
+    "note": "Ratings are indicative based on publicly available audit findings and completion records. Not official NHAI star ratings.",
+    "license": "Open Government License, India"
+  },
+
+  "top_contractors_india": [
+    {
+      "contractor_id": "C001",
+      "name": "Larsen & Toubro Limited (L&T Infrastructure)",
+      "type": "EPC / HAM",
+      "headquarters": "Mumbai, Maharashtra",
+      "active_nh_projects": 28,
+      "total_km_under_construction": 1840,
+      "completed_projects_total": 142,
+      "avg_cost_overrun_pct": 4.2,
+      "avg_time_overrun_months": 3.1,
+      "quality_rating": 4.6,
+      "notable_projects": ["Delhi–Meerut Expressway (partial)", "Mumbai–Nagpur Samruddhi Mahamarg (sections)"],
+      "source": "NHAI Annual Report 2022-23, L&T Annual Report 2023-24"
+    },
+    {
+      "contractor_id": "C002",
+      "name": "KNR Constructions Limited",
+      "type": "EPC / BOT",
+      "headquarters": "Hyderabad, Telangana",
+      "active_nh_projects": 14,
+      "total_km_under_construction": 820,
+      "completed_projects_total": 68,
+      "avg_cost_overrun_pct": 2.1,
+      "avg_time_overrun_months": 1.8,
+      "quality_rating": 4.5,
+      "notable_projects": ["NH-44 Telangana sections", "SH-9 Karnataka segments"],
+      "source": "KNR Constructions Annual Report 2023-24, NHAI eTender"
+    },
+    {
+      "contractor_id": "C003",
+      "name": "GR Infraprojects Limited",
+      "type": "HAM / EPC",
+      "headquarters": "Udaipur, Rajasthan",
+      "active_nh_projects": 19,
+      "total_km_under_construction": 1120,
+      "completed_projects_total": 54,
+      "avg_cost_overrun_pct": 5.8,
+      "avg_time_overrun_months": 4.2,
+      "quality_rating": 4.1,
+      "notable_projects": ["NH-27 Rajasthan sections", "NH-48 partial sections"],
+      "source": "GR Infraprojects DRHP, NHAI Awarded Projects 2023"
+    },
+    {
+      "contractor_id": "C004",
+      "name": "Dilip Buildcon Limited (DBL)",
+      "type": "EPC / HAM",
+      "headquarters": "Bhopal, Madhya Pradesh",
+      "active_nh_projects": 22,
+      "total_km_under_construction": 1540,
+      "completed_projects_total": 96,
+      "avg_cost_overrun_pct": 7.4,
+      "avg_time_overrun_months": 6.8,
+      "quality_rating": 3.8,
+      "notable_projects": ["MP State Highways – multiple", "NH-44 MP/CG sections"],
+      "cag_findings": "CAG noted time overruns in 3 of 5 sampled DBL projects under Bharatmala",
+      "source": "CAG Audit Report 13/2023, DBL Annual Report 2023"
+    },
+    {
+      "contractor_id": "C005",
+      "name": "Afcons Infrastructure Limited",
+      "type": "EPC",
+      "headquarters": "Mumbai, Maharashtra",
+      "active_nh_projects": 9,
+      "total_km_under_construction": 480,
+      "completed_projects_total": 41,
+      "avg_cost_overrun_pct": 3.5,
+      "avg_time_overrun_months": 2.4,
+      "quality_rating": 4.3,
+      "notable_projects": ["NH in Northeast India – Arunachal Pradesh sections", "Tunnel construction NH-3"],
+      "source": "NHAI eTender, Afcons Prospectus 2024"
+    },
+    {
+      "contractor_id": "C006",
+      "name": "NCC Limited (Nagarjuna Construction Company)",
+      "type": "EPC / BOT",
+      "headquarters": "Hyderabad, Telangana",
+      "active_nh_projects": 11,
+      "total_km_under_construction": 620,
+      "completed_projects_total": 73,
+      "avg_cost_overrun_pct": 4.8,
+      "avg_time_overrun_months": 3.7,
+      "quality_rating": 4.0,
+      "notable_projects": ["NH-16 AP sections", "NH-30 sections"],
+      "source": "NCC Annual Report 2023-24, NHAI records"
+    },
+    {
+      "contractor_id": "C007",
+      "name": "PNC Infratech Limited",
+      "type": "HAM / EPC",
+      "headquarters": "Agra, Uttar Pradesh",
+      "active_nh_projects": 16,
+      "total_km_under_construction": 910,
+      "completed_projects_total": 58,
+      "avg_cost_overrun_pct": 6.1,
+      "avg_time_overrun_months": 5.2,
+      "quality_rating": 3.7,
+      "notable_projects": ["NH-19 UP–Bihar stretch", "NH-27 UP section"],
+      "cag_findings": "Slow pace of construction noted in UP projects; land acquisition delays contributed",
+      "source": "CAG 2023, PNC Infratech Annual Report 2023-24"
+    },
+    {
+      "contractor_id": "C008",
+      "name": "Ashoka Buildcon Limited",
+      "type": "BOT / HAM",
+      "headquarters": "Nashik, Maharashtra",
+      "active_nh_projects": 13,
+      "total_km_under_construction": 780,
+      "completed_projects_total": 87,
+      "avg_cost_overrun_pct": 5.3,
+      "avg_time_overrun_months": 4.0,
+      "quality_rating": 3.9,
+      "notable_projects": ["NH-60 Maharashtra", "NH-53 Nagpur–Raipur sections"],
+      "source": "Ashoka Buildcon Annual Report 2024, NHAI"
+    }
+  ],
+
+  "flagged_contractors_cag": {
+    "source": "CAG Report No. 13 of 2023 – Bharatmala Performance Audit",
+    "note": "These are findings from the official CAG audit. Not blacklisted — flagged for delays/overruns.",
+    "findings": [
+      {
+        "issue": "Inadequate pre-project surveys",
+        "impact": "Redesign costs and delays in 35% of sampled projects",
+        "responsible": "NHAI project planning division + awarded contractors"
+      },
+      {
+        "issue": "Land acquisition delays",
+        "impact": "60% of delayed projects cited land acquisition as primary bottleneck",
+        "responsible": "State governments + NHAI land acquisition units"
+      },
+      {
+        "issue": "Excess payments to contractors",
+        "amount_crore": 1287,
+        "impact": "CAG found overpayments in maintenance contracts across multiple NHs",
+        "responsible": "NHAI maintenance division"
+      },
+      {
+        "issue": "Below-standard road quality after construction",
+        "impact": "15% of inspected road stretches showed premature distress within 2 years",
+        "responsible": "Contractors + NHAI Quality Control"
+      }
+    ]
+  },
+
+  "contractor_types_explained": {
+    "EPC": "Engineering, Procurement & Construction – Government pays contractor directly",
+    "BOT": "Build-Operate-Transfer – Contractor funds, builds, operates toll, transfers back",
+    "HAM": "Hybrid Annuity Model – Government pays 40% upfront, 60% as annuity over 15 years"
+  }
+}

@@ -317,39 +317,8 @@
     <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">💰 Spending Tender Registry</h2>
     <div id="tender-registry-root"></div>
 
-    <!-- Summary KPI Cards -->
-    <div id="budget-kpi-row" style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px;">
-      <div class="glass-card" style="padding:14px; text-align:center;">
-        <p style="font-size:11px; color:var(--text-muted);">TOTAL ALLOCATED</p>
-        <p id="bkpi-allocated" style="font-size:22px; font-weight:800; color:var(--tertiary); font-family:var(--font-heading);">—</p>
-      </div>
-      <div class="glass-card" style="padding:14px; text-align:center;">
-        <p style="font-size:11px; color:var(--text-muted);">TOTAL SPENT</p>
-        <p id="bkpi-spent" style="font-size:22px; font-weight:800; color:var(--secondary); font-family:var(--font-heading);">—</p>
-      </div>
-      <div class="glass-card" style="padding:14px; text-align:center;">
-        <p style="font-size:11px; color:var(--text-muted);">REMAINING</p>
-        <p id="bkpi-remaining" style="font-size:22px; font-weight:800; color:var(--primary); font-family:var(--font-heading);">—</p>
-      </div>
-      <div class="glass-card" style="padding:14px; text-align:center;">
-        <p style="font-size:11px; color:var(--text-muted);">UTILIZATION</p>
-        <p id="bkpi-utilization" style="font-size:22px; font-weight:800; color:var(--text-white); font-family:var(--font-heading);">—</p>
-      </div>
-    </div>
-
-    <!-- Budget Chart -->
-    <div class="glass-card" style="padding:16px; margin-bottom:20px;">
-      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">ALLOCATED vs SPENT PER ROAD (₹ Crores)</h4>
-      <div style="height:220px; position:relative;">
-        <canvas id="chart-budget-detail"></canvas>
-      </div>
-    </div>
-
-    <!-- Roads Table -->
-    <div class="glass-card" style="padding:16px;">
-      <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">ROAD-WISE BREAKDOWN</h4>
-      <div id="budget-roads-table" style="display:flex; flex-direction:column; gap:10px;"></div>
-    </div>
+    <!-- Budget Dashboard (rendered by JS) -->
+    <div id="overview-budget-dashboard"></div>
 
     <div style="margin-top:20px;">
       <h4 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:12px;">🏗️ Contractor Performance</h4>

@@ -1,0 +1,242 @@
+{
+  "metadata": {
+    "file": "India Road Network Database",
+    "purpose": "Road data for map module - who built it, cost, time, location for YathraRaksha",
+    "sources": [
+      "MoRTH Road Transport Yearbook 2022-23",
+      "NHAI Project Register 2024",
+      "OpenStreetMap India (overpass-api.de)",
+      "National Highways List: https://morth.nic.in/national-highways",
+      "PMGSY Road Statistics 2024: omms.nic.in"
+    ],
+    "coordinate_system": "WGS84 (GPS standard)",
+    "overpass_api_query_example": "way[highway=motorway][name~'NH-48'](india); out body geom;"
+  },
+  "national_highways": [
+    {
+      "road_id": "NH-48",
+      "official_name": "National Highway 48",
+      "former_name": "NH-8 (pre-2010)",
+      "route": "Delhi → Gurugram → Jaipur → Ajmer → Udaipur → Ahmedabad → Vadodara → Mumbai",
+      "total_length_km": 2807,
+      "states_covered": ["Delhi", "Haryana", "Rajasthan", "Gujarat", "Maharashtra"],
+      "road_type": "National Highway (4-6 lane expressway sections)",
+      "built_by": "NHAI + Multiple contractors (phased construction 1997-2024)",
+      "primary_contractors": ["L&T", "Dilip Buildcon", "Ashoka Buildcon", "PNC Infratech"],
+      "total_project_cost_cr": 48000,
+      "construction_start_year": 1997,
+      "year_fully_completed": 2024,
+      "current_status": "Operational (ongoing expansion/upgrades)",
+      "key_sections": [
+        {
+          "section": "Delhi-Jaipur Expressway (NH-48)",
+          "length_km": 270,
+          "lanes": 8,
+          "cost_cr": 8500,
+          "start_gps": {"lat": 28.6139, "lon": 77.2090},
+          "end_gps": {"lat": 26.9124, "lon": 75.7873}
+        },
+        {
+          "section": "Vadodara-Mumbai Expressway",
+          "length_km": 473,
+          "lanes": 8,
+          "cost_cr": 21000,
+          "start_gps": {"lat": 22.3072, "lon": 73.1812},
+          "end_gps": {"lat": 19.0760, "lon": 72.8777}
+        }
+      ],
+      "osm_highway_tag": "motorway/trunk",
+      "osm_query": "[out:json]; way[highway][ref='NH 48'](india); out body geom;"
+    },
+    {
+      "road_id": "NH-44",
+      "official_name": "National Highway 44",
+      "former_name": "NH-7 + NH-46 + NH-44 (pre-2010)",
+      "route": "Srinagar → Jalandhar → Ambala → Delhi → Agra → Nagpur → Hyderabad → Bangalore → Chennai → Kanyakumari",
+      "total_length_km": 3745,
+      "states_covered": ["J&K", "Punjab", "Haryana", "Delhi", "UP", "MP", "Maharashtra", "Telangana", "AP", "Karnataka", "Tamil Nadu"],
+      "road_type": "National Highway (India's longest NH)",
+      "built_by": "NHAI + State PWDs",
+      "primary_contractors": ["Dilip Buildcon", "GR Infraprojects", "APCO Infratech", "Sadbhav Engineering"],
+      "total_project_cost_cr": 62000,
+      "construction_start_year": 1990,
+      "year_fully_completed": 2023,
+      "current_status": "Operational",
+      "key_sections": [
+        {
+          "section": "Nagpur-Hyderabad Section",
+          "length_km": 500,
+          "lanes": 4,
+          "cost_cr": 11200,
+          "start_gps": {"lat": 21.1458, "lon": 79.0882},
+          "end_gps": {"lat": 17.3850, "lon": 78.4867}
+        }
+      ],
+      "osm_query": "[out:json]; way[highway][ref='NH 44'](india); out body geom;"
+    },
+    {
+      "road_id": "NH-66",
+      "official_name": "National Highway 66",
+      "former_name": "NH-17 (pre-2010)",
+      "route": "Panvel (Mumbai) → Goa → Mangalore → Kozhikode → Kochi → Thiruvananthapuram",
+      "total_length_km": 1622,
+      "states_covered": ["Maharashtra", "Goa", "Karnataka", "Kerala"],
+      "road_type": "National Highway (coastal highway)",
+      "built_by": "NHAI + PWDs of Goa, Karnataka, Kerala",
+      "primary_contractors": ["IRB Infrastructure", "Dilip Buildcon", "KRIDL"],
+      "total_project_cost_cr": 28500,
+      "construction_start_year": 2005,
+      "year_fully_completed": 2025,
+      "current_status": "Operational (last section completing 2025)",
+      "kerala_section": {
+        "states": "Kerala",
+        "length_km": 420,
+        "key_towns": ["Kasaragod", "Kannur", "Kozhikode", "Malappuram", "Thrissur", "Ernakulam", "Alappuzha", "Kollam"],
+        "kannur_gps": {"lat": 11.8745, "lon": 75.3704},
+        "lanes": 4,
+        "cost_cr": 7200
+      },
+      "osm_query": "[out:json]; way[highway][ref='NH 66'](india); out body geom;"
+    },
+    {
+      "road_id": "NH-19",
+      "official_name": "National Highway 19",
+      "former_name": "NH-2 Grand Trunk Road (pre-2010)",
+      "route": "Delhi → Mathura → Agra → Kanpur → Allahabad → Varanasi → Kolkata",
+      "total_length_km": 1435,
+      "states_covered": ["Delhi", "UP", "Bihar", "Jharkhand", "West Bengal"],
+      "road_type": "National Highway (historic Grand Trunk Road)",
+      "built_by": "PWD (British era) + NHAI upgrades",
+      "primary_contractors": ["L&T", "PNC Infratech", "Ashoka Buildcon"],
+      "total_project_cost_cr": 22000,
+      "construction_start_year": 1959,
+      "year_fully_completed": 2020,
+      "current_status": "Operational"
+    },
+    {
+      "road_id": "NH-52",
+      "official_name": "National Highway 52",
+      "route": "Bareilly → Sitarganj → Tanakpur",
+      "total_length_km": 396,
+      "states_covered": ["Uttar Pradesh", "Uttarakhand"],
+      "road_type": "National Highway",
+      "built_by": "NHAI",
+      "primary_contractors": ["GR Infraprojects", "HG Infra"],
+      "total_project_cost_cr": 5400,
+      "current_status": "Under 4-laning (partial)"
+    },
+    {
+      "road_id": "NH-27",
+      "official_name": "National Highway 27",
+      "route": "Porbandar (Gujarat) → Ahmedabad → Udaipur → Kota → Lucknow → Varanasi → Patna → Silchar",
+      "total_length_km": 3507,
+      "states_covered": ["Gujarat", "Rajasthan", "MP", "UP", "Bihar", "WB", "Assam"],
+      "road_type": "National Highway",
+      "built_by": "NHAI + State PWDs",
+      "total_project_cost_cr": 41000,
+      "current_status": "Mostly operational, sections being 4-laned"
+    }
+  ],
+  "expressways": [
+    {
+      "road_id": "DMIC-YE",
+      "official_name": "Yamuna Expressway",
+      "route": "Greater Noida → Agra",
+      "total_length_km": 165,
+      "lanes": 6,
+      "built_by": "Jaypee Group (Jaypee Infratech)",
+      "total_cost_cr": 12700,
+      "construction_start": "2008",
+      "completion_date": "2012-08-09",
+      "model": "BOT Toll",
+      "current_status": "Operational",
+      "start_gps": {"lat": 28.4744, "lon": 77.5040},
+      "end_gps": {"lat": 27.1767, "lon": 78.0081},
+      "source": "Jaypee Infratech IPO Prospectus + YEIDA Annual Report"
+    },
+    {
+      "road_id": "PUNE-EXP",
+      "official_name": "Mumbai-Pune Expressway (Yashwantrao Chavan Expressway)",
+      "route": "Panvel → Pune",
+      "total_length_km": 94.5,
+      "lanes": 6,
+      "built_by": "Maharashtra State Road Development Corporation (MSRDC)",
+      "total_cost_cr": 1630,
+      "construction_start": "1997",
+      "completion_date": "2002-04-28",
+      "model": "Toll (Government)",
+      "current_status": "Operational",
+      "annual_revenue_cr": 780,
+      "source": "MSRDC Annual Report 2022-23"
+    },
+    {
+      "road_id": "DELHIMEERUT-EXP",
+      "official_name": "Delhi-Meerut Expressway",
+      "route": "Delhi → Meerut",
+      "total_length_km": 96,
+      "lanes": 14,
+      "built_by": "NHAI",
+      "primary_contractors": ["Dilip Buildcon", "Gawar Construction", "NCC Limited"],
+      "total_cost_cr": 8476,
+      "construction_start": "2018",
+      "completion_date": "2021-04-01",
+      "model": "EPC (Government funded)",
+      "current_status": "Operational",
+      "start_gps": {"lat": 28.6315, "lon": 77.2736},
+      "end_gps": {"lat": 28.9845, "lon": 77.7064},
+      "source": "NHAI Annual Report 2021-22, PIB Press Release April 2021"
+    }
+  ],
+  "kerala_roads_detail": {
+    "note": "Detailed data for Kannur region relevant to project location",
+    "state_highways": [
+      {
+        "road_id": "SH-29-KL",
+        "name": "SH-29 Kerala (Thalassery-Ooty Road)",
+        "route": "Thalassery → Mananthavady → Ooty",
+        "length_km": 106,
+        "maintained_by": "Kerala PWD Roads Division",
+        "last_major_work": "2021-22 (resurfacing)",
+        "cost_of_last_work_cr": 12.4,
+        "contractor_last_work": "KRIDL",
+        "condition_2024": "Fair",
+        "start_gps": {"lat": 11.7486, "lon": 75.4943}
+      },
+      {
+        "road_id": "SH-34-KL",
+        "name": "SH-34 Kerala (Kannur-Mysore Road)",
+        "route": "Kannur → Kalpetta → Mysore",
+        "length_km": 132,
+        "maintained_by": "Kerala PWD + Karnataka PWD",
+        "last_major_work": "2022-23",
+        "cost_of_last_work_cr": 18.7,
+        "condition_2024": "Good (NH-766 section recently upgraded)"
+      }
+    ],
+    "statistics": {
+      "total_road_length_kerala_km": 217000,
+      "nh_length_km": 1524,
+      "sh_length_km": 4342,
+      "mdr_length_km": 27012,
+      "rural_roads_pm_gsy_km": 31218,
+      "source": "Kerala Economic Review 2023, Kerala PWD Annual Report 2022-23"
+    }
+  },
+  "live_data_apis": {
+    "osm_overpass": {
+      "url": "https://overpass-api.de/api/interpreter",
+      "example_query_nh48": "[out:json]; way[highway][ref='NH 48'](india); out body geom;",
+      "example_query_by_bbox": "[out:json]; way[highway](11.5,75.0,12.2,76.0); out body geom;",
+      "note": "Free, no API key needed, real OSM road data"
+    },
+    "nhai_project_data": {
+      "url": "https://nhai.gov.in/projectdetails",
+      "note": "Manual download - no open API, but data updated regularly"
+    },
+    "pmgsy_open_data": {
+      "url": "https://omms.nic.in/Home/GetDistrictReport",
+      "method": "GET",
+      "note": "Semi-open, returns district road stats"
+    }
+  }
+}

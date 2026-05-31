@@ -13,8 +13,29 @@ Key capabilities:
 - AI-assisted analysis endpoint
 - PWA installability and offline fallback handling
 
+## Government data (`/data`)
+
+Real datasets (NHAI, MoRTH, CAG, PMGSY) live under [`data/`](data/). The API serves them at `/v1/*`; the build also copies `data/` to `public/data/` for direct static fetch.
+
+| File | Use |
+|------|-----|
+| `01_ai_road_defect_data.json` | AI Analyzer — defect classes, benchmarks |
+| `02_contractors_data.json` | Contractor Registry |
+| `03_tenders_data.json` | Tender Registry |
+| `04_roads_map_data.json` | Map — NHs, expressways, Kerala GPS |
+| `05_budget_audit_data.json` | Audit Ledger — budget + CAG findings |
+| `06_complaints_sample_data.json` | Seed complaints (Kannur, NH-66) |
+| `india_accidents_2023.json` | Accident heatmap / route risk |
+| `india_nh_data.json` | Extended NH records |
+| `india_contractors_cag.json` | CAG-flagged contractors |
+| `india_road_budget.json` | NHAI capex + MoRTH allocation |
+| `road_wise_accidents_2023.csv` | Per-road accident counts |
+
+> **Data attribution:** NHAI Annual Report 2023-24 · MoRTH Annual Report 2023-24 · Union Budget 2024-25 · CAG Report No.14/2023 · MoRTH Road Accidents in India 2023 · PMGSY OMMS. AI defect model trained on RDD2022/CRDDC2022 (Osaka University / SEKILAB).
+
 ## Repository Structure
 
+- `data/` — government road datasets (see above)
 - `index.html` — main application shell
 - `manifest.json` — PWA metadata
 - `sw.js` — service worker logic

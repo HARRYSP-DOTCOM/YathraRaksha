@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Road
 from app.seed_data import get_budget_audit
+from app.services import real_data
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
@@ -21,6 +22,9 @@ def _serialize_budget_road(road: Road) -> dict:
 
 @router.get("/budget")
 def budget_audit(roadId: str | None = Query(None), db: Session = Depends(get_db)):
+    if real_data.data_available():
+        return real_data.get_budget()
+
     roads = db.query(Road).all()
     if not roads:
         return get_budget_audit(roadId)

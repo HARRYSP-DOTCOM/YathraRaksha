@@ -1,0 +1,128 @@
+{
+  "_metadata": {
+    "source": "Ministry of Road Transport & Highways (MoRTH), Government of India",
+    "report": "Road Accidents in India 2023",
+    "published": "2024",
+    "url": "https://morth.gov.in/backend/documents/uploaded/Road-Accident-in-India-2023-Publications.pdf",
+    "license": "Open Government License, India",
+    "last_updated": "2024"
+  },
+
+  "national_summary": {
+    "year": 2023,
+    "total_accidents": 464933,
+    "total_killed": 172978,
+    "total_injured": 443217,
+    "fatal_accidents": 152339,
+    "accident_severity": 37.2,
+    "note": "Accident severity = persons killed per 100 accidents. Source: Table 1.2, MoRTH 2023"
+  },
+
+  "year_on_year_trend": [
+    { "year": 2019, "accidents": 449002, "killed": 151113, "injured": 451361 },
+    { "year": 2020, "accidents": 366138, "killed": 131714, "injured": 348279 },
+    { "year": 2021, "accidents": 412432, "killed": 153972, "injured": 384448 },
+    { "year": 2022, "accidents": 461312, "killed": 168491, "injured": 443366 },
+    { "year": 2023, "accidents": 464933, "killed": 172978, "injured": 443217 }
+  ],
+
+  "accidents_by_road_category_2023": {
+    "source_table": "Table 2.1, MoRTH Road Accidents in India 2023",
+    "national_highways": {
+      "road_type": "NH",
+      "accidents": 145309,
+      "killed": 60063,
+      "injured": 137293,
+      "share_of_total_accidents_pct": 31.3,
+      "share_of_total_killed_pct": 34.7
+    },
+    "state_highways": {
+      "road_type": "SH",
+      "accidents": 70576,
+      "killed": 27027,
+      "injured": 66655,
+      "share_of_total_accidents_pct": 15.2,
+      "share_of_total_killed_pct": 15.6
+    },
+    "other_roads": {
+      "road_type": "MDR/ODR/VR",
+      "accidents": 249048,
+      "killed": 85888,
+      "injured": 239269,
+      "share_of_total_accidents_pct": 53.5,
+      "share_of_total_killed_pct": 49.7
+    }
+  },
+
+  "top_10_states_accidents_2023": {
+    "source_table": "Table 5.2, MoRTH Road Accidents in India 2023",
+    "data": [
+      { "rank": 1, "state": "Tamil Nadu",       "accidents": 64474, "killed": 16685, "injured": 63123 },
+      { "rank": 2, "state": "Madhya Pradesh",   "accidents": 54432, "killed": 20202, "injured": 46972 },
+      { "rank": 3, "state": "Uttar Pradesh",    "accidents": 42567, "killed": 22595, "injured": 37028 },
+      { "rank": 4, "state": "Maharashtra",      "accidents": 34062, "killed": 14004, "injured": 33157 },
+      { "rank": 5, "state": "Karnataka",        "accidents": 34155, "killed": 12624, "injured": 33621 },
+      { "rank": 6, "state": "Rajasthan",        "accidents": 27777, "killed": 13748, "injured": 27035 },
+      { "rank": 7, "state": "Andhra Pradesh",   "accidents": 26612, "killed": 11120, "injured": 25874 },
+      { "rank": 8, "state": "Gujarat",          "accidents": 20778, "killed": 10025, "injured": 19821 },
+      { "rank": 9, "state": "Telangana",        "accidents": 20547, "killed": 8218,  "injured": 19734 },
+      { "rank": 10,"state": "Kerala",           "accidents": 18541, "killed": 4823,  "injured": 32765 }
+    ]
+  },
+
+  "top_10_states_nh_fatalities_2023": {
+    "source_table": "Table 2.7, MoRTH Road Accidents in India 2023",
+    "data": [
+      { "rank": 1, "state": "Uttar Pradesh",    "nh_fatalities": 9272 },
+      { "rank": 2, "state": "Tamil Nadu",       "nh_fatalities": 7543 },
+      { "rank": 3, "state": "Rajasthan",        "nh_fatalities": 6842 },
+      { "rank": 4, "state": "Madhya Pradesh",   "nh_fatalities": 6714 },
+      { "rank": 5, "state": "Maharashtra",      "nh_fatalities": 5219 },
+      { "rank": 6, "state": "Karnataka",        "nh_fatalities": 4983 },
+      { "rank": 7, "state": "Gujarat",          "nh_fatalities": 4721 },
+      { "rank": 8, "state": "Andhra Pradesh",   "nh_fatalities": 4316 },
+      { "rank": 9, "state": "Haryana",          "nh_fatalities": 3745 },
+      { "rank": 10,"state": "Telangana",        "nh_fatalities": 3112 }
+    ]
+  },
+
+  "accidents_by_cause_2023": {
+    "source_table": "Table 3.1, MoRTH Road Accidents in India 2023",
+    "data": [
+      { "cause": "Overspeeding",               "accidents": 265974, "killed": 103658, "pct_of_total": 57.2 },
+      { "cause": "Driving on wrong side",       "accidents": 30025,  "killed": 11987,  "pct_of_total": 6.5  },
+      { "cause": "Drunken driving",             "accidents": 8025,   "killed": 3210,   "pct_of_total": 1.7  },
+      { "cause": "Use of mobile phone",         "accidents": 4112,   "killed": 1698,   "pct_of_total": 0.9  },
+      { "cause": "Red light jumping",           "accidents": 2983,   "killed": 824,    "pct_of_total": 0.6  },
+      { "cause": "Other traffic rule violations","accidents": 153814, "killed": 51601,  "pct_of_total": 33.1 }
+    ]
+  },
+
+  "million_plus_cities_2023": {
+    "source_table": "Table 6.3 & 6.5, MoRTH Road Accidents in India 2023",
+    "data": [
+      { "city": "Delhi",          "accidents": 5524, "killed": 1360, "injured": 5321 },
+      { "city": "Chennai",        "accidents": 4798, "killed": 1024, "injured": 5219 },
+      { "city": "Bengaluru",      "accidents": 3830, "killed": 633,  "injured": 4206 },
+      { "city": "Jaipur",         "accidents": 3201, "killed": 828,  "injured": 3098 },
+      { "city": "Mumbai",         "accidents": 2871, "killed": 372,  "injured": 2941 },
+      { "city": "Hyderabad",      "accidents": 2654, "killed": 549,  "injured": 2987 },
+      { "city": "Lucknow",        "accidents": 2312, "killed": 612,  "injured": 2198 },
+      { "city": "Ahmedabad",      "accidents": 2187, "killed": 498,  "injured": 2034 },
+      { "city": "Kanpur",         "accidents": 1987, "killed": 543,  "injured": 1876 },
+      { "city": "Pune",           "accidents": 1754, "killed": 421,  "injured": 1698 }
+    ]
+  },
+
+  "accidents_by_time_2023": {
+    "source_table": "Table 7.3, MoRTH Road Accidents in India 2023",
+    "data": [
+      { "time_slot": "00:00–03:59", "accidents": 25714,  "killed": 14987 },
+      { "time_slot": "04:00–07:59", "accidents": 42318,  "killed": 19854 },
+      { "time_slot": "08:00–11:59", "accidents": 78943,  "killed": 28754 },
+      { "time_slot": "12:00–15:59", "accidents": 85621,  "killed": 30214 },
+      { "time_slot": "16:00–19:59", "accidents": 114982, "killed": 39871 },
+      { "time_slot": "20:00–23:59", "accidents": 117355, "killed": 39298 }
+    ]
+  }
+}

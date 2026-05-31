@@ -550,21 +550,35 @@ const App = {
    */
   async loadBudgetDashboard() {
     const formatCr = v => `₹${(v/10000000).toFixed(2)} Cr`;
+    const formatCrDirect = (cr) => `₹${Number(cr || 0).toLocaleString()} Cr`;
     try {
       const data = await APIService.request('/audit/budget');
+      const sector = data.national_budget_road_sector || [];
+      const latest = [...sector].reverse().find((y) => y.actual_spent_cr != null) || sector[sector.length - 1];
+      if (latest) {
+        document.getElementById('bkpi-allocated').textContent = formatCrDirect(latest.budget_allocated_cr);
+        document.getElementById('bkpi-spent').textContent = formatCrDirect(latest.actual_spent_cr);
+        const rem = (latest.budget_allocated_cr || 0) - (latest.actual_spent_cr || 0);
+        document.getElementById('bkpi-remaining').textContent = formatCrDirect(rem);
+        document.getElementById('bkpi-utilization').textContent = (latest.utilization_percent ?? '—') + (latest.utilization_percent != null ? '%' : '');
+      } else if (data.summary) {
+        const s = data.summary;
+        document.getElementById('bkpi-allocated').textContent = formatCr(s.totalSanctioned);
+        document.getElementById('bkpi-spent').textContent = formatCr(s.totalSpent);
+        document.getElementById('bkpi-remaining').textContent = formatCr(s.totalRemaining || (s.totalSanctioned - s.totalSpent));
+        document.getElementById('bkpi-utilization').textContent = (s.utilizationPercent || 0) + '%';
+      }
       const s = data.summary;
-      document.getElementById('bkpi-allocated').textContent = formatCr(s.totalSanctioned);
-      document.getElementById('bkpi-spent').textContent = formatCr(s.totalSpent);
-      document.getElementById('bkpi-remaining').textContent = formatCr(s.totalRemaining || (s.totalSanctioned - s.totalSpent));
-      document.getElementById('bkpi-utilization').textContent = (s.utilizationPercent || 0) + '%';
+      if (!latest && !s) return;
 
       // Chart
       const canvas = document.getElementById('chart-budget-detail');
       if (canvas && typeof Chart !== 'undefined') {
         if (this.activeCharts.budgetDetail) this.activeCharts.budgetDetail.destroy();
-        const labels = data.roads.map(r => r.id);
-        const allocated = data.roads.map(r => r.sanctionedBudget / 10000000);
-        const spent = data.roads.map(r => r.spentBudget / 10000000);
+        const fyRows = sector.filter((y) => y.actual_spent_cr != null);
+        const labels = fyRows.length ? fyRows.map((y) => y.fiscal_year) : (data.roads || []).map(r => r.id);
+        const allocated = fyRows.length ? fyRows.map((y) => y.budget_allocated_cr) : (data.roads || []).map(r => r.sanctionedBudget / 10000000);
+        const spent = fyRows.length ? fyRows.map((y) => y.actual_spent_cr) : (data.roads || []).map(r => r.spentBudget / 10000000);
         this.activeCharts.budgetDetail = new Chart(canvas.getContext('2d'), {
           type: 'bar',
           data: {
@@ -590,7 +604,7 @@ const App = {
 
       // Table
       const tableEl = document.getElementById('budget-roads-table');
-      if (tableEl) {
+      if (tableEl && data.roads?.length) {
         tableEl.innerHTML = data.roads.map(r => {
           const statusStyle = r.statusLabel === 'Over Budget'
             ? { badge: 'badge-warn', bar: 'var(--accent-red)' }
@@ -619,6 +633,18 @@ const App = {
             </div>
           `;
         }).join('');
+      } else if (tableEl && sector.length) {
+        tableEl.innerHTML = sector
+          .filter((y) => y.actual_spent_cr != null)
+          .map(
+            (y) => `
+          <div class="glass-card" style="padding:12px;">
+            <p style="font-weight:700;color:var(--text-white);">FY ${y.fiscal_year}</p>
+            <p style="font-size:11px;color:var(--text-muted);">Allocated ₹${y.budget_allocated_cr?.toLocaleString()} Cr · Spent ₹${y.actual_spent_cr?.toLocaleString()} Cr</p>
+            <span class="source-badge">${y.source || "Union Budget"}</span>
+          </div>`
+          )
+          .join("");
       }
 
       // Load contractor dashboard alongside budget data
@@ -874,6 +900,10 @@ const App = {
           this.coordsLockedByUser = true;
           this.applyCoordinates(lat, lng, { updateMap: false, silent: true });
         });
+        if (window.RoadDatabase?.roads?.length) {
+          window.MapHub.plotDatabaseRoads();
+          window.MapHub.plotSeededComplaints?.(window._SEEDED_COMPLAINTS);
+        }
         if (window.MapHub.map) {
           window.MapHub.map.invalidateSize();
           if (window.LocationService?.lastPosition && !this.coordsLockedByUser) {
@@ -2398,4 +2428,17 @@ const App = {
 };
 
 window.App = App;
-window.onload = () => window.App.showWelcome(() => window.App.init());
+window.onload = () =>
+  window.App.showWelcome(async () => {
+    if (window.RealDataLoader?.init) {
+      await window.RealDataLoader.init();
+    }
+    window.App.init();
+    window.TransparencyPanel?.render?.();
+    window.ContractorHub?.render?.();
+    window.BudgetDashboard?.render?.();
+    if (window.MapHub?.map) {
+      window.MapHub.plotDatabaseRoads();
+      window.MapHub.plotSeededComplaints?.(window._SEEDED_COMPLAINTS);
+    }
+  });
