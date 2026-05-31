@@ -31,74 +31,6 @@
 </head>
 <body>
 
-  <!-- Welcome splash (before dashboard) -->
-  <div id="welcome-screen" class="welcome-screen" role="dialog" aria-label="Welcome to YatraRaksha">
-    <div class="welcome-bg" aria-hidden="true">
-      <div class="welcome-grid"></div>
-      <div class="welcome-orb welcome-orb--1"></div>
-      <div class="welcome-orb welcome-orb--2"></div>
-      <div class="welcome-orb welcome-orb--3"></div>
-      <div class="welcome-particles">
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-        <span class="welcome-particle"></span>
-      </div>
-      <svg class="welcome-road-svg" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="welcomeRoadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.2"/>
-            <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.8"/>
-            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.3"/>
-          </linearGradient>
-        </defs>
-        <path class="welcome-road-path" d="M0,160 Q200,80 400,120 T800,100 T1200,140 L1200,200 L0,200 Z"/>
-      </svg>
-    </div>
-
-    <div class="welcome-content">
-      <div class="welcome-logo-wrap">
-        <div class="welcome-logo" aria-hidden="true">Y</div>
-        <span class="welcome-eyebrow">Road Safety Hackathon 2026 · CoERS</span>
-      </div>
-      <h1 class="welcome-title">YatraRaksha</h1>
-      <p class="welcome-subtitle">Monitor road quality, audit public spending, and route complaints with AI — built for citizen transparency.</p>
-
-      <div id="welcome-main">
-        <div class="welcome-features">
-          <div class="welcome-feature"><span class="welcome-feature-icon">🗺️</span> Live maps & safe routes</div>
-          <div class="welcome-feature"><span class="welcome-feature-icon">🤖</span> AI defect verification</div>
-          <div class="welcome-feature"><span class="welcome-feature-icon">📊</span> Open route transparency</div>
-        </div>
-
-        <div class="welcome-loader" aria-hidden="true"><div class="welcome-loader-bar"></div></div>
-
-        <div class="welcome-actions">
-          <button type="button" class="welcome-cta" id="welcome-enter-btn">Enter dashboard</button>
-          <button type="button" class="welcome-skip" id="welcome-skip-btn">Skip intro</button>
-        </div>
-      </div>
-
-      <div id="welcome-captcha" class="welcome-captcha hidden" aria-live="polite">
-        <h3 class="welcome-captcha-title">Human verification</h3>
-        <p class="captcha-info">Please solve the quick captcha to confirm your session and continue to the dashboard.</p>
-        <div class="captcha-card">
-          <div class="captcha-question" id="captcha-question">What is 8 + 3?</div>
-          <input type="text" id="captcha-answer" autocomplete="off" inputmode="numeric" placeholder="Enter answer" aria-label="Captcha answer" />
-          <button type="button" class="welcome-cta" id="captcha-verify-btn">Verify and continue</button>
-          <button type="button" class="welcome-skip welcome-back" id="captcha-back-btn">Back</button>
-          <div class="captcha-feedback" id="captcha-feedback"></div>
-        </div>
-      </div>
-
-      <p class="welcome-hackathon">RoadWatch · AI in Road Safety</p>
-    </div>
-  </div>
-
   <div class="app-layout">
     
     <!-- A. Desktop Sidebar Navigation (Hidden on Mobile) -->
@@ -110,10 +42,7 @@
         </div>
         
         <nav class="sidebar-nav">
-          <div class="nav-link active" data-tab="overview">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-            <span>Dashboard</span>
-          </div>
+          
           <div class="nav-link" data-tab="capture">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             <span>AI Defect Capture</span>
@@ -126,7 +55,7 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <span>Contractor Hub</span>
           </div>
-          <div class="nav-link" data-tab="map">
+          <div class="nav-link active" data-tab="map">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <span>Satellite Map Hub</span>
           </div>
@@ -223,84 +152,6 @@
       <!-- Main Contents Panels -->
       <main>
         
-        <!-- 1. OVERVIEW & METRICS TAB -->
-        <section class="tab-content active" id="overview-tab">
-          <div class="page-hero">
-            <div class="page-hero-content">
-              <span class="hero-eyebrow">Citizen transparency platform</span>
-              <h2 class="section-title hero-title">Monitor roads. Audit spending. Report defects.</h2>
-              <p class="section-desc hero-desc">Location-based road quality data, contractor accountability, and AI-verified complaint routing — built for the Road Safety Hackathon 2026.</p>
-            </div>
-            <div class="hero-orbs" aria-hidden="true"></div>
-          </div>
-
-          <!-- Metric Cards in INR -->
-          <div class="metrics-grid">
-            <div class="glass-card metric-card highlight-teal">
-              <span class="label">Total Grievances Filed</span>
-              <span class="value" id="overview-total">0</span>
-              <span class="trend positive">🟢 Active Citizen Audits</span>
-            </div>
-            <div class="glass-card metric-card">
-              <span class="label">Remedied Defect Points</span>
-              <span class="value" id="overview-resolved">0</span>
-              <span class="trend positive">✨ Repaired under Warranty</span>
-            </div>
-            <div class="glass-card metric-card highlight-orange">
-              <span class="label">Audited Road Budgets</span>
-              <span class="value" id="overview-budget">₹832.2 Cr</span>
-              <span class="trend warning">📊 Public Funds Monitored</span>
-            </div>
-            <div class="glass-card metric-card">
-              <span class="label">Avg Contractor Rating</span>
-              <span class="value">3.8 / 5.0</span>
-              <span class="trend positive">🌟 Quality Standard Index</span>
-            </div>
-          </div>
-
-          <!-- Charts and miniature map -->
-          <div class="dashboard-grid">
-            <!-- Left panel: Charts -->
-            <div>
-              <div class="glass-card highlight-teal">
-                <h3 style="margin-bottom: 16px;">💸 Audit Ledger: Sanctioned vs Spent Capital (₹ Crores)</h3>
-                <div style="height: 320px; position: relative;">
-                  <canvas id="chart-budget-leakage" width="400" height="320" style="width:100%;height:100%;display:block;"></canvas>
-                </div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">⚠️ Red markers represent budget overruns (potential contractor overcharging). Green markers denote projects completed on-time and within public funding allocations.</p>
-              </div>
-
-              <div class="glass-card">
-                <h3 style="margin-bottom: 16px;">🛠️ Registered Contractor Performance Rating</h3>
-                <div style="height: 250px; position: relative;">
-                  <canvas id="chart-contractor-quality" width="400" height="250" style="width:100%;height:100%;display:block;"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <div id="budget-transparency-root"></div>
-
-            <!-- Right panel: Interactive mini map widget -->
-            <div>
-              <div class="glass-card highlight-orange mini-map-card">
-                <div class="mini-map-header">
-                  <h3>Live road network</h3>
-                  <div class="mini-map-legend">
-                    <span class="legend-dot legend-critical"></span> Critical
-                    <span class="legend-dot legend-warning"></span> Warning
-                    <span class="legend-dot legend-healthy"></span> Healthy
-                  </div>
-                </div>
-                <p class="mini-map-desc">Global sample corridors — tap a segment in the full map for contractor, budget, and engineer details.</p>
-                <div class="mini-map-shell">
-                  <div id="overview-mini-map"></div>
-                </div>
-                <button type="button" onclick="window.App.switchTab('map')" class="btn btn-primary btn-block">Open satellite map hub</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- 2. AI CAPTURE & VERIFICATION TAB -->
         <section class="tab-content" id="capture-tab">
           <h2 class="section-title">Visual AI Pavement Analyzer</h2>
@@ -370,6 +221,12 @@
                 <div class="logger-logs" id="ai-logger-logs">
                   <div class="log-entry text-muted">System waiting for media stream upload...</div>
                 </div>
+              </div>
+
+              <div class="glass-card" id="ai-model-benchmarks-card" style="display:none; margin-top:12px;">
+                <h4 style="font-size:13px; color:var(--primary); margin-bottom:8px;">YOLOv8 defect classes (RDD2022 / CRDDC2022)</h4>
+                <ul id="ai-defect-class-list" style="font-size:12px; color:var(--text-muted); margin:0 0 12px 18px;"></ul>
+                <div id="ai-benchmark-scores" style="font-size:12px;"></div>
               </div>
             </div>
 
@@ -502,7 +359,7 @@
 </section>
 
         <!-- 4. MAP HUB TAB -->
-        <section class="tab-content" id="map-tab">
+        <section class="tab-content active" id="map-tab">
           <header class="map-hub-header">
             <p class="map-hub-header__eyebrow">Geospatial audit</p>
             <h2 class="section-title">Infrastructure map atlas</h2>
@@ -793,10 +650,7 @@
     </div>
 
     <nav class="mobile-nav" aria-label="Mobile navigation">
-      <div class="mobile-nav-link active" data-tab="overview">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-        <span>Overview</span>
-      </div>
+      
       <div class="mobile-nav-link" data-tab="capture">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
         <span>AI Vision</span>
@@ -805,7 +659,7 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
         <span>Tenders</span>
       </div>
-      <div class="mobile-nav-link" data-tab="map">
+      <div class="mobile-nav-link active" data-tab="map">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         <span>Map</span>
       </div>
@@ -826,6 +680,10 @@
         <span>Score</span>
       </div>
     </nav>
+
+    <footer class="data-attribution-footer" style="padding:12px 16px 80px; font-size:10px; color:var(--text-muted); text-align:center; line-height:1.5; border-top:1px solid var(--glass-border);">
+      Data sourced from: NHAI Annual Report 2023-24 · MoRTH Annual Report 2023-24 · Union Budget 2024-25 · CAG Report No.14/2023 · MoRTH Road Accidents in India 2023 · PMGSY OMMS. AI defect model trained on RDD2022/CRDDC2022 (Osaka University / SEKILAB).
+    </footer>
   </div>
 
   <!-- PWA Service Worker -->
@@ -845,6 +703,7 @@
   <script src="js/config-env.js"></script>
   <script src="js/database.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/real-data.js"></script>
   <script src="js/storage-optimizer.js"></script>
   
   <!-- Session & API -->
@@ -882,5 +741,11 @@
     <div id="public-timeline-content"></div>
   </div>
 </div>
+
+<!-- Floating AI Chatbot Button -->
+<button id="floating-chatbot-btn" class="floating-chatbot-btn" onclick="window.App.switchTab('chatbot')" aria-label="Open AI Chatbot">
+  🤖 AI Chat
+</button>
 </body>
+
 </html>
