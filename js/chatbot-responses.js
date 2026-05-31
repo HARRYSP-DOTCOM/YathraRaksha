@@ -54,6 +54,32 @@ window.YatraGPT = (() => {
           }
         }
       }
+      if (buffer.trim()) {
+        const line = buffer.trim();
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") {
+            onDone();
+            return;
+          }
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.error) throw new Error(parsed.error);
+            const token = parsed.choices?.[0]?.delta?.content;
+            if (token) onToken(token);
+          } catch (e) {
+            if (line.includes('"delta"')) {
+              try {
+                const parsed = JSON.parse(data);
+                const token = parsed.choices?.[0]?.delta?.content;
+                if (token) onToken(token);
+              } catch {
+                /* passthrough SSE chunks from Groq */
+              }
+            }
+          }
+        }
+      }
       onDone();
     } catch (err) {
       onError(err);
@@ -110,7 +136,16 @@ window.YatraGPT = (() => {
     chatHistory = [];
     const box = document.getElementById("chat-box");
     if (box) box.innerHTML = "";
-    window.YatraChatbot?.showWelcome?.();
+    const welcomeMessage =
+      "👋 Hi! I'm YatraGPT. Ask me about road quality, contractor budgets, filing complaints, or safe routes.";
+    if (window.App?.appendChatMessage) {
+      window.App.appendChatMessage("assistant", welcomeMessage);
+    } else if (box) {
+      const wrap = document.createElement("div");
+      wrap.className = "chat-bubble chat-bubble--assistant";
+      wrap.innerHTML = `<div class="chat-bubble-meta"><span class="chat-time">${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div><div class="chat-bubble-body">${welcomeMessage}</div>`;
+      box.appendChild(wrap);
+    }
   }
 
   return { sendMessage, reset, streamGroqResponse };

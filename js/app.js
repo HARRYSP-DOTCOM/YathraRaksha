@@ -313,6 +313,8 @@ const App = {
       }
     });
 
+    document.getElementById("chat-clear-btn")?.addEventListener("click", () => this.clearChat());
+
     document.getElementById("map-panel-close")?.addEventListener("click", () => {
       const panel = document.getElementById("map-audit-panel");
       if (panel) panel.style.display = "none";
@@ -2407,6 +2409,24 @@ const App = {
   hideTypingIndicator() {
     const el = document.getElementById("typing-indicator");
     if (el) el.style.display = "none";
+  },
+
+  clearChat() {
+    const box = document.getElementById("chat-box");
+    if (box) box.innerHTML = "";
+    this.hideTypingIndicator();
+    if (window.YatraGPT?.reset) {
+      window.YatraGPT.reset();
+      return;
+    }
+    if (window.YatraChatbot?.clearChat) {
+      window.YatraChatbot.clearChat();
+      return;
+    }
+    this.appendChatMessage(
+      "assistant",
+      "👋 Hi! I'm YatraGPT. Ask me about road quality, contractor budgets, filing complaints, or safe routes."
+    );
   },
 
   handleUserChatMessage() {
