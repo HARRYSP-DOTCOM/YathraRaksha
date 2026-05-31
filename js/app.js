@@ -169,7 +169,7 @@ const App = {
   setMapMode(mode) {
     if (this.mapTileLayer) this.map.removeLayer(this.mapTileLayer);
     const tiles = {
-      road: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      road: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       night: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     };
