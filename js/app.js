@@ -310,12 +310,24 @@ const App = {
     );
   },
 
+  getRoadAuthority(road = {}, tender = null) {
+    const type = (road.type || road.name || '').toString();
+    const source = (tender?.source || road.funding_source || '').toString().toLowerCase();
+    if (/nh|national/i.test(type) || source.includes('nhai') || source.includes('national')) return 'NHAI';
+    if (/sh|state/i.test(type) || source.includes('pwd') || source.includes('state')) return 'State PWD';
+    if (/mdr/i.test(type) || /district/i.test(type) || source.includes('municipality')) return 'Municipality / District Authority';
+    if (/exp|expressway/i.test(type) || source.includes('expressway')) return 'Expressway Authority';
+    return 'Local Road Authority';
+  },
+
   showRoadInfo(road) {
     this.selectedRoad = road;
     const data = window.MOCK_DATA;
     const contractor = data.getContractorById(road.contractor_id);
     const complaints = data.getComplaintsByRoad(road.id);
     const tender = data.getTenderByRoad(road.id);
+    const fundingSource = tender?.source || road.funding_source || 'Public Fund';
+    const authority = this.getRoadAuthority(road, tender);
     const budgetPct = road.budget_allocated > 0 ? Math.round((road.budget_spent / road.budget_allocated) * 100) : 0;
     const condClass = road.condition.toLowerCase();
     const typeLabel = window.I18n.translateRoadType(road.type);
@@ -366,6 +378,14 @@ const App = {
             <span class="detail-item-value">${road.department}</span>
           </div>
           <div class="detail-item">
+            <span class="detail-item-label">${window.t('panel_authority')}</span>
+            <span class="detail-item-value">${authority}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item-label">${window.t('panel_funding_source')}</span>
+            <span class="detail-item-value">${fundingSource}</span>
+          </div>
+          <div class="detail-item">
             <span class="detail-item-label">${window.t('panel_ai_score')}</span>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="score-ring">
@@ -386,12 +406,24 @@ const App = {
             <span class="detail-item-value">${road.next_maintenance}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">${window.t('panel_budget_alloc')}</span>
+            <span class="detail-item-label">${window.t('panel_budget_sanctioned')}</span>
             <span class="detail-item-value">${data.formatINR(road.budget_allocated)}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-item-label">${window.t('panel_budget_used')}</span>
-            <span class="detail-item-value" style="color:${budgetPct > 100 ? 'var(--danger)' : 'var(--text)'}">${budgetPct}%</span>
+            <span class="detail-item-label">${window.t('panel_budget_spent')}</span>
+            <span class="detail-item-value">${data.formatINR(road.budget_spent)}</span>
+          </div>
+        </div>
+
+        <!-- Accountability summary -->
+        <div class="road-accountability-card" style="margin-top:18px;padding:16px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;background:rgba(255,255,255,0.03);">
+          <h3 style="margin:0 0 10px;font-size:14px;font-weight:700;">${window.t('panel_accountability')}</h3>
+          <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:var(--text-muted);">${window.t('panel_accountability_note')}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+            <div><strong>${window.t('panel_contractor')}:</strong> ${contractor?.name || '—'}</div>
+            <div><strong>${window.t('panel_authority')}:</strong> ${authority}</div>
+            <div><strong>${window.t('panel_budget_sanctioned')}:</strong> ${data.formatINR(road.budget_allocated)}</div>
+            <div><strong>${window.t('panel_budget_spent')}:</strong> ${data.formatINR(road.budget_spent)}</div>
           </div>
         </div>
 
@@ -1152,6 +1184,7 @@ const App = {
         <div class="complaint-meta">
           <span class="badge badge-${c.type === 'Pothole' ? 'critical' : c.type.includes('Crack') ? 'fair' : 'poor'}">${c.type}</span>
           <span>👤 ${c.submitted_by} (${c.aadhaar_masked})</span>
+          <span>📡 ${c.authority || 'Local Authority'}</span>
           <span>📅 ${c.date}</span>
         </div>
         <div class="status-tracker" style="margin-top:8px;">
@@ -1200,12 +1233,14 @@ const App = {
       return;
     }
 
+    const matchedRoad = window.MOCK_DATA.roads.find(r => r.name.toLowerCase() === road.toLowerCase() || r.name.toLowerCase().includes(road.toLowerCase()));
+    const authority = matchedRoad ? this.getRoadAuthority(matchedRoad, window.MOCK_DATA.getTenderByRoad(matchedRoad.id)) : 'Local Road Authority';
     const refId = 'YR-2026-' + String(Math.floor(Math.random() * 99999)).padStart(5, '0');
     const aadhaar = document.getElementById('nc-aadhaar').value.trim();
 
     window.MOCK_DATA.complaints.unshift({
       id: 'CMP' + Date.now(),
-      road_id: 'R000',
+      road_id: matchedRoad?.id || 'R000',
       road_name: road,
       location: document.getElementById('nc-location').value || road,
       lat: parseFloat(document.getElementById('nc-lat').value) || 0,
@@ -1217,6 +1252,7 @@ const App = {
       date: new Date().toISOString().split('T')[0],
       status: 'Filed',
       reference_id: refId,
+      authority,
       photo_url: null,
       upvote_count: 0,
     });
@@ -1322,7 +1358,10 @@ const App = {
 
   buildChatContext() {
     const data = window.MOCK_DATA;
-    const roads = data.roads.map(r => `${r.name} (${r.type}): ${r.condition}, ${r.length_km}km, ${r.state}, contractor: ${data.getContractorById(r.contractor_id)?.name}, damage: ${r.ai_damage_score}/100, complaints: ${r.complaint_count}, budget: ${data.formatINR(r.budget_allocated)}, spent: ${data.formatINR(r.budget_spent)}`).join('\n');
+    const roads = data.roads.map(r => {
+      const tender = data.getTenderByRoad(r.id);
+      return `${r.name} (${r.type}): ${r.condition}, ${r.length_km}km, ${r.state}, contractor: ${data.getContractorById(r.contractor_id)?.name}, authority: ${this.getRoadAuthority(r, tender)}, funding: ${tender?.source || 'Public fund'}, damage: ${r.ai_damage_score}/100, complaints: ${r.complaint_count}, budget: ${data.formatINR(r.budget_allocated)}, spent: ${data.formatINR(r.budget_spent)}`;
+    }).join('\n');
     const contractors = data.contractors.map(c => `${c.name}: health ${c.avg_health_score}/100, projects ${c.projects_completed}, complaints ${c.complaints_count}, efficiency ${c.budget_efficiency}%, completion ${c.completion_rate}%`).join('\n');
     const langName = window.I18n?.getLangName?.() || 'English';
 
