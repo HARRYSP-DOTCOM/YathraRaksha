@@ -1,9 +1,11 @@
 """Groq AI chat proxy — /v1/ai/chat and /v1/ai/chat/stream (Groq only, no Claude)."""
 
+import json
+import os
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator as pydantic_root_validator
 
 from app.config import settings
 from app.prompts.yatragpt_system import YATRAGPT_SYSTEM_PROMPT
@@ -16,8 +18,23 @@ FALLBACK_MODEL = "llama-3.3-70b-versatile"
 
 class ChatRequest(BaseModel):
     messages: list[dict] = Field(default_factory=list)
+    message: str | None = None
+    history: list[dict] = Field(default_factory=list)
     context: str = ""
     language: str = "en"
+
+    @pydantic_root_validator(pre=True)
+    def _normalize_messages(cls, values):
+        if values.get("messages"):
+            return values
+        msgs = []
+        hist = values.get("history") or []
+        if isinstance(hist, list):
+            msgs.extend(hist)
+        if values.get("message"):
+            msgs.append({"role": "user", "content": values.get("message")})
+        values["messages"] = msgs
+        return values
 
 
 class ChatResponse(BaseModel):
@@ -38,7 +55,37 @@ def _system_content(context: str, language: str) -> str:
     )
     if context:
         return base.replace("[DYNAMIC_DATA_CONTEXT]", context) + lang_instruction
-    return base.replace("[DYNAMIC_DATA_CONTEXT]", "(No live context provided)") + lang_instruction
+
+    # Build a short dynamic context from local data files when none provided
+    def _build_dynamic_context():
+        root = os.path.join(os.path.dirname(__file__), "..", "..", "data")
+        try:
+            root = os.path.normpath(root)
+            parts = []
+            roads_file = os.path.join(root, "04_roads_map_data.json")
+            if os.path.exists(roads_file):
+                with open(roads_file, "r", encoding="utf-8") as f:
+                    roads = json.load(f)
+                count = len(roads.get("roads", roads)) if isinstance(roads, dict) else len(roads)
+                parts.append(f"Road records available: {count}.")
+            contractors_file = os.path.join(root, "02_contractors_data.json")
+            if os.path.exists(contractors_file):
+                with open(contractors_file, "r", encoding="utf-8") as f:
+                    c = json.load(f)
+                contractors = c.get("contractors") if isinstance(c, dict) else c
+                parts.append(f"Registered contractors: {len(contractors) if contractors else 0}.")
+            tenders_file = os.path.join(root, "03_tenders_data.json")
+            if os.path.exists(tenders_file):
+                with open(tenders_file, "r", encoding="utf-8") as f:
+                    t = json.load(f)
+                tcount = len(t.get("tenders", t)) if isinstance(t, dict) else len(t)
+                parts.append(f"Tender records: {tcount}.")
+            return " ".join(parts) or "(No live context available)"
+        except Exception:
+            return "(No live context available)"
+
+    dyn = _build_dynamic_context()
+    return base.replace("[DYNAMIC_DATA_CONTEXT]", dyn) + lang_instruction
 
 
 def _prepare_messages(req: ChatRequest) -> list[dict]:
