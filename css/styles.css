@@ -2986,3 +2986,55 @@ label {
   from { opacity: 0.3; }
   to { opacity: 1; }
 }
+
+.anomaly-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.anomaly-overspent { background: #ef4444; color: #fff; }
+.anomaly-breach { background: #dc2626; color: #fff; animation: pulse 2s infinite; }
+.anomaly-at-risk { background: #f59e0b; color: #111; }
+.anomaly-on-track { background: #10b981; color: #fff; }
+
+.completion-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--glass-bg);
+  margin-bottom: 4px;
+}
+.completion-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--primary);
+  transition: width 1s ease;
+}
+.completion-bar-fill.critical { background: #ef4444; }
+
+.contractor-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.badge-excellent { background: gold; color: #111; }
+.badge-good { background: #10b981; color: #fff; }
+.badge-average { background: #f59e0b; color: #111; }
+.badge-poor { background: #ef4444; color: #fff; }
+
+.source-link {
+  color: var(--primary);
+  font-size: 11px;
+  text-decoration: none;
+}
+.source-link:hover { text-decoration: underline; }
+.source-link::after { content: " ↗"; font-size: 10px; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}

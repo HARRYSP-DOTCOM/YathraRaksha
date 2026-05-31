@@ -122,6 +122,10 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
             <span>Tender Registry</span>
           </div>
+          <div class="nav-link" data-tab="contractors">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Contractor Hub</span>
+          </div>
           <div class="nav-link" data-tab="map">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <span>Satellite Map Hub</span>
@@ -261,7 +265,7 @@
               <div class="glass-card highlight-teal">
                 <h3 style="margin-bottom: 16px;">💸 Audit Ledger: Sanctioned vs Spent Capital (₹ Crores)</h3>
                 <div style="height: 320px; position: relative;">
-                  <canvas id="chart-budget-leakage"></canvas>
+                  <canvas id="chart-budget-leakage" width="400" height="320" style="width:100%;height:100%;display:block;"></canvas>
                 </div>
                 <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">⚠️ Red markers represent budget overruns (potential contractor overcharging). Green markers denote projects completed on-time and within public funding allocations.</p>
               </div>
@@ -269,10 +273,12 @@
               <div class="glass-card">
                 <h3 style="margin-bottom: 16px;">🛠️ Registered Contractor Performance Rating</h3>
                 <div style="height: 250px; position: relative;">
-                  <canvas id="chart-contractor-quality"></canvas>
+                  <canvas id="chart-contractor-quality" width="400" height="250" style="width:100%;height:100%;display:block;"></canvas>
                 </div>
               </div>
             </div>
+
+            <div id="budget-transparency-root"></div>
 
             <!-- Right panel: Interactive mini map widget -->
             <div>
@@ -441,10 +447,18 @@
           </div>
         </section>
 
+        <!-- CONTRACTOR HUB TAB -->
+        <section class="tab-content" id="contractors-tab">
+          <h2 class="section-title">Contractor Accountability Hub</h2>
+          <p class="section-desc">Rankings, performance metrics, and budget utilization by registered contractors.</p>
+          <div id="contractor-hub-root"></div>
+        </section>
+
         <!-- 3. TRANSPARENCY AUDIT BOARD -->
         <section class="tab-content" id="transparency-tab">
   <div style="padding:0 4px;">
-    <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">💰 Budget Transparency</h2>
+    <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">💰 Spending Tender Registry</h2>
+    <div id="tender-registry-root"></div>
 
     <!-- Summary KPI Cards -->
     <div id="budget-kpi-row" style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px;">
@@ -691,6 +705,10 @@
               <button type="button" onclick="window.App.sendBotMessage('How does complaint routing work?')" class="quick-action-pill">📬 Routing</button>
               <button type="button" onclick="window.App.sendBotMessage('How to report a pothole')" class="quick-action-pill">📝 Report</button>
               <button type="button" onclick="window.App.sendBotMessage('Help')" class="quick-action-pill">❓ Help</button>
+              <button type="button" onclick="window.App.sendBotMessage('Show all roads with budget overruns')" class="quick-action-pill">💰 Budget overruns</button>
+              <button type="button" onclick="window.App.sendBotMessage('Rank all contractors by performance')" class="quick-action-pill">🏗️ Contractor ranking</button>
+              <button type="button" onclick="window.App.sendBotMessage('Tell me about SH-21 Kannur-Kozhikode road')" class="quick-action-pill">🔍 SH21 Kerala</button>
+              <button type="button" onclick="window.App.sendBotMessage('How do I file a complaint for a road defect?')" class="quick-action-pill">📋 File complaint</button>
             </div>
 
             <div class="chat-input-row">
@@ -826,6 +844,7 @@
   <!-- Core Infrastructure -->
   <script src="js/config-env.js"></script>
   <script src="js/database.js"></script>
+  <script src="js/data.js"></script>
   <script src="js/storage-optimizer.js"></script>
   
   <!-- Session & API -->
@@ -842,7 +861,10 @@
   <!-- AI & Tracking -->
   <script src="js/ai-engine.js"></script>
   <script src="js/location-service.js"></script>
-  <script src="js/chatbot.js"></script>
+  <script src="js/chatbot-responses.js"></script>
+  <script src="js/transparency-panel.js"></script>
+  <script src="js/contractor-hub.js"></script>
+  <script src="js/budget-dashboard.js"></script>
   <script src="js/route-planner.js"></script>
   <script src="js/trip-tracker.js"></script>
   <script src="js/map-hub.js"></script>

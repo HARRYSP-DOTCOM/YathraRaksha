@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allow_credentials: bool = False
     media_upload_dir: str = "uploads"
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "meta-llama/llama-4-maverick-17b-128e-instruct"
     open_roads_data_url: str = ""
     open_data_refresh_on_startup: bool = False
 

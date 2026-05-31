@@ -8,6 +8,9 @@ function resolveApiBaseUrl() {
   if (host === "localhost" || host === "127.0.0.1") {
     return "http://127.0.0.1:8000/v1";
   }
+  if (window.location.hostname.includes("vercel.app")) {
+    return `${window.location.origin}/v1`;
+  }
   return `${window.location.origin}/v1`;
 }
 

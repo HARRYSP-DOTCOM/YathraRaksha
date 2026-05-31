@@ -36,6 +36,10 @@ const PushNotificationService = {
    * Request notification permission
    */
   async requestPermission() {
+    if (!("Notification" in window)) {
+      window.App?.showToast?.("Push notifications not supported in this browser.");
+      return false;
+    }
     if (Notification.permission === "granted") {
       return true;
     }
@@ -58,6 +62,9 @@ const PushNotificationService = {
    * Send local notification
    */
   async sendNotification(title, options = {}) {
+    if (!("Notification" in window)) {
+      return false;
+    }
     if (Notification.permission !== "granted") {
       console.warn("Notification permission not granted");
       return false;

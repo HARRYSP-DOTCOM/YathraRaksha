@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v12";
+const CACHE_VERSION = "yatharaksha-v3";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -28,7 +28,11 @@ const APP_SHELL = [
   "./js/pwa-install.js",
   "./js/ai-engine.js",
   "./js/location-service.js",
-  "./js/chatbot.js",
+  "./js/data.js",
+  "./js/chatbot-responses.js",
+  "./js/transparency-panel.js",
+  "./js/contractor-hub.js",
+  "./js/budget-dashboard.js",
   "./js/route-planner.js",
   "./js/trip-tracker.js",
   "./js/map-hub.js",
@@ -72,7 +76,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith("yatra-raksha") && !key.includes(CACHE_VERSION))
+            .filter((key) => (key.startsWith("yatra-raksha") || key.startsWith("yatharaksha")) && !key.includes(CACHE_VERSION))
             .map((key) => caches.delete(key))
         )
       )
@@ -122,10 +126,15 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   if (isApiRequest(url)) {
-    event.respondWith(fetch(request).catch(() => new Response(JSON.stringify({ offline: true }), {
-      status: 503,
-      headers: { "Content-Type": "application/json" },
-    })));
+    event.respondWith(
+      fetch(request, { mode: "cors", credentials: "omit" })
+        .catch(() =>
+          new Response(JSON.stringify({ offline: true }), {
+            status: 503,
+            headers: { "Content-Type": "application/json" },
+          })
+        )
+    );
     return;
   }
 
@@ -154,7 +163,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isCdnLibrary(url)) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(
+      fetch(request, { mode: "cors", credentials: "omit" })
+        .then((r) => r)
+        .catch(() => caches.match(request))
+    );
     return;
   }
 

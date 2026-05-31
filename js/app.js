@@ -215,10 +215,7 @@ const App = {
     this.renderReportsList();
     this.initCharts();
     
-    // 1. Initialize miniature Map Widget on Overview Dashboard immediately
-    setTimeout(() => {
-      this.initMiniMap();
-    }, 400);
+    window.ROADS_DATA?.mergeRoadEnrichment?.();
 
     this.applyCoordinates(this.selectedCoords[0], this.selectedCoords[1], {
       updateMap: false,
@@ -226,8 +223,11 @@ const App = {
     });
     this.startLiveLocation();
 
-    if (window.YatraChatbot && !document.getElementById("chat-box")?.children?.length) {
-      window.YatraChatbot.showWelcome();
+    if (!document.getElementById("chat-box")?.children?.length) {
+      this.appendChatMessage(
+        "assistant",
+        "👋 Hi! I'm YatraGPT. Ask me about road quality, contractor budgets, filing complaints, or safe routes."
+      );
     }
 
     this.monitorStorageQuota();
@@ -284,6 +284,13 @@ const App = {
     document.getElementById("complaint-form").addEventListener("submit", (e) => {
       e.preventDefault();
       this.submitComplaint();
+    });
+
+    document.getElementById("chat-input")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        this.handleUserChatMessage();
+      }
     });
 
     document.getElementById("map-panel-close")?.addEventListener("click", () => {
@@ -869,6 +876,11 @@ const App = {
 
     if (tabId === "transparency") {
       this.loadBudgetDashboard();
+      window.TransparencyPanel?.render?.();
+    }
+
+    if (tabId === "contractors") {
+      window.ContractorHub?.render?.();
     }
 
     if (tabId === 'alerts') { this.renderAlerts('all'); }
@@ -877,12 +889,21 @@ const App = {
 
     if (tabId === "overview") {
       setTimeout(() => {
+        if (!this._miniMapReady) {
+          this.initMiniMap();
+          this._miniMapReady = true;
+        } else if (this.miniMap) {
+          this.miniMap.invalidateSize();
+        }
         this.initCharts();
-        if (this.miniMap) this.miniMap.invalidateSize();
+        window.BudgetDashboard?.render?.();
         this.activeCharts.budgetLeakage?.resize?.();
         this.activeCharts.contractorPerformance?.resize?.();
-      }, 100);
+      }, 150);
     }
+
+    document.body.classList.remove("mobile-nav-open");
+    window.dispatchEvent(new CustomEvent("tabchanged", { detail: { tabId } }));
   },
 
   checkNetworkStatus() {
@@ -1494,6 +1515,17 @@ const App = {
     fileSubmitBtn.disabled = true;
     scanOverlay.style.display = "block";
     boundingBox.style.display = "block";
+
+    const enableIfManual = () => {
+      const desc = document.getElementById("user-desc")?.value?.trim();
+      const contact = document.getElementById("user-contact")?.value?.trim();
+      if (desc && contact) {
+        fileSubmitBtn.disabled = false;
+        fileSubmitBtn.title = "Unverified — AI scan not completed";
+      }
+    };
+    setTimeout(enableIfManual, 3000);
+    document.getElementById("user-desc")?.addEventListener("input", enableIfManual);
 
     const addLog = (message, cssClass = "") => {
       const el = document.createElement("div");
@@ -2146,6 +2178,10 @@ const App = {
     this.clearChartFallback(canvas1);
     this.clearChartFallback(canvas2);
 
+    if (window._budgetChart) {
+      window._budgetChart.destroy();
+      window._budgetChart = null;
+    }
     if (this.activeCharts.budgetLeakage) this.activeCharts.budgetLeakage.destroy();
     if (this.activeCharts.contractorPerformance) this.activeCharts.contractorPerformance.destroy();
 
@@ -2156,7 +2192,7 @@ const App = {
     const contractorLabels = roads.map((r) => r.contractorName.substring(0, 15) + "...");
     const performanceScores = roads.map((r) => r.contractorPerformance);
 
-    this.activeCharts.budgetLeakage = new Chart(canvas1.getContext("2d"), {
+    window._budgetChart = this.activeCharts.budgetLeakage = new Chart(canvas1.getContext("2d"), {
       type: "bar",
       data: {
         labels: roadLabels,
@@ -2253,16 +2289,82 @@ const App = {
     }
   },
 
+  getComplaintsForContext() {
+    return (window.RoadTracker?.getAllReports?.() || []).map((c) => ({
+      refId: c.id,
+      defectClass: c.defectType,
+      road: c.matchedRoad?.name || c.matchedRoad?.id || "Unknown",
+    }));
+  },
+
+  highlightTenderRow(roadId) {
+    this.switchTab("transparency");
+    setTimeout(() => {
+      const row = document.querySelector(`.tender-row[data-road-id="${roadId}"]`);
+      row?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (row) {
+        row.style.background = "rgba(13, 148, 136, 0.15)";
+        setTimeout(() => {
+          row.style.background = "";
+        }, 3000);
+      }
+    }, 300);
+  },
+
+  appendChatMessage(role, text, options = {}) {
+    const box = document.getElementById("chat-box");
+    if (!box) return;
+    const wrap = document.createElement("div");
+    wrap.className = `chat-bubble chat-bubble--${role}${options.error ? " chat-bubble--error" : ""}`;
+    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    wrap.innerHTML = `<div class="chat-bubble-meta"><span class="chat-time">${time}</span></div><div class="chat-bubble-body">${this.escapeHTML(text).replace(/\n/g, "<br>")}</div>`;
+    box.appendChild(wrap);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  createStreamingBubble() {
+    const box = document.getElementById("chat-box");
+    if (!box) return null;
+    window.App?.hideTypingIndicator?.();
+    const wrap = document.createElement("div");
+    wrap.className = "chat-bubble chat-bubble--assistant";
+    wrap.innerHTML = `<div class="chat-bubble-meta"><span class="chat-time">YatraGPT</span></div><div class="chat-bubble-body"></div>`;
+    box.appendChild(wrap);
+    box.scrollTop = box.scrollHeight;
+    return wrap;
+  },
+
+  showTypingIndicator() {
+    const el = document.getElementById("typing-indicator");
+    const box = document.getElementById("chat-box");
+    if (el && box) {
+      el.style.display = "flex";
+      box.appendChild(el);
+      box.scrollTop = box.scrollHeight;
+    }
+  },
+
+  hideTypingIndicator() {
+    const el = document.getElementById("typing-indicator");
+    if (el) el.style.display = "none";
+  },
+
   handleUserChatMessage() {
-    if (window.YatraChatbot) {
+    const inputEl = document.getElementById("chat-input");
+    const text = inputEl?.value?.trim();
+    if (!text) return;
+    if (inputEl) inputEl.value = "";
+    if (window.YatraGPT) {
+      window.YatraGPT.sendMessage(text);
+    } else if (window.YatraChatbot) {
       window.YatraChatbot.handleUserChatMessage();
     }
   },
 
   sendBotMessage(text) {
-    if (window.YatraChatbot) {
-      window.YatraChatbot.sendBotMessage(text);
-    }
+    const inputEl = document.getElementById("chat-input");
+    if (inputEl) inputEl.value = text;
+    this.handleUserChatMessage();
   },
 };
 

@@ -91,7 +91,11 @@ const APIService = {
       throw new Error("Request queued - will retry when online");
     }
 
-    throw lastError || new Error("API request failed");
+    const msg = lastError?.message || "API request failed";
+    if (window.App?.showToast) {
+      window.App.showToast(`⚠️ ${msg}`);
+    }
+    throw lastError || new Error(msg);
   },
 
   /**

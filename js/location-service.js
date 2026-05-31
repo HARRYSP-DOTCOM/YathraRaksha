@@ -88,9 +88,29 @@ const LocationService = {
   _geoOptions(fresh = false) {
     return {
       enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: fresh ? 25000 : 30000,
+      maximumAge: 30000,
+      timeout: fresh ? 10000 : 10000,
     };
+  },
+
+  async _ipFallback() {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      if (!data.latitude) return null;
+      return {
+        lat: parseFloat(Number(data.latitude).toFixed(6)),
+        lng: parseFloat(Number(data.longitude).toFixed(6)),
+        accuracy: 5000,
+        heading: null,
+        speed: null,
+        altitude: null,
+        timestamp: Date.now(),
+        ipBased: true,
+      };
+    } catch {
+      return null;
+    }
   },
 
   _acceptAccuracy(parsed) {
@@ -123,7 +143,20 @@ const LocationService = {
 
     this.watchId = navigator.geolocation.watchPosition(
       (pos) => this._handlePosition(pos, false),
-      (err) => this._emit(null, err),
+      async (err) => {
+        const ip = await this._ipFallback();
+        if (ip) {
+          ip._ipBased = true;
+          this.lastPosition = ip;
+          this._emit(ip, null);
+          const detail = document.getElementById("location-status-detail");
+          if (detail) {
+            detail.textContent = "Approximate location (IP-based) — enable GPS for precise coordinates.";
+          }
+        } else {
+          this._emit(null, err);
+        }
+      },
       this._geoOptions(false)
     );
     return true;
