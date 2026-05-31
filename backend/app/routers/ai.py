@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from app.config import settings
+from app.services.ai_analysis import analyze_road_image
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -57,15 +58,13 @@ async def analyze_road(body: RoadAnalysisRequest):
 def _analyze_with_vision_ai(
     image_base64: str, lat: float, lng: float, location_name: str
 ) -> dict:
-    """Analyze a road image using Google Gemini Vision only."""
-    if not settings.gemini_api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="GEMINI_API_KEY not configured. Add it to backend/.env for road image detection.",
-        )
-
+    """Analyze a road image using Gemini Vision, with local analysis fallback."""
     image_base64_clean = _strip_data_url(image_base64)
     media_type = _image_media_type(image_base64)
+    image_bytes = _decode_image(image_base64_clean)
+
+    if not settings.gemini_api_key:
+        return _analyze_locally(image_bytes, lat, lng, location_name)
 
     system_prompt = (
         "You are a road damage detection AI expert. Analyze the provided road image "
@@ -99,10 +98,10 @@ def _analyze_with_vision_ai(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Gemini vision analysis failed: {exc}",
-        ) from exc
+        result = _analyze_locally(image_bytes, lat, lng, location_name)
+        result["provider"] = "local-fallback"
+        result["fallback_reason"] = str(exc)
+        return result
 
 
 def _analyze_with_gemini(
@@ -116,10 +115,7 @@ def _analyze_with_gemini(
 ) -> dict:
     import google.generativeai as genai
 
-    # Ensure model name is correct for the SDK
-    model_name = settings.gemini_model
-    if not model_name.startswith("models/"):
-        model_name = f"models/{model_name}"
+    model_name = _normalize_gemini_model(settings.gemini_model)
 
     genai.configure(api_key=settings.gemini_api_key)
     
@@ -129,10 +125,9 @@ def _analyze_with_gemini(
             system_instruction=system_prompt
         )
     except Exception as exc:
-        # Fallback to a guaranteed model name if 2.0-flash is not found
-        print(f"Model {model_name} initialization failed: {exc}. Trying gemini-flash-latest")
+        print(f"Model {model_name} initialization failed: {exc}. Trying gemini-1.5-flash")
         model = genai.GenerativeModel(
-            model_name="models/gemini-flash-latest",
+            model_name="models/gemini-1.5-flash",
             system_instruction=system_prompt
         )
 
@@ -252,6 +247,114 @@ def _mock_complaint(location_name: str) -> str:
         f"Immediate repair action is requested to prevent accidents and further "
         f"deterioration.\n\nRegards,\nCitizen via Yathra Raksha Platform"
     )
+
+
+def _analyze_locally(
+    image_bytes: bytes, lat: float, lng: float, location_name: str
+) -> dict:
+    raw = analyze_road_image(
+        image_bytes,
+        [lat, lng],
+        {"road": location_name, "distanceKm": None},
+    )
+    if not raw.get("success"):
+        return {
+            "success": False,
+            "detected_damages": ["Good Condition"],
+            "selected_road_problems": ["Good Condition"],
+            "problem_options": _problem_options(["Good Condition"]),
+            "severity_score": 0,
+            "ai_complaint_text": (
+                f"The uploaded image could not be confirmed as a road scene at "
+                f"{location_name}. Reason: {raw.get('reason', 'Unknown')}"
+            ),
+            "coordinates": [lat, lng],
+            "location_name": location_name,
+            "provider": "local",
+            "validation": raw,
+        }
+
+    damages = _damage_from_local_defect(raw.get("defectType", ""))
+    severity = _severity_from_local(raw.get("urgencyScore"), raw.get("severity"))
+    complaint_text = _complaint_from_analysis(location_name, damages, severity)
+    return {
+        "success": True,
+        "detected_damages": damages,
+        "selected_road_problems": damages,
+        "problem_options": _problem_options(damages),
+        "severity_score": severity,
+        "ai_complaint_text": complaint_text,
+        "coordinates": [lat, lng],
+        "location_name": location_name,
+        "provider": "local",
+        "local_analysis": raw,
+    }
+
+
+def _damage_from_local_defect(defect_type: str) -> list[str]:
+    key = defect_type.lower()
+    if "no significant" in key:
+        return ["Good Condition"]
+    if "pothole" in key:
+        return ["Pothole"]
+    if "alligator" in key or "fatigue" in key:
+        return ["Alligator Cracking"]
+    if "rut" in key or "surface degradation" in key or "raveling" in key:
+        return ["Rutting"]
+    if "crack" in key:
+        return ["Longitudinal Crack"]
+    return ["Good Condition"]
+
+
+def _severity_from_local(urgency: Any, label: Any) -> int:
+    try:
+        return max(0, min(10, round(float(urgency))))
+    except (TypeError, ValueError):
+        fallback = {
+            "none": 0,
+            "low": 3,
+            "medium": 5,
+            "high": 7,
+            "critical": 9,
+        }
+        return fallback.get(str(label).strip().lower(), 5)
+
+
+def _complaint_from_analysis(location_name: str, damages: list[str], severity: int) -> str:
+    if damages == ["Good Condition"]:
+        return (
+            f"The road at {location_name} appears to be in Good Condition according "
+            "to the image analysis."
+        )
+    return (
+        "To the Executive Engineer, Public Works Department,\n\n"
+        f"This is to formally report road damage observed at {location_name}. "
+        f"The AI analysis has detected the following issues: {', '.join(damages)}. "
+        f"The severity is rated {severity}/10, indicating that repair attention is "
+        "required to reduce risk to commuters.\n\n"
+        "Immediate inspection and appropriate repair action are requested.\n\n"
+        "Regards,\nCitizen via Yathra Raksha Platform"
+    )
+
+
+def _decode_image(image_base64: str) -> bytes:
+    try:
+        return base64.b64decode(image_base64, validate=True)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid base64 image payload") from exc
+
+
+def _normalize_gemini_model(model_name: str) -> str:
+    aliases = {
+        "gemini-3.5-flash": "gemini-1.5-flash",
+        "models/gemini-3.5-flash": "gemini-1.5-flash",
+        "gemini-flash-latest": "gemini-1.5-flash",
+        "models/gemini-flash-latest": "gemini-1.5-flash",
+    }
+    normalized = aliases.get((model_name or "").strip(), (model_name or "gemini-1.5-flash").strip())
+    if not normalized.startswith("models/"):
+        normalized = f"models/{normalized}"
+    return normalized
 
 
 def _strip_data_url(image_base64: str) -> str:
