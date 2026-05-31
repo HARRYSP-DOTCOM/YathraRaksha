@@ -746,10 +746,10 @@ const App = {
   renderAIResults(result) {
     document.getElementById('ai-loading-state').style.display = 'none';
     document.getElementById('ai-results').style.display = '';
-    document.getElementById('ai-action-buttons').style.display = 'flex';
+    document.getElementById('ai-action-buttons').style.display = result.success === false ? 'none' : 'flex';
 
     const allDamageTypes = ['Pothole', 'Alligator Cracking', 'Longitudinal Crack', 'Transverse Crack', 'Rutting', 'Good Condition'];
-    const detected = result.detected_damages || [];
+    const detected = result.success === false ? [] : (result.detected_damages || []);
 
     const checklist = document.getElementById('ai-checklist');
     checklist.innerHTML = allDamageTypes.map(type => {

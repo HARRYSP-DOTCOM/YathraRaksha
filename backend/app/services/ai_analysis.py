@@ -355,8 +355,10 @@ def analyze_defect(image_bytes: bytes) -> dict[str, Any]:
 
         # ── Classification logic ──
 
-        # Pothole: concentrated dark patches on grey/road-colored background
-        if pct_very_dark > 0.08 and pct_grey > 0.2 and edge_density > 0.04:
+        # Pothole: concentrated dark patches on grey/road-colored background.
+        # Smooth pothole cavities may not produce many horizontal edges, so a
+        # large dark region alone is enough when the surrounding scene is road-like.
+        if pct_very_dark > 0.08 and pct_grey > 0.2 and (edge_density > 0.04 or pct_very_dark > 0.12):
             return {
                 "defectType": "Pothole (Class-III structural failure)",
                 "severity": "Critical",
@@ -423,9 +425,9 @@ def analyze_defect(image_bytes: bytes) -> dict[str, Any]:
 
 
 def _default_defect() -> dict[str, Any]:
-    """Fallback defect classification when analysis is inconclusive."""
+    """Fallback defect classification when a road scene has visible but unclear wear."""
     return {
-        "defectType": "Minor Surface Wear",
+        "defectType": "Surface Degradation (Minor Wear)",
         "severity": "Low",
         "aiConfidence": "72.0%",
         "defectArea": "Undetermined",

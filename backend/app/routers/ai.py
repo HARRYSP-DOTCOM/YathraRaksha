@@ -260,9 +260,9 @@ def _analyze_locally(
     if not raw.get("success"):
         return {
             "success": False,
-            "detected_damages": ["Good Condition"],
-            "selected_road_problems": ["Good Condition"],
-            "problem_options": _problem_options(["Good Condition"]),
+            "detected_damages": [],
+            "selected_road_problems": [],
+            "problem_options": _problem_options([]),
             "severity_score": 0,
             "ai_complaint_text": (
                 f"The uploaded image could not be confirmed as a road scene at "
@@ -299,7 +299,7 @@ def _damage_from_local_defect(defect_type: str) -> list[str]:
         return ["Pothole"]
     if "alligator" in key or "fatigue" in key:
         return ["Alligator Cracking"]
-    if "rut" in key or "surface degradation" in key or "raveling" in key:
+    if "rut" in key or "surface degradation" in key or "raveling" in key or "minor wear" in key:
         return ["Rutting"]
     if "crack" in key:
         return ["Longitudinal Crack"]
