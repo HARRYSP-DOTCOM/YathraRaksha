@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_seconds: int = 86400
     database_url: str = "sqlite:///./yatra_raksha.db"
-    cors_origins: str = "http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,null"
+    cors_origins: str = "*"
+    allow_credentials: bool = False
     media_upload_dir: str = "uploads"
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"

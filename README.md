@@ -105,7 +105,10 @@ python -m http.server 5500
 Then open:
 - `http://127.0.0.1:5500`
 
-The frontend is configured to use the backend API at `http://127.0.0.1:8000/v1`.
+The frontend is configured to use the backend API at `http://127.0.0.1:8000/v1` in development.
+
+> For production/Vercel deployments, the frontend expects the backend to be reachable from the same origin under `/v1`, or you must set a production API URL in `js/config-env.js` and allow it in `vercel.json`.
+> If you deploy new frontend code and still see stale behavior, refresh the browser and clear the PWA service worker cache.
 
 ### Start both services together
 

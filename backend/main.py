@@ -2,9 +2,10 @@ import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import inspect, text
 
 from app.config import settings
@@ -62,10 +63,18 @@ app = FastAPI(
 )
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+allow_all_origins = "*" in origins
+if allow_all_origins:
+    cors_allow_origins = ["*"]
+    cors_allow_credentials = False
+else:
+    cors_allow_origins = origins
+    cors_allow_credentials = settings.allow_credentials
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=cors_allow_origins,
+    allow_credentials=cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -89,6 +98,8 @@ upload_dir = Path(__file__).parent / settings.media_upload_dir
 upload_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
+frontend_dir = Path(__file__).resolve().parent.parent
+
 
 @app.get("/")
 def root():
@@ -103,6 +114,19 @@ def root():
 @app.get(f"{settings.api_prefix}/health")
 def health():
     return {"status": "ok", "backend": "python", "framework": "fastapi"}
+
+if (frontend_dir / "index.html").exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+
+
+@app.get("/{full_path:path}")
+async def spa_catchall(full_path: str):
+    if full_path.startswith(settings.api_prefix.strip("/")) or full_path.startswith("uploads"):
+        raise HTTPException(status_code=404, detail="Not found")
+    index_file = frontend_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    raise HTTPException(status_code=404, detail="Not found")
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ const APIService = {
    * Initialize API service
    */
   init() {
+    console.log("🔧 API Service base URL:", this.BASE_URL);
     window.addEventListener("online", () => {
       this.isOnline = true;
       this.processQueue();

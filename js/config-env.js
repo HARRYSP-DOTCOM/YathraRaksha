@@ -9,7 +9,9 @@ function resolveApiBaseUrl() {
   if (host === "localhost" || host === "127.0.0.1") {
     return "http://127.0.0.1:8000/v1";
   }
-  return "https://api.yatra-raksha.local/v1";
+  // In production, use same-origin API path by default.
+  // If the backend is deployed on the same domain, it can be exposed under /v1.
+  return `${window.location.origin}/v1`;
 }
 
 const AppConfig = {
