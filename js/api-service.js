@@ -6,7 +6,10 @@
 
 const APIService = {
   get BASE_URL() {
-    return (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
+    if (window.AppConfig && window.AppConfig.API_BASE_URL) return window.AppConfig.API_BASE_URL;
+    return (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://127.0.0.1:8000/v1'
+      : '/api/v1';
   },
   TIMEOUT: 30000,
   MAX_RETRIES: 3,

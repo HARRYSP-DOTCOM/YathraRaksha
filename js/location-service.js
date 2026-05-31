@@ -173,18 +173,50 @@ const LocationService = {
   requestOnce() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject({ code: "UNSUPPORTED", message: "Geolocation not supported" });
+        this._ipFallback().then(ip => ip ? resolve(ip) : reject({ code: "UNSUPPORTED", message: "Geolocation not supported" }));
         return;
       }
+
+      let resolved = false;
+      const timeoutId = setTimeout(async () => {
+        if (resolved) return;
+        resolved = true;
+        const ip = await this._ipFallback();
+        if (ip) {
+          ip._ipBased = true;
+          this.lastPosition = ip;
+          this._emit(ip, null);
+          resolve(ip);
+        } else {
+          reject({ code: "TIMEOUT", message: "GPS fix timed out" });
+        }
+      }, 10000);
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeoutId);
           const parsed = this._parsePosition(pos);
           this.lastPosition = parsed;
           this.lastEmitTime = Date.now();
           this._emit(parsed, null);
           resolve(parsed);
         },
-        (err) => reject(err),
+        async (err) => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeoutId);
+          const ip = await this._ipFallback();
+          if (ip) {
+             ip._ipBased = true;
+             this.lastPosition = ip;
+             this._emit(ip, null);
+             resolve(ip);
+          } else {
+             reject(err);
+          }
+        },
         this._geoOptions(true)
       );
     });

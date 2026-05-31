@@ -6,15 +6,15 @@ window.BudgetDashboard = {
   _velocity: null,
 
   render() {
-    const root = document.getElementById("budget-transparency-root");
+    const root = document.getElementById("overview-budget-dashboard");
     if (!root || !window.ROADS_DATA) return;
-    const roads = window.ROADS_DATA.getRoadsData();
+    const roads = window.ROADS_DATA;
     if (!roads.length) return;
 
     const sum = (fn) => roads.reduce((a, r) => a + fn(r), 0);
-    const totalSanctioned = sum((r) => r.sanctionedCr);
-    const totalReleased = sum((r) => r.releasedCr);
-    const totalSpent = sum((r) => r.spentCr);
+    const totalSanctioned = sum((r) => r.sanctioned);
+    const totalReleased = sum((r) => r.released);
+    const totalSpent = sum((r) => r.spent);
     const totalRemaining = totalReleased - totalSpent;
     const breaches = roads.filter((r) => r.anomalyClass === "anomaly-breach" || r.anomalyClass === "anomaly-overspent").length;
     const avgCompletion = Math.round(sum((r) => r.completion) / roads.length);
@@ -48,7 +48,7 @@ window.BudgetDashboard = {
         <div id="anomaly-alert-list">
           ${anomalies.length ? anomalies.map((r) => `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--glass-border);">
-              <span><strong>${r.id}</strong> ${r.contractor} — overrun ₹${Math.abs(r.remainingCr).toFixed(1)} Cr</span>
+              <span><strong>${r.id}</strong> ${r.contractor} — overrun ₹${Math.abs(r.remaining).toFixed(1)} Cr</span>
               <button type="button" class="btn btn-secondary btn-sm" onclick="window.App.highlightTenderRow('${r.id}')">View</button>
             </div>`).join("") : "<p style='color:var(--text-muted);'>No anomalies detected.</p>"}
         </div>
@@ -68,11 +68,11 @@ window.BudgetDashboard = {
   renderContractorUtil() {
     const tbody = document.getElementById("contractor-util-tbody");
     if (!tbody || !window.CONTRACTORS) return;
-    const roads = window.ROADS_DATA.getRoadsData();
+    const roads = window.ROADS_DATA;
     tbody.innerHTML = window.CONTRACTORS.map((c) => {
       const cRoads = roads.filter((r) => c.roads.includes(r.id));
-      const sanc = cRoads.reduce((a, r) => a + r.sanctionedCr, 0);
-      const spent = cRoads.reduce((a, r) => a + r.spentCr, 0);
+      const sanc = cRoads.reduce((a, r) => a + r.sanctioned, 0);
+      const spent = cRoads.reduce((a, r) => a + r.spent, 0);
       const anom = cRoads.filter((r) => r.anomalyClass !== "anomaly-on-track").length;
       return `<tr style="border-top:1px solid var(--glass-border);">
         <td style="padding:8px;">${c.name}</td><td>${c.roads.length}</td>
@@ -86,7 +86,7 @@ window.BudgetDashboard = {
     const fundingMap = {};
     roads.forEach((r) => {
       const key = (r.fundingSource || "Other").split("(")[0].trim();
-      fundingMap[key] = (fundingMap[key] || 0) + r.spentCr;
+      fundingMap[key] = (fundingMap[key] || 0) + r.spent;
     });
 
     const donutEl = document.getElementById("chart-funding-donut");
@@ -106,7 +106,7 @@ window.BudgetDashboard = {
     if (velEl) {
       if (this._velocity) this._velocity.destroy();
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const total = roads.reduce((a, r) => a + r.spentCr, 0);
+      const total = roads.reduce((a, r) => a + r.spent, 0);
       const pace = months.map((_, i) => (total / 12) * (i + 1));
       const spent = months.map((_, i) => (total / 12) * (i + 0.85));
       this._velocity = new Chart(velEl.getContext("2d"), {

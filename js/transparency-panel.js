@@ -8,7 +8,7 @@ window.TransparencyPanel = {
     const container = document.getElementById("tender-registry-root");
     if (!container || !window.ROADS_DATA) return;
 
-    const roads = window.ROADS_DATA.getRoadsData();
+    const roads = window.ROADS_DATA;
     const q = this._filter.toLowerCase();
     const filtered = q
       ? roads.filter(

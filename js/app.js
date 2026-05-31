@@ -286,6 +286,26 @@ const App = {
       this.submitComplaint();
     });
 
+    // Fallback: enable submit button if fields manually filled without AI scan
+    const enableIfManual = () => {
+      const btn = document.getElementById("file-complaint-btn");
+      if (!btn || !btn.disabled) return;
+      const desc = document.getElementById("user-desc")?.value?.trim();
+      const contact = document.getElementById("user-contact")?.value?.trim();
+      if (desc && contact) {
+        setTimeout(() => {
+          if (btn.disabled) {
+            btn.disabled = false;
+            btn.title = "Unverified — AI scan not completed";
+            btn.innerHTML = "📄 File Unverified Complaint";
+          }
+        }, 3000);
+      }
+    };
+    document.getElementById("user-desc")?.addEventListener("input", enableIfManual);
+    document.getElementById("user-contact")?.addEventListener("input", enableIfManual);
+
+
     document.getElementById("chat-input")?.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -2258,6 +2278,15 @@ const App = {
     });
 
     window._charts = this.activeCharts;
+
+    if (!this._chartResizeObserver) {
+      this._chartResizeObserver = new ResizeObserver(() => {
+        if (this.activeCharts.budgetLeakage) this.activeCharts.budgetLeakage.resize();
+        if (this.activeCharts.contractorPerformance) this.activeCharts.contractorPerformance.resize();
+      });
+      this._chartResizeObserver.observe(canvas1.parentElement);
+      this._chartResizeObserver.observe(canvas2.parentElement);
+    }
   },
 
   renderChartFallback(canvas, message) {
