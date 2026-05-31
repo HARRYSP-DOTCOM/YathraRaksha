@@ -3,7 +3,7 @@
  * App shell caching, offline navigation, API network-only, push notifications.
  */
 
-const CACHE_VERSION = "yatra-raksha-v11";
+const CACHE_VERSION = "yatra-raksha-v12";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -16,9 +16,7 @@ const APP_SHELL = [
   "./css/welcome.css",
   "./css/map-hub.css",
   "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png",
+  "./icons/icon-maskable.svg",
   "./js/vendor/chart.umd.min.js",
   "./js/config-env.js",
   "./js/database.js",
@@ -30,7 +28,7 @@ const APP_SHELL = [
   "./js/pwa-install.js",
   "./js/ai-engine.js",
   "./js/location-service.js",
-  "./js/chatbot-responses.js",
+  "./js/chatbot.js",
   "./js/route-planner.js",
   "./js/trip-tracker.js",
   "./js/map-hub.js",
@@ -182,8 +180,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "YatraRaksha", {
       body: data.body || "",
-      icon: "./icons/icon-192.png",
-      badge: "./icons/icon-192.png",
+      icon: "./icons/icon.svg",
+      badge: "./icons/icon.svg",
       tag: data.tag || "yatra-raksha",
       data: data.data || {},
     })

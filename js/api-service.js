@@ -33,8 +33,11 @@ const APIService = {
   /**
    * Generic fetch wrapper with retry logic
    */
-  async request(endpoint, options = {}) {
+  async request(endpoint, options = {}, retryOpts = {}) {
     const url = `${this.BASE_URL}${endpoint}`;
+    const maxRetries = retryOpts.maxRetries ?? this.MAX_RETRIES;
+    const retry5xx = retryOpts.retry5xx ?? false;
+
     const config = {
       method: options.method || "GET",
       headers: {
@@ -46,13 +49,12 @@ const APIService = {
       ...options
     };
 
-    // Remove body for GET requests
     if (config.method === "GET") {
       delete config.body;
     }
 
     let lastError;
-    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const response = await fetch(url, config);
 
@@ -61,16 +63,24 @@ const APIService = {
             this.clearAuthToken();
             throw new Error("Session expired — please sign in again");
           }
-          throw new Error(`API Error: ${response.statusText}`);
+          if (retry5xx && response.status >= 500 && attempt < maxRetries) {
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+          }
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
         }
 
         return await response.json();
       } catch (error) {
         lastError = error;
-        console.warn(`API request attempt ${attempt}/${this.MAX_RETRIES} failed:`, error.message);
+        console.warn(`API request attempt ${attempt}/${maxRetries} failed:`, error.message);
 
-        if (attempt < this.MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        if (attempt < maxRetries && !retry5xx) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        } else if (attempt < maxRetries && retry5xx) {
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          await new Promise((r) => setTimeout(r, delay));
         }
       }
     }
@@ -112,10 +122,14 @@ const APIService = {
    * File complaint with AI report
    */
   async fileComplaint(complaint) {
-    return this.request("/complaints", {
-      method: "POST",
-      body: JSON.stringify(complaint)
-    });
+    return this.request(
+      "/complaints",
+      {
+        method: "POST",
+        body: JSON.stringify(complaint),
+      },
+      { maxRetries: 3, retry5xx: true }
+    );
   },
 
   /**

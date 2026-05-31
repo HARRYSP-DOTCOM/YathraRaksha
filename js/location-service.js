@@ -115,6 +115,12 @@ const LocationService = {
     }
     if (this.watchId !== null) return true;
 
+    navigator.geolocation.getCurrentPosition(
+      (pos) => this._handlePosition(pos, true),
+      (err) => this._emit(null, err),
+      this._geoOptions(true)
+    );
+
     this.watchId = navigator.geolocation.watchPosition(
       (pos) => this._handlePosition(pos, false),
       (err) => this._emit(null, err),

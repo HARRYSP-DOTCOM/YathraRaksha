@@ -38,13 +38,40 @@ Key capabilities:
 - A modern browser with PWA support
 - A shell for `./start.sh` on Windows (Git Bash, WSL, or similar)
 
+## Quick start (v2.0)
+
+```bash
+# 1. Clone
+git clone https://github.com/HARRYSP-DOTCOM/YathraRaksha.git
+cd YathraRaksha
+
+# 2. Backend setup
+cd backend
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env and set GROQ_API_KEY=<your key>
+python download_model.py
+python run.py
+# API at http://127.0.0.1:8000
+
+# 3. Frontend (new terminal, repo root)
+cd ..
+python -m http.server 5500
+# Open http://127.0.0.1:5500
+
+# 4. Install as PWA — Chrome/Edge install icon, or Safari Share → Add to Home Screen
+```
+
 ## Installation
 
 ### Clone the repository
 
 ```bash
-git clone https://github.com/your-repo/roadwatch.git
-cd roadwatch
+git clone https://github.com/HARRYSP-DOTCOM/YathraRaksha.git
+cd YathraRaksha
 ```
 
 ### Set up the backend
@@ -64,6 +91,8 @@ source .venv/bin/activate
 
 pip install --upgrade pip
 pip install -r requirements.txt
+cp .env.example .env
+python download_model.py
 ```
 
 ### Optional configuration
