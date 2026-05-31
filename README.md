@@ -130,7 +130,10 @@ API_PREFIX=/v1
 SECRET_KEY=replace-this-for-production
 DATABASE_URL=sqlite:///./yatra_raksha.db
 CORS_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
-GROQ_API_KEY=
+GROQ_API_KEY=your_groq_api_key
+GEMINI_API_KEY=your_gemini_api_key
+GROQ_MODEL=meta-llama/llama-4-maverick-17b-128e-instruct
+GEMINI_MODEL=gemini-2.0-flash
 OPEN_DATA_REFRESH_ON_STARTUP=False
 ```
 

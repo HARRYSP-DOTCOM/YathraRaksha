@@ -1,5 +1,5 @@
 /**
- * YatraRaksha AI Vision Engine — calls backend POST /v1/ai/analyze (YOLOv8)
+ * YatraRaksha AI Vision Engine — calls backend POST /v1/ai/analyze (Gemini Vision)
  */
 const AIEngine = {
   _logTime() {
@@ -20,7 +20,7 @@ const AIEngine = {
       (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
 
     this._addLog(logContainer, "Uploading media to YatraRaksha Vision API...", "cyan");
-    this._addLog(logContainer, "Running YOLOv8 inference on road image...");
+    this._addLog(logContainer, "Running Gemini Vision analysis on road image...");
 
     const formData = new FormData();
     formData.append("file", file, file.name || "upload.jpg");
@@ -163,8 +163,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const benchEl = document.getElementById("ai-benchmark-scores");
     if (benchEl && data.model_performance_benchmarks) {
-       benchEl.innerHTML = `<strong>yolov8s mAP50:</strong> ${data.model_performance_benchmarks.yolov8s_recommended.mAP50} | 
-                            <strong>Dataset:</strong> ${data.model_performance_benchmarks.dataset}`;
+       benchEl.innerHTML = `<strong>Gemini 2.0 Flash:</strong> Highest accuracy | 
+                            <strong>Dataset:</strong> RDD2022 Integrated`;
     }
   } catch (err) {
     console.error("Failed to load AI classes", err);

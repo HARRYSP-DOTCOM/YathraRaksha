@@ -305,7 +305,7 @@ window.RealDataLoader = {
     const labels = (defects.defect_classes || [])
       .filter((d) => d.class_name !== "road_good_condition")
       .map((d) => d.class_name.replace(/_/g, " "));
-    window._YOLO_DEFECT_LABELS = labels;
+    window._VISION_DEFECT_LABELS = labels;
 
     const bench = defects.model_performance_benchmarks || {};
     const card = document.getElementById("ai-model-benchmarks-card");
@@ -314,21 +314,18 @@ window.RealDataLoader = {
       list.innerHTML = (defects.defect_classes || [])
         .map(
           (d) =>
-            `<li><strong>${d.class_name.replace(/_/g, " ")}</strong> — ${d.description || ""} <span class="source-badge">RDD2022/CRDDC2022</span></li>`
+            `<li><strong>${d.class_name.replace(/_/g, " ")}</strong> — ${d.description || ""} <span class="source-badge">Gemini Vision</span></li>`
         )
         .join("");
     }
-    if (card && bench.yolov8s_recommended) {
+    if (card && bench.gemini_2_0_flash) {
       card.style.display = "block";
       const el = document.getElementById("ai-benchmark-scores");
       if (el) {
-        el.innerHTML = Object.entries(bench)
-          .filter(([k]) => k.startsWith("yolov8"))
-          .map(
-            ([k, v]) =>
-              `<div class="popup-row"><strong>${k}</strong>: mAP50 ${(v.mAP50 * 100).toFixed(1)}% · ${v.inference_ms}ms inference</div>`
-          )
-          .join("");
+        el.innerHTML = `
+          <div class="popup-row"><strong>Gemini 2.0 Flash</strong>: Accuracy ${(bench.gemini_2_0_flash.accuracy * 100).toFixed(1)}% · ${bench.gemini_2_0_flash.inference_ms}ms lat</div>
+          <div class="popup-row" style="font-size:11px;opacity:0.8;">${bench.note}</div>
+        `;
       }
     }
   },

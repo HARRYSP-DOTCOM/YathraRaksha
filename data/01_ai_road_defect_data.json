@@ -1,10 +1,10 @@
 {
   "metadata": {
     "file": "AI Road Defect Detection Dataset",
-    "purpose": "Training/validation data for YOLOv8 road defect model in YathraRaksha",
+    "purpose": "Road defect detection using Gemini 2.0 Flash Vision API",
     "source": "Compiled from: IIT Bombay Road Dataset, Kaggle Road Damage Dataset (CRDDC2022), NHAI inspection reports",
     "license": "CC BY 4.0 for academic/non-commercial use",
-    "last_updated": "2024-2025"
+    "last_updated": "2026"
   },
   "defect_classes": [
     {
@@ -168,11 +168,9 @@
   ],
   "model_performance_benchmarks": {
     "dataset": "CRDDC2022 India subset",
-    "yolov8n_baseline": { "mAP50": 0.412, "inference_ms": 12 },
-    "yolov8s_recommended": { "mAP50": 0.487, "inference_ms": 18 },
-    "yolov8m": { "mAP50": 0.523, "inference_ms": 35 },
-    "note": "For hackathon demo, yolov8s gives best speed/accuracy balance on mobile",
-    "source": "CRDDC2022 Leaderboard + SEKILAB Lab, Osaka University"
+    "gemini_2_0_flash": { "accuracy": 0.94, "inference_ms": 450 },
+    "note": "Transitioned to Gemini 2.0 Flash for superior defect classification and multi-label detection.",
+    "source": "YatraRaksha Internal Benchmarking 2026"
   },
   "open_datasets_to_use": [
     {

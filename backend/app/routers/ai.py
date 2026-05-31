@@ -3,7 +3,7 @@ import json
 import re
 from typing import Any
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from app.config import settings
@@ -57,10 +57,16 @@ async def analyze_road(body: RoadAnalysisRequest):
 def _analyze_with_vision_ai(
     image_base64: str, lat: float, lng: float, location_name: str
 ) -> dict:
-    """Analyze a road image using Gemini Vision (primary) or fallback."""
+    """Analyze a road image using Google Gemini Vision only."""
+    if not settings.gemini_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="GEMINI_API_KEY not configured. Add it to backend/.env for road image detection.",
+        )
+
     image_base64_clean = _strip_data_url(image_base64)
     media_type = _image_media_type(image_base64)
-    
+
     system_prompt = (
         "You are a road damage detection AI expert. Analyze the provided road image "
         "and return ONLY valid JSON (no markdown, no code fences): "
@@ -80,32 +86,23 @@ def _analyze_with_vision_ai(
         "Return ONLY JSON."
     )
 
-    if settings.gemini_api_key:
-        try:
-            return _analyze_with_gemini(
-                image_base64_clean,
-                media_type,
-                system_prompt,
-                user_prompt,
-                lat,
-                lng,
-                location_name,
-            )
-        except Exception as exc:
-            print(f"Gemini API failed: {exc}")
-
-    # Fallback to Mock if Gemini fails or is not configured
-    return {
-        "success": True,
-        "detected_damages": ["Pothole", "Alligator Cracking"],
-        "selected_road_problems": ["Pothole", "Alligator Cracking"],
-        "problem_options": _problem_options(["Pothole", "Alligator Cracking"]),
-        "severity_score": 6,
-        "ai_complaint_text": _mock_complaint(location_name),
-        "coordinates": [lat, lng],
-        "location_name": location_name,
-        "provider": "mock",
-    }
+    try:
+        return _analyze_with_gemini(
+            image_base64_clean,
+            media_type,
+            system_prompt,
+            user_prompt,
+            lat,
+            lng,
+            location_name,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Gemini vision analysis failed: {exc}",
+        ) from exc
 
 
 def _analyze_with_gemini(

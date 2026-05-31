@@ -578,17 +578,23 @@ const App = {
       if (response.ok) {
         result = await response.json();
       } else {
-        // Fallback mock analysis if backend unavailable
-        result = this.mockAIAnalysis(locationName);
+        const errBody = await response.json().catch(() => ({}));
+        const detail = errBody.detail || `Vision API error (${response.status})`;
+        document.getElementById('ai-loading-state').style.display = 'none';
+        document.getElementById('ai-analyze-btn').disabled = false;
+        document.getElementById('ai-empty-state').style.display = '';
+        this.showToast(typeof detail === 'string' ? detail : 'Gemini analysis failed. Check GEMINI_API_KEY.');
+        return;
       }
 
       this.aiAnalysisResult = result;
       this.renderAIResults(result);
     } catch (err) {
-      console.warn('AI analysis error, using mock:', err);
-      const result = this.mockAIAnalysis(locationName);
-      this.aiAnalysisResult = result;
-      this.renderAIResults(result);
+      console.warn('AI analysis error:', err);
+      document.getElementById('ai-loading-state').style.display = 'none';
+      document.getElementById('ai-analyze-btn').disabled = false;
+      document.getElementById('ai-empty-state').style.display = '';
+      this.showToast('Gemini analysis failed. Ensure backend is running with GEMINI_API_KEY set.');
     }
   },
 
@@ -614,9 +620,9 @@ const App = {
     checklist.innerHTML = allDamageTypes.map(type => {
       const found = detected.includes(type);
       const label = window.I18n.translateDamage(type);
-      return `<div class="detection-item ${found ? 'detected' : 'not-detected'}">
-        <span>${found ? '✅' : '❌'}</span>
-        <span>${label}</span>
+      return `<div class="detection-item ${found ? 'detected' : ''}">
+        <input type="checkbox" id="defect-${type.replace(/\s+/g, '-')}" ${found ? 'checked' : ''} onchange="window.App.updateAIComplaintText()">
+        <label for="defect-${type.replace(/\s+/g, '-')}">${label}</label>
       </div>`;
     }).join('');
 
@@ -630,6 +636,26 @@ const App = {
 
     // Complaint text
     document.getElementById('ai-complaint-text').value = result.ai_complaint_text || '';
+  },
+
+  updateAIComplaintText() {
+    const allDamageTypes = ['Pothole', 'Alligator Cracking', 'Longitudinal Crack', 'Transverse Crack', 'Rutting', 'Good Condition'];
+    const selected = allDamageTypes.filter(type => {
+      const el = document.getElementById(`defect-${type.replace(/\s+/g, '-')}`);
+      return el && el.checked;
+    });
+
+    const locationName = document.getElementById('ai-location-name').value || 'Unknown location';
+    const score = document.getElementById('ai-severity-value').textContent || '5';
+    
+    let text = `To the Executive Engineer, Public Works Department,\n\nThis is to formally report road damage observed at ${locationName}. `;
+    if (selected.length > 0 && !selected.includes('Good Condition')) {
+      text += `The AI analysis has detected the following issues: ${selected.join(', ')}. The severity is rated ${score}/10, indicating significant damage requiring prompt attention. The road surface shows signs of structural failure that poses a safety risk to commuters, particularly two-wheeler riders.\n\nImmediate repair action is requested to prevent accidents and further deterioration.\n\nRegards,\nCitizen via Yathra Raksha Platform`;
+    } else {
+      text += `The road at this location appears to be in Good Condition according to the analysis.\n\nRegards,\nCitizen via Yathra Raksha Platform`;
+    }
+    
+    document.getElementById('ai-complaint-text').value = text;
   },
 
   fileToBase64(file) {
@@ -683,6 +709,12 @@ const App = {
 
     const refId = 'YR-2026-' + String(Math.floor(Math.random() * 99999)).padStart(5, '0');
 
+    const allDamageTypes = ['Pothole', 'Alligator Cracking', 'Longitudinal Crack', 'Transverse Crack', 'Rutting', 'Good Condition'];
+    const selected = allDamageTypes.filter(type => {
+      const el = document.getElementById(`defect-${type.replace(/\s+/g, '-')}`);
+      return el && el.checked;
+    });
+
     // Add to mock complaints
     const newComplaint = {
       id: 'CMP' + Date.now(),
@@ -691,7 +723,7 @@ const App = {
       location: document.getElementById('modal-location').value,
       lat: parseFloat(document.getElementById('modal-lat').value) || 0,
       lng: parseFloat(document.getElementById('modal-lng').value) || 0,
-      type: this.aiAnalysisResult?.detected_damages?.[0] || 'Pothole',
+      type: selected.length > 0 ? selected.join(', ') : 'Pothole',
       description: document.getElementById('modal-description').value,
       submitted_by: name,
       aadhaar_masked: aadhaar ? 'XXXX-XXXX-' + aadhaar.slice(-4) : 'XXXX-XXXX-XXXX',
