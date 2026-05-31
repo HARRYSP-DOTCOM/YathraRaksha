@@ -135,8 +135,8 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             <span>YatraGPT Assistant</span>
           </div>
-          <div class="nav-link" data-tab="accountability">
-            <span style="font-size:18px;">🏆</span>
+          <div class="nav-link" data-tab="score">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             <span>Score</span>
           </div>
         </nav>
@@ -636,16 +636,27 @@
           </div>
         </section>
 
+        <!-- 7. ALERTS TAB -->
         <section class="tab-content" id="alerts-tab">
-          <div style="padding:0 4px;">
-            <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:16px;">⚠️ Risk Alerts</h2>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;" id="alerts-filter-chips">
-              <button class="btn btn-sm btn-primary" onclick="window.App.filterAlerts('all')">All</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('Critical')">🔴 Critical</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('High')">🟠 High</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAlerts('Medium')">🟡 Medium</button>
+          <h2 class="section-title">⚠️ Risk Alerts</h2>
+          <p class="section-desc">Real-time safety alerts generated from registered road accident records, pavement distress indexes, and contractor compliance violations.</p>
+
+          <div class="alert-filters" id="alert-filters">
+            <button type="button" class="alert-filter-pill active" data-filter="all">All</button>
+            <button type="button" class="alert-filter-pill critical" data-filter="critical"><span class="filter-dot dot-critical"></span> Critical</button>
+            <button type="button" class="alert-filter-pill high" data-filter="high"><span class="filter-dot dot-high"></span> High</button>
+            <button type="button" class="alert-filter-pill medium" data-filter="medium"><span class="filter-dot dot-medium"></span> Medium</button>
+          </div>
+
+          <div id="alerts-list" class="alerts-list">
+            <!-- Filled dynamically -->
+          </div>
+
+          <div class="glass-card highlight-teal" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 10px;">📊 Budget Oversight Summary</h3>
+            <div id="alerts-budget-summary">
+              <!-- Filled dynamically -->
             </div>
-            <div id="alerts-list" style="display:flex; flex-direction:column; gap:12px;"></div>
           </div>
         </section>
 
@@ -675,39 +686,74 @@
           </div>
         </section>
 
-        <section class="tab-content" id="accountability-tab">
-          <div style="padding:0 4px;">
-            <h2 style="font-family:var(--font-heading); color:var(--text-white); margin-bottom:4px;">🏆 Accountability Score</h2>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">A single composite metric measuring transparency, resolution, and budget efficiency.</p>
+        <!-- 8. SCORE TAB -->
+        <section class="tab-content" id="score-tab">
+          <h2 class="section-title">🏆 Safety Scorecard</h2>
+          <p class="section-desc">Comprehensive road safety scoring, contractor leaderboard, and budget health metrics derived from registered infrastructure data.</p>
 
-            <!-- National Average Gauge -->
-            <div class="glass-card" style="padding:20px; text-align:center; margin-bottom:20px;">
-              <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.08em;">NATIONAL ROAD NETWORK AVERAGE</p>
-              <div id="national-gauge" style="position:relative; width:120px; height:120px; margin:0 auto 12px;">
-                <svg viewBox="0 0 120 120" width="120" height="120">
-                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"/>
-                  <circle id="gauge-arc" cx="60" cy="60" r="50" fill="none" stroke="var(--primary)" stroke-width="12"
-                    stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"
-                    transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease;"/>
-                </svg>
-                <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                  <span id="national-score-text" style="font-size:28px; font-weight:800; font-family:var(--font-heading); color:var(--text-white);">—</span>
-                  <span style="font-size:10px; color:var(--text-muted);">/100</span>
+          <div class="metrics-grid">
+            <div class="glass-card metric-card highlight-teal">
+              <span class="label">Avg Safety Rating</span>
+              <span class="value" id="score-avg-safety">—</span>
+              <span class="trend positive">⭐ Across all corridors</span>
+            </div>
+            <div class="glass-card metric-card">
+              <span class="label">Total Annual Accidents</span>
+              <span class="value" id="score-total-accidents">—</span>
+              <span class="trend warning">🚨 All registered roads</span>
+            </div>
+            <div class="glass-card metric-card highlight-orange">
+              <span class="label">Budget Overruns</span>
+              <span class="value" id="score-overrun-count">—</span>
+              <span class="trend warning">💸 Flagged projects</span>
+            </div>
+            <div class="glass-card metric-card">
+              <span class="label">Best Contractor</span>
+              <span class="value" id="score-best-contractor">—</span>
+              <span class="trend positive">🌟 Highest rated</span>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div>
+              <div class="glass-card">
+                <h3 style="margin-bottom: 14px;">🛣️ Road Safety Rankings</h3>
+                <div class="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Road</th>
+                        <th>Safety Score</th>
+                        <th>Accidents/yr</th>
+                        <th>Fatalities</th>
+                        <th>Potholes/km</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="score-road-rankings">
+                      <!-- Filled dynamically -->
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <p id="national-total-roads" style="font-size:11px; color:var(--text-muted);"></p>
             </div>
 
-            <!-- Filter chips -->
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-              <button class="btn btn-sm btn-primary" onclick="window.App.filterAccountability('all')">All Roads</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('A')">A Grade</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('B')">B Grade</button>
-              <button class="btn btn-sm btn-secondary" onclick="window.App.filterAccountability('needs')">⚠️ Needs Attention</button>
-            </div>
+            <div>
+              <div class="glass-card highlight-orange">
+                <h3 style="margin-bottom: 14px;">🏗️ Contractor Leaderboard</h3>
+                <div id="score-contractor-leaderboard">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
 
-            <!-- Leaderboard -->
-            <div id="accountability-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+              <div class="glass-card" style="margin-top: 16px;">
+                <h3 style="margin-bottom: 14px;">💰 Budget Health</h3>
+                <div id="score-budget-health">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -743,7 +789,10 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         <span>YatraGPT</span>
       </div>
-      <div class="mobile-nav-link" data-tab="accountability">🏆<span>Score</span></div>
+      <div class="mobile-nav-link" data-tab="score">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+        <span>Score</span>
+      </div>
     </nav>
   </div>
 
