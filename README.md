@@ -64,7 +64,7 @@ Real datasets (NHAI, MoRTH, CAG, PMGSY) live under [`data/`](data/). The API ser
 ## Quick start (v2.0)
 
 ```bash
-# 1. Clone
+
 git clone https://github.com/HARRYSP-DOTCOM/YathraRaksha.git
 cd YathraRaksha
 
