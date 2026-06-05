@@ -216,20 +216,11 @@ const App = {
     const data = window.MOCK_DATA;
     if (!data) return;
 
-    data.roads.forEach(road => {
-      const color = data.getConditionColor(road.condition);
-
-      // Plot polyline
-      if (road.coordinates.length > 1) {
-        const polyline = L.polyline(road.coordinates, {
-          color: color,
-          weight: 5,
-          opacity: 0.8,
-          lineCap: 'round',
-        }).addTo(this.map);
-        polyline.on('click', () => this.showRoadInfo(road));
-        this.roadLayers.push(polyline);
+    const fetchRouteAndPlot = async (road, delayMs = 0) => {
+      if (delayMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
+      const color = data.getConditionColor(road.condition);
 
       // Plot start marker
       const marker = L.circleMarker(road.coordinates[0], {
@@ -249,6 +240,43 @@ const App = {
 
       marker.on('click', () => this.showRoadInfo(road));
       this.roadLayers.push(marker);
+
+      // Plot polyline with OSRM routing
+      if (road.coordinates.length > 1) {
+        const coordsStr = road.coordinates.map(c => `${c[1]},${c[0]}`).join(';');
+        try {
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`);
+          const routeData = await res.json();
+          if (routeData.code === 'Ok' && routeData.routes && routeData.routes.length > 0) {
+            const geojsonCoords = routeData.routes[0].geometry.coordinates;
+            const latLngs = geojsonCoords.map(c => [c[1], c[0]]);
+            const polyline = L.polyline(latLngs, {
+              color: color,
+              weight: 5,
+              opacity: 0.8,
+              lineCap: 'round',
+            }).addTo(this.map);
+            polyline.on('click', () => this.showRoadInfo(road));
+            this.roadLayers.push(polyline);
+          } else {
+            throw new Error('OSRM route not found');
+          }
+        } catch (err) {
+          console.warn('OSRM fetch failed, falling back to straight lines:', err);
+          const polyline = L.polyline(road.coordinates, {
+            color: color,
+            weight: 5,
+            opacity: 0.8,
+            lineCap: 'round',
+          }).addTo(this.map);
+          polyline.on('click', () => this.showRoadInfo(road));
+          this.roadLayers.push(polyline);
+        }
+      }
+    };
+
+    data.roads.forEach((road, index) => {
+      fetchRouteAndPlot(road, index * 200); // Stagger requests to avoid OSRM rate limits
     });
   },
 
