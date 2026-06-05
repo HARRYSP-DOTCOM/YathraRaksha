@@ -21,11 +21,16 @@ window.ContractorHub = {
         const data = await fetch(`${base}/contractors`).then((r) => r.json());
         
         // Populate window.CONTRACTORS
+        const cagFlaggedNames = (data.cag_flagged_contractor_names || []).map(n => n.toLowerCase());
+        const isCagFlagged = (name) => {
+          const n = (name || "").toLowerCase();
+          return cagFlaggedNames.some(flag => n.includes(flag.split("(")[0].trim().slice(0, 12)) || flag.includes(n.slice(0, 12)));
+        };
         window.CONTRACTORS = data.contractors.map(c => {
            return {
              id: c.contractor_id,
              name: c.name,
-             regNo: c.type || c.nhai_empanelment_class,
+             regNo: c.bse_code ? `BSE: ${c.bse_code}` : (c.type || c.nhai_empanelment_class || ""),
              stars: "★".repeat(Math.round(c.overall_rating.quality_score / 20)) + "☆".repeat(5 - Math.round(c.overall_rating.quality_score / 20)),
              qualityScore: c.overall_rating.quality_score,
              badge: c.overall_rating.quality_score >= 85 ? "EXCELLENT" : (c.overall_rating.quality_score >= 70 ? "GOOD" : "AVERAGE"),
@@ -33,11 +38,17 @@ window.ContractorHub = {
              completed: c.total_road_projects_completed,
              inProgress: (c.active_projects || []).length,
              completionRate: c.overall_rating.timely_completion_rate_percent,
+             complaints: Math.round((c.overall_rating?.complaints_per_100km || 2) * 10),
+             budgetUtil: c.overall_rating.timely_completion_rate_percent || 80,
              roads: (c.active_projects || []).map(p => p.road),
-             cagFlagged: c.name.includes("Dilip Buildcon") || c.name.includes("PNC Infratech"), // Extracted from india_contractors_cag.json
+             cagFlagged: isCagFlagged(c.name),
              source: c.overall_rating.source
            };
         });
+        // Store CAG flagged metadata and contractor type explanations
+        window._cagFlaggedMeta = data.cag_flagged || {};
+        window._contractorTypes = data.contractor_types || {};
+        window._topContractorsCAG = data.top_contractors_cag || [];
         this._rows = window.CONTRACTORS;
       } catch (err) {
         console.error("Failed to load contractors", err);

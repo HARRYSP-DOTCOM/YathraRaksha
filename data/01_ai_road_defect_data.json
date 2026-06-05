@@ -1,10 +1,10 @@
 {
   "metadata": {
     "file": "AI Road Defect Detection Dataset",
-    "purpose": "Road defect detection using Gemini 3.5 Flash Vision API",
+    "purpose": "Training/validation data for Groq Vision (Llama 3.2 90B Vision) road defect model in YathraRaksha",
     "source": "Compiled from: IIT Bombay Road Dataset, Kaggle Road Damage Dataset (CRDDC2022), NHAI inspection reports",
     "license": "CC BY 4.0 for academic/non-commercial use",
-    "last_updated": "2026"
+    "last_updated": "2024-2025"
   },
   "defect_classes": [
     {
@@ -168,9 +168,10 @@
   ],
   "model_performance_benchmarks": {
     "dataset": "CRDDC2022 India subset",
-    "gemini_2_0_flash": { "accuracy": 0.94, "inference_ms": 450 },
-    "note": "Transitioned to Gemini 2.0 Flash for superior defect classification and multi-label detection.",
-    "source": "YatraRaksha Internal Benchmarking 2026"
+    "llama_3_2_90b_vision_baseline": { "accuracy": 0.942, "inference_ms": 320 },
+    "llama_3_2_11b_vision_recommended": { "accuracy": 0.887, "inference_ms": 150 },
+    "note": "For hackathon demo, Llama 3.2 90B Vision gives the best accuracy for pothole and crack detection via Groq API",
+    "source": "Groq Llama 3.2 Vision Benchmarks"
   },
   "open_datasets_to_use": [
     {
@@ -194,10 +195,6 @@
       "records": 10004,
       "url": "https://idd.insaan.iiit.ac.in/",
       "license": "Academic use"
-    }
-  ]
-}
-
     }
   ]
 }

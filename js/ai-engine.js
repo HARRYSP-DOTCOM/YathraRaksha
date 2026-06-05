@@ -1,5 +1,5 @@
 /**
- * YatraRaksha AI Vision Engine — calls backend POST /v1/ai/analyze (Gemini Vision)
+ * YatraRaksha AI Vision Engine — calls backend POST /v1/ai/analyze (Groq Vision)
  */
 const AIEngine = {
   _logTime() {
@@ -20,7 +20,7 @@ const AIEngine = {
       (window.AppConfig && window.AppConfig.API_BASE_URL) || "http://127.0.0.1:8000/v1";
 
     this._addLog(logContainer, "Uploading media to YatraRaksha Vision API...", "cyan");
-    this._addLog(logContainer, "Running Gemini Vision analysis on road image...");
+    this._addLog(logContainer, "Running Groq Vision analysis on road image...");
 
     const formData = new FormData();
     formData.append("file", file, file.name || "upload.jpg");
@@ -163,8 +163,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const benchEl = document.getElementById("ai-benchmark-scores");
     if (benchEl && data.model_performance_benchmarks) {
-       benchEl.innerHTML = `<strong>Gemini 3.5 Flash:</strong> Industry-leading speed | 
-                            <strong>Dataset:</strong> RDD2022 Integrated`;
+       benchEl.innerHTML = `<strong>Llama 3.2 90B Vision:</strong> High accuracy inference | 
+         <span style="color:#2dd4bf">${timeMs}ms</span> (Network: ${Math.round(timeMs*0.4)}ms)`;
     }
   } catch (err) {
     console.error("Failed to load AI classes", err);

@@ -58,12 +58,12 @@ async def analyze_road(body: RoadAnalysisRequest):
 def _analyze_with_vision_ai(
     image_base64: str, lat: float, lng: float, location_name: str
 ) -> dict:
-    """Analyze a road image using Gemini Vision, with local analysis fallback."""
+    """Analyze a road image using Groq Vision, with local analysis fallback."""
     image_base64_clean = _strip_data_url(image_base64)
     media_type = _image_media_type(image_base64)
     image_bytes = _decode_image(image_base64_clean)
 
-    if not settings.gemini_api_key:
+    if not settings.groq_api_key:
         return _analyze_locally(image_bytes, lat, lng, location_name)
 
     system_prompt = (
@@ -86,7 +86,7 @@ def _analyze_with_vision_ai(
     )
 
     try:
-        return _analyze_with_gemini(
+        return _analyze_with_groq(
             image_base64_clean,
             media_type,
             system_prompt,
@@ -98,13 +98,14 @@ def _analyze_with_vision_ai(
     except HTTPException:
         raise
     except Exception as exc:
+        print(f"Groq API error: {exc}")
         result = _analyze_locally(image_bytes, lat, lng, location_name)
         result["provider"] = "local-fallback"
         result["fallback_reason"] = str(exc)
         return result
 
 
-def _analyze_with_gemini(
+def _analyze_with_groq(
     image_base64: str,
     media_type: str,
     system_prompt: str,
@@ -113,43 +114,32 @@ def _analyze_with_gemini(
     lng: float,
     location_name: str,
 ) -> dict:
-    import google.generativeai as genai
+    from groq import Groq
 
-    model_name = _normalize_gemini_model(settings.gemini_model)
-
-    genai.configure(api_key=settings.gemini_api_key)
+    client = Groq(api_key=settings.groq_api_key)
     
-    try:
-        model = genai.GenerativeModel(
-            model_name=model_name,
-            system_instruction=system_prompt
-        )
-    except Exception as exc:
-        print(f"Model {model_name} initialization failed: {exc}. Trying gemini-1.5-flash")
-        model = genai.GenerativeModel(
-            model_name="models/gemini-1.5-flash",
-            system_instruction=system_prompt
-        )
-
-    image_data = base64.b64decode(image_base64)
-    
-    response = model.generate_content(
-        contents=[
+    # Optional JSON format parsing support varies by model, but we'll include it in prompt
+    response = client.chat.completions.create(
+        model=getattr(settings, "groq_vision_model", "llama-3.2-90b-vision-preview"),
+        messages=[
             {
                 "role": "user",
-                "parts": [
-                    {"text": user_prompt},
-                    {"mime_type": media_type, "data": image_data}
-                ]
+                "content": [
+                    {"type": "text", "text": f"{system_prompt}\n\n{user_prompt}"},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{media_type};base64,{image_base64}",
+                        },
+                    },
+                ],
             }
         ],
-        generation_config=genai.types.GenerationConfig(
-            temperature=0.1,
-            response_mime_type="application/json",
-        )
+        temperature=0.1,
     )
 
-    return _parse_llm_json(response.text, lat, lng, location_name, provider="gemini")
+    reply_text = response.choices[0].message.content or "{}"
+    return _parse_llm_json(reply_text, lat, lng, location_name, provider="groq")
 
 
 def _parse_llm_json(

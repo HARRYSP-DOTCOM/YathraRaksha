@@ -101,42 +101,102 @@ prefix = settings.api_prefix
 import json, csv as csv_module, os
 DATA = os.path.join(os.path.dirname(__file__), "..", "data")
 
+def _load_json(filename):
+    with open(os.path.join(DATA, filename), encoding="utf-8") as f:
+        return json.load(f)
+
 @app.get("/v1/contractors")
 def get_contractors():
-    d2 = json.load(open(f"{DATA}/02_contractors_data.json"))
-    d1 = json.load(open(f"{DATA}/india_contractors_cag.json"))
-    return {"contractors": d2["contractors"], "industry_summary": d2["industry_summary"], "cag_flagged": d1["flagged_contractors_cag"]}
+    d2 = _load_json("02_contractors_data.json")
+    d1 = _load_json("india_contractors_cag.json")
+    # Build list of CAG-flagged contractor names for frontend badge logic
+    cag_flagged_names = [
+        c["name"] for c in d1.get("top_contractors_india", []) if c.get("cag_findings")
+    ]
+    return {
+        "contractors": d2["contractors"],
+        "industry_summary": d2["industry_summary"],
+        "cag_flagged": d1.get("flagged_contractors_cag", {}),
+        "cag_flagged_contractor_names": cag_flagged_names,
+        "contractor_types": d1.get("contractor_types_explained", {}),
+        "top_contractors_cag": d1.get("top_contractors_india", []),
+    }
 
 @app.get("/v1/roads")
 def get_roads():
-    d2 = json.load(open(f"{DATA}/04_roads_map_data.json"))
-    d1 = json.load(open(f"{DATA}/india_nh_data.json"))
-    return {**d2, "nh_extended": d1["national_highways"], "nh_network_totals": d1["nh_network_totals"]}
+    d2 = _load_json("04_roads_map_data.json")
+    d1 = _load_json("india_nh_data.json")
+    return {
+        **d2,
+        "nh_extended": d1["national_highways"],
+        "sh_extended": d1.get("state_highways_sample", []),
+        "nh_network_totals": d1["nh_network_totals"],
+    }
 
 @app.get("/v1/tenders")
 def get_tenders():
-    return json.load(open(f"{DATA}/03_tenders_data.json"))
+    d = _load_json("03_tenders_data.json")
+    return d
 
 @app.get("/v1/audit/budget")
 def get_budget():
-    d2 = json.load(open(f"{DATA}/05_budget_audit_data.json"))
-    d1 = json.load(open(f"{DATA}/india_road_budget.json"))
-    return {**d2, "nhai_capex": d1["nhai_capex_last_5_years"], "morth_allocation": d1["morth_budget_allocation"]}
+    d2 = _load_json("05_budget_audit_data.json")
+    d1 = _load_json("india_road_budget.json")
+    return {
+        **d2,
+        "nhai_capex": d1.get("nhai_capex_last_5_years", {}).get("data", d1.get("nhai_capex_last_5_years", [])),
+        "morth_allocation": d1.get("morth_budget_allocation", {}).get("data", d1.get("morth_budget_allocation", [])),
+        "pmgsy_national": d1.get("pmgsy_national_summary", {}),
+        "pmgsy_state_wise": d1.get("pmgsy_state_wise", {}).get("data", []),
+        "bharatmala_audit": d1.get("bharatmala_phase1_audit", {}),
+    }
 
 @app.get("/v1/accidents")
 def get_accidents():
-    stats = json.load(open(f"{DATA}/india_accidents_2023.json"))
-    with open(f"{DATA}/road_wise_accidents_2023.csv") as f:
-        road_wise = list(csv_module.DictReader(f))
+    stats = _load_json("india_accidents_2023.json")
+    csv_path = os.path.join(DATA, "road_wise_accidents_2023.csv")
+    road_wise = []
+    if os.path.isfile(csv_path):
+        with open(csv_path, encoding="utf-8") as f:
+            road_wise = list(csv_module.DictReader(f))
     return {**stats, "road_wise_2023": road_wise}
 
 @app.get("/v1/ai/defect-classes")
 def get_defects():
-    return json.load(open(f"{DATA}/01_ai_road_defect_data.json"))
+    return _load_json("01_ai_road_defect_data.json")
 
 @app.get("/v1/complaints/seed")
 def get_seeded_complaints():
-    return json.load(open(f"{DATA}/06_complaints_sample_data.json"))
+    return _load_json("06_complaints_sample_data.json")
+
+@app.get("/v1/highway-construction")
+def get_highway_construction():
+    """Monthly highway construction spending time-series (TLHWYCONS)."""
+    csv_path = os.path.join(DATA, "TLHWYCONS.csv")
+    rows = []
+    if os.path.isfile(csv_path):
+        with open(csv_path, encoding="utf-8") as f:
+            for row in csv_module.DictReader(f):
+                rows.append({
+                    "date": row["observation_date"],
+                    "value": int(row["TLHWYCONS"]),
+                })
+    return {"series": rows, "unit": "Thousands of USD", "source": "FRED / US Census Bureau"}
+
+@app.get("/v1/budget/pmgsy")
+def get_pmgsy():
+    """PMGSY state-wise road construction progress."""
+    d1 = _load_json("india_road_budget.json")
+    return {
+        "national_summary": d1.get("pmgsy_national_summary", {}),
+        "state_wise": d1.get("pmgsy_state_wise", {}).get("data", []),
+    }
+
+@app.get("/v1/budget/bharatmala")
+def get_bharatmala():
+    """Bharatmala Phase 1 CAG audit data."""
+    d1 = _load_json("india_road_budget.json")
+    return d1.get("bharatmala_phase1_audit", {})
 
 
 app.include_router(auth.router, prefix=prefix)

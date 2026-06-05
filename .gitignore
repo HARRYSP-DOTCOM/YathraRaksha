@@ -66,3 +66,7 @@ desktop.ini
 # API keys (prevent accidental commit)
 **/secrets/
 **/credentials/
+
+# Data backups
+roadwatch_real_data/
+roadwatch_real_data2/

@@ -33,6 +33,14 @@ window.RealDataLoader = {
       this._hydrateBudget(budget);
       this._hydrateDefects(defects);
       this._hydrateComplaints(complaints);
+
+      // Non-blocking: load supplementary data in background
+      Promise.allSettled([
+        fetchJson("/highway-construction").then((d) => this._hydrateHighwayConstruction(d)),
+        fetchJson("/budget/pmgsy").then((d) => this._hydratePMGSY(d)),
+        fetchJson("/budget/bharatmala").then((d) => this._hydrateBharatmala(d)),
+      ]).catch(() => {});
+
       window._realDataReady = true;
       return true;
     } catch (err) {
@@ -54,6 +62,8 @@ window.RealDataLoader = {
         cag_flagged_contractor_names: (cag?.top_contractors_india || [])
           .filter((c) => c.cag_findings)
           .map((c) => c.name),
+        contractor_types: cag?.contractor_types_explained || {},
+        top_contractors_cag: cag?.top_contractors_india || [],
       };
       this._cache.contractors = merged;
       this._cagNames = merged.cag_flagged_contractor_names;
@@ -64,16 +74,55 @@ window.RealDataLoader = {
       const nh = await load("/data/india_nh_data.json");
       if (roads) {
         this._hydrateRoads(
-          { ...roads, nh_extended: nh?.national_highways || [], nh_network_totals: nh?.nh_network_totals || {} },
+          {
+            ...roads,
+            nh_extended: nh?.national_highways || [],
+            sh_extended: nh?.state_highways_sample || [],
+            nh_network_totals: nh?.nh_network_totals || {},
+          },
           await load("/data/india_accidents_2023.json")
         );
       }
-      const budget = await load("/data/05_budget_audit_data.json");
-      if (budget) this._hydrateBudget(budget);
+      const budgetAudit = await load("/data/05_budget_audit_data.json");
+      const budgetRaw = await load("/data/india_road_budget.json");
+      if (budgetAudit) {
+        const budgetMerged = {
+          ...budgetAudit,
+          nhai_capex: budgetRaw?.nhai_capex_last_5_years?.data || budgetRaw?.nhai_capex_last_5_years || [],
+          morth_allocation: budgetRaw?.morth_budget_allocation?.data || budgetRaw?.morth_budget_allocation || [],
+          pmgsy_national: budgetRaw?.pmgsy_national_summary || {},
+          pmgsy_state_wise: budgetRaw?.pmgsy_state_wise?.data || [],
+          bharatmala_audit: budgetRaw?.bharatmala_phase1_audit || {},
+        };
+        this._hydrateBudget(budgetMerged);
+      }
       const defects = await load("/data/01_ai_road_defect_data.json");
       if (defects) this._hydrateDefects(defects);
       const complaints = await load("/data/06_complaints_sample_data.json");
       if (complaints) this._hydrateComplaints(complaints);
+
+      // Load highway construction CSV (non-blocking)
+      load("/data/TLHWYCONS.csv").catch(() => null);
+      // Parse CSV from static file for highway construction (text)
+      fetch("/data/TLHWYCONS.csv").then(r => r.ok ? r.text() : null).then(csv => {
+        if (!csv) return;
+        const lines = csv.trim().split("\n").slice(1);
+        const series = lines.map(l => {
+          const [date, val] = l.split(",");
+          return { date: date.trim(), value: parseInt(val.trim(), 10) };
+        }).filter(r => !isNaN(r.value));
+        this._hydrateHighwayConstruction({ series });
+      }).catch(() => {});
+
+      // Hydrate PMGSY/Bharatmala from loaded budget data
+      if (budgetRaw) {
+        this._hydratePMGSY({
+          national_summary: budgetRaw.pmgsy_national_summary || {},
+          state_wise: budgetRaw.pmgsy_state_wise?.data || [],
+        });
+        this._hydrateBharatmala(budgetRaw.bharatmala_phase1_audit || {});
+      }
+
       window._realDataReady = true;
       return true;
     } catch (e) {
@@ -252,6 +301,32 @@ window.RealDataLoader = {
       );
     });
 
+    // Extended state highways from india_nh_data.json (SH-36 TN, SH-9 KA, SH-1 MH)
+    (mapPayload.sh_extended || []).forEach((sh) => {
+      const accCount = this._accidentCountForRoad(sh.road_code, accidentLookup);
+      roads.push({
+        id: sh.road_code,
+        name: sh.road_name,
+        route: sh.road_name,
+        country: "India",
+        type: "SH",
+        authority: sh.responsible_authority || "State PWD",
+        contractorName: sh.executive_engineer || "State PWD",
+        contractorPerformance: 3.5,
+        sanctionedBudget: (sh.budget_sanctioned_crore || 0) * 1e7,
+        spentBudget: (sh.budget_spent_crore || 0) * 1e7,
+        fundingSource: "State PWD",
+        coordinates: [20.5937, 78.9629], // Default India center (no GPS in SH data)
+        path: [[20.5937, 78.9629]],
+        statusColor: sh.overrun_pct > 5 ? "#ff9f1c" : "#38bdf8",
+        lengthKm: sh.length_km,
+        builtBy: sh.responsible_authority,
+        accidents2023: accCount,
+        overrunPct: sh.overrun_pct,
+        source: sh.source || "State PWD Annual Report",
+      });
+    });
+
     const kl = mapPayload.kerala_roads_detail;
     if (kl?.state_highways) {
       kl.state_highways.forEach((sh) => {
@@ -298,6 +373,37 @@ window.RealDataLoader = {
     window._BUDGET_AUDIT = budget;
     const sector = budget.national_budget_road_sector || [];
     window._BUDGET_YEARS = sector.filter((y) => y.actual_spent_cr != null);
+
+    // NHAI capex time series
+    window._NHAI_CAPEX = budget.nhai_capex || [];
+    // MoRTH allocation time series
+    window._MORTH_ALLOCATION = budget.morth_allocation || [];
+    // State-wise allocation FY24
+    window._STATE_ALLOCATION = budget.state_wise_allocation_fy24 || [];
+    // CAG audit findings
+    window._CAG_FINDINGS = budget.cag_audit_findings || {};
+    // Maintenance budget info
+    window._MAINTENANCE_BUDGET = budget.maintenance_budget || {};
+    // PMGSY & Bharatmala (may also be set from dedicated endpoints)
+    if (budget.pmgsy_national) window._PMGSY_NATIONAL = budget.pmgsy_national;
+    if (budget.pmgsy_state_wise?.length) window._PMGSY_STATES = budget.pmgsy_state_wise;
+    if (budget.bharatmala_audit?.total_projects_awarded_km) window._BHARATMALA = budget.bharatmala_audit;
+  },
+
+  _hydrateHighwayConstruction(data) {
+    window._HIGHWAY_CONSTRUCTION = data.series || [];
+    console.log(`[RealData] Highway construction: ${window._HIGHWAY_CONSTRUCTION.length} data points loaded`);
+  },
+
+  _hydratePMGSY(data) {
+    window._PMGSY_NATIONAL = data.national_summary || {};
+    window._PMGSY_STATES = data.state_wise || [];
+    console.log(`[RealData] PMGSY: ${window._PMGSY_STATES.length} states loaded`);
+  },
+
+  _hydrateBharatmala(data) {
+    window._BHARATMALA = data || {};
+    console.log(`[RealData] Bharatmala audit loaded: ${data.total_projects_awarded_km || 0} km awarded`);
   },
 
   _hydrateDefects(defects) {
@@ -307,23 +413,30 @@ window.RealDataLoader = {
       .map((d) => d.class_name.replace(/_/g, " "));
     window._VISION_DEFECT_LABELS = labels;
 
+    // Inspection records
+    window._AI_INSPECTION_RECORDS = defects.sample_inspection_records || [];
+
+    // Open datasets for AI
+    window._AI_OPEN_DATASETS = defects.open_datasets_to_use || [];
+
     const bench = defects.model_performance_benchmarks || {};
+    window._AI_BENCHMARKS = bench;
     const card = document.getElementById("ai-model-benchmarks-card");
     const list = document.getElementById("ai-defect-class-list");
     if (list) {
       list.innerHTML = (defects.defect_classes || [])
         .map(
           (d) =>
-            `<li><strong>${d.class_name.replace(/_/g, " ")}</strong> — ${d.description || ""} <span class="source-badge">Gemini Vision</span></li>`
+            `<li><strong>${d.class_name.replace(/_/g, " ")}</strong> — ${d.description || ""} <span class="source-badge">Groq Vision</span></li>`
         )
         .join("");
     }
-    if (card && bench.gemini_3_5_flash) {
+    if (card && bench.llama_3_2_90b_vision_baseline) {
       card.style.display = "block";
       const el = document.getElementById("ai-benchmark-scores");
       if (el) {
         el.innerHTML = `
-          <div class="popup-row"><strong>Gemini 3.5 Flash</strong>: Accuracy ${(bench.gemini_3_5_flash.accuracy * 100).toFixed(1)}% · ${bench.gemini_3_5_flash.inference_ms}ms lat</div>
+          <div class="popup-row"><strong>Llama 3.2 90B Vision</strong>: Accuracy ${(bench.llama_3_2_90b_vision_baseline.accuracy * 100).toFixed(1)}% · ${bench.llama_3_2_90b_vision_baseline.inference_ms}ms lat</div>
           <div class="popup-row" style="font-size:11px;opacity:0.8;">${bench.note}</div>
         `;
       }
@@ -332,6 +445,7 @@ window.RealDataLoader = {
 
   _hydrateComplaints(payload) {
     window._SEEDED_COMPLAINTS = payload.complaints || [];
+    window._COMPLAINT_STATISTICS = payload.statistics || {};
     if (window.MapHub?.plotSeededComplaints) {
       window.MapHub.plotSeededComplaints(window._SEEDED_COMPLAINTS);
     }

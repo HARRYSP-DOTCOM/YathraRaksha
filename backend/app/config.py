@@ -16,8 +16,7 @@ class Settings(BaseSettings):
     media_upload_dir: str = "uploads"
     groq_api_key: str = ""
     groq_model: str = "meta-llama/llama-4-maverick-17b-128e-instruct"
-    gemini_api_key: str = ""
-    gemini_model: str = "gemini-3.5-flash"
+    groq_vision_model: str = "llama-3.2-90b-vision-preview"
     open_roads_data_url: str = ""
     open_data_refresh_on_startup: bool = False
 
